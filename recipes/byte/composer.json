@@ -1,0 +1,25 @@
+{
+  "name": "drupal/byte",
+  "description": "A site template based on Drupal CMS designed for a SaaS product website with landing pages, a blog, newsletter sign up and other features.",
+  "type": "drupal-recipe",
+  "license": ["GPL-2.0-or-later"],
+  "require": {
+    "drupal/byte_theme": "^1",
+    "drupal/cva": "^1",
+    "drupal/drupal_cms_admin_ui": "^2",
+    "drupal/drupal_cms_anti_spam": "^2",
+    "drupal/drupal_cms_authentication": "^2",
+    "drupal/drupal_cms_content_type_base": "^2",
+    "drupal/drupal_cms_forms": "^2",
+    "drupal/drupal_cms_media": "^2",
+    "drupal/drupal_cms_privacy_basic": "^2",
+    "drupal/drupal_cms_seo_tools": "^2",
+    "drupal/easy_email_express": "^1.0.2",
+    "drupal/selective_better_exposed_filters": "^3",
+    "drupal/ui_icons": "^1.1",
+    "drupal/views_infinite_scroll": "^2"
+  },
+  "conflict": {
+    "drupal/better_exposed_filters": "<7"
+  }
+}

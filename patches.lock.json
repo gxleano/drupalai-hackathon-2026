@@ -1,0 +1,29 @@
+{
+    "_hash": "917abd05124f3caca31abd473ce249657d63cae62a94add3e662c18a1334a2b2",
+    "patches": {
+        "drupal/core": [
+            {
+                "package": "drupal/core",
+                "description": "#3564735: Synthetic service (kernel) error during non-interactive install from existing config in Drupal 11.3",
+                "url": "https://git.drupalcode.org/project/drupal/-/merge_requests/14169.patch",
+                "sha256": "71fb6ea138a76694e061d9180489fdaf1008f6c9bfdd766cc1fb3ae5f06bd5f1",
+                "depth": 2,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ],
+        "drupal/ai_provider_mistral": [
+            {
+                "package": "drupal/ai_provider_mistral",
+                "description": "#3567414: TypeError when assistant message includes tool calls",
+                "url": "https://git.drupalcode.org/project/ai_provider_mistral/-/merge_requests/10.patch",
+                "sha256": "b956845cf4e4fea273de33ef2151c87d8d63f8c314afa36798cebaa35eb32e48",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,5 @@
+# @todo Delete this file when https://www.drupal.org/i/3557220 is released.
+additional_trusted_composer_plugins:
+  # This is added, indirectly, by `drupal/core-dev`.
+  - tbachert/spi
+include_unknown_files_in_project_root: false

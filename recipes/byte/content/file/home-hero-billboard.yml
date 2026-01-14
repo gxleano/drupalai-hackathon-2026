@@ -1,0 +1,24 @@
+_meta:
+  version: '1.0'
+  entity_type: file
+  uuid: 8967d9f1-abee-41ca-a2fd-3ed3700871a1
+  default_langcode: en
+default:
+  uid:
+    -
+      target_id: 1
+  filename:
+    -
+      value: pexels-therato-13555023.jpg
+  uri:
+    -
+      value: 'public://2025-12/pexels-therato-13555023.jpg'
+  filemime:
+    -
+      value: image/jpeg
+  filesize:
+    -
+      value: 291784
+  status:
+    -
+      value: true

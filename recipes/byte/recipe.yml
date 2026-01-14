@@ -1,0 +1,126 @@
+name: Byte
+type: Site
+description: 'Designed for a SaaS product website, this template includes landing pages, a blog, newsletter sign up and other features.'
+recipes:
+  - drupal_cms_admin_ui
+  - drupal_cms_anti_spam
+  - drupal_cms_authentication
+  - drupal_cms_content_type_base
+  - drupal_cms_forms
+  - drupal_cms_media
+  - drupal_cms_privacy_basic
+  - drupal_cms_seo_basic
+  - drupal_cms_seo_tools
+  - easy_email_express
+install:
+  - byte_theme
+  # CVA is needed for Byte Theme to work.
+  - cva
+  - project_browser
+  - selective_better_exposed_filters
+  - ui_icons_menu
+  - views_infinite_scroll
+config:
+  strict: false
+  import:
+    system:
+      - system.menu.footer
+      - system.menu.main
+  actions:
+    # Allow Canvas to render all content types.
+    field.storage.node.field_component_tree:
+      addToAllBundles:
+        label: Components
+        description: Stores a component tree for Canvas.
+    # Only show basic metatag fields on Canvas pages.
+    metatag.settings:
+      simpleConfigUpdate:
+        entity_type_groups:
+          canvas_page:
+            canvas_page:
+              basic: basic
+    # Allow basic pages to go into the main menu, or the footer.
+    node.type.page:
+      setThirdPartySettings:
+        -
+          module: menu_ui
+          key: available_menus
+          value:
+            - main
+            - footer
+            - utility
+        -
+          module: menu_ui
+          key: parent
+          value: 'main:'
+    project_browser.admin_settings:
+      simpleConfigUpdate:
+        enabled_sources:
+          recommended:
+            # @see recommended.yml
+            uri: 'https://git.drupalcode.org/api/v4/projects/194416/repository/files/recommended.yml/raw?ref=HEAD'
+            ttl: 1
+          drupalorg_jsonapi: []
+        default_source: recommended
+    system.site:
+      simpleConfigUpdate:
+        page.404: '/404'
+        # The Home page, built in Canvas.
+        page.front: '/home'
+    system.theme:
+      simpleConfigUpdate:
+        default: byte_theme
+    user.role.content_editor:
+      grantPermissions:
+        - 'create blog content'
+        - 'delete blog revisions'
+        - 'delete any blog content'
+        - 'edit any blog content'
+    webform.webform.contact_form:
+      setProperties:
+        settings.confirmation_type: modal
+    workflows.workflow.basic_editorial:
+      addNodeTypes: ['blog']
+    # Disable Canvas components that aren't really useful in building pages or
+    # content templates.
+    canvas.component.block.announce_block:
+      disable: []
+    canvas.component.block.dashboard_placeholder:
+      disable: []
+    canvas.component.block.dashboard_site_status:
+      disable: []
+    canvas.component.block.local_actions_block:
+      disable: []
+    canvas.component.block.local_tasks_block:
+      disable: []
+    canvas.component.block.navigation_dashboard:
+      disable: []
+    canvas.component.block.navigation_link:
+      disable: []
+    canvas.component.block.navigation_shortcuts:
+      disable: []
+    canvas.component.block.navigation_user:
+      disable: []
+    canvas.component.block.project_browser_block.*:
+      disable: []
+    canvas.component.block.system_menu_block.admin:
+      disable: []
+    canvas.component.block.system_menu_block.navigation-user-links:
+      disable: []
+    canvas.component.block.system_menu_block.tools:
+      disable: []
+    canvas.component.block.system_menu_block.top-tasks:
+      disable: []
+    canvas.component.block.system_messages_block:
+      disable: []
+    canvas.component.block.views_block.publishing_content-block_drafts:
+      disable: []
+    canvas.component.block.views_block.publishing_content-block_scheduled:
+      disable: []
+    canvas.component.block.views_block.recent_pages-block_recent_pages:
+      disable: []
+    canvas.component.sdc.navigation.title:
+      disable: []
+extra:
+  recipe_installer_kit:
+    finish_url: '/admin/dashboard/welcome'

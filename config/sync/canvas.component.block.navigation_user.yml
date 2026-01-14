@@ -1,0 +1,22 @@
+uuid: 19278887-9624-496a-9195-d02d2d8693f8
+langcode: en
+status: false
+dependencies:
+  module:
+    - navigation
+active_version: b1e17ec4885768e0
+versioned_properties:
+  active:
+    settings:
+      default_settings:
+        id: navigation_user
+        label: User
+        label_display: '0'
+        provider: navigation
+    fallback_metadata:
+      slot_definitions: null
+label: User
+id: block.navigation_user
+provider: navigation
+source: block
+source_local_id: navigation_user

@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - views.view.blog
+  module:
+    - views
+active_version: 9c0e5a7be68b5628
+versioned_properties:
+  active:
+    settings:
+      default_settings:
+        id: 'views_block:blog-all'
+        label: 'Blog: All blog posts'
+        label_display: '0'
+        provider: views
+        views_label: ''
+        items_per_page: null
+    fallback_metadata:
+      slot_definitions: null
+label: 'Blog: All blog posts'
+id: block.views_block.blog-all
+provider: views
+source: block
+source_local_id: 'views_block:blog-all'
+category: 'Lists (Views)'

@@ -1,0 +1,16 @@
+name: Basic page
+type: Drupal CMS
+description: Adds a content type for simple pages.
+recipes:
+  - drupal_cms_content_type_base
+config:
+  strict: false
+  actions:
+    user.role.content_editor:
+      grantPermissions:
+        - 'create page content'
+        - 'delete page revisions'
+        - 'delete any page content'
+        - 'edit any page content'
+    workflows.workflow.basic_editorial:
+      addNodeTypes: ['page']

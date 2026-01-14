@@ -1,0 +1,46 @@
+_meta:
+  version: '1.0'
+  entity_type: canvas_page
+  uuid: 66025d34-24a4-4ab9-89a3-b1654b875505
+  default_langcode: en
+default:
+  revision_user:
+    -
+      target_id: 1
+  status:
+    -
+      value: true
+  owner:
+    -
+      target_id: 1
+  title:
+    -
+      value: 'About us'
+  components:
+    -
+      uuid: f08be9dc-e328-4cb7-9499-df6db9bd8900
+      component_id: sdc.byte_theme.heading
+      inputs:
+        heading_text: 'About us'
+        level: 1
+        text_size: default
+        text_color: default
+        align: left
+    -
+      uuid: 2c722338-b73d-45b6-8d8a-3d474adfaed1
+      component_id: sdc.byte_theme.text
+      inputs:
+        text:
+          value: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce elementum elit a diam vehicula efficitur. Curabitur finibus feugiat justo, ac pulvinar sapien ullamcorper quis. Aliquam bibendum tortor nec volutpat varius. Vivamus rutrum iaculis lobortis. Quisque cursus fringilla justo et iaculis. Morbi at eros id sapien rhoncus laoreet. Maecenas ut gravida arcu, quis ornare metus. Donec sed posuere lorem, nec vestibulum magna. Praesent sodales id quam sed euismod. Phasellus ac leo vel est elementum luctus nec ac magna.</p>'
+        text_size: normal
+        text_color: default
+  path:
+    -
+      alias: /about
+      langcode: en
+  created:
+    -
+      value: 1735191284
+  revision_translation_affected:
+    -
+      value: true

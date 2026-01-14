@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+## Description: Install the site
+## Usage: install
+## Example: ddev install
+
+echo "Installing Drupal..."
+composer install
+drush si --account-pass=admin --existing-config -y
+#drush cim -y
+drush cr
+drush uli

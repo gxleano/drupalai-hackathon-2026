@@ -1,0 +1,44 @@
+name: Starter
+type: Site
+description: A simple template with just the basics. Bring your own design, and build what you need.
+recipes:
+  - core/recipes/administrator_role
+  - core/recipes/core_recommended_maintenance
+  - core/recipes/core_recommended_performance
+  - drupal_cms_admin_ui
+  - drupal_cms_anti_spam
+  - drupal_cms_authentication
+  - drupal_cms_media
+  - drupal_cms_privacy_basic
+  - drupal_cms_seo_basic
+  - easy_email_express
+install:
+  # CVA is a Mercury dependency.
+  - cva
+  - menu_link_content
+  - mercury
+  - project_browser
+  # These are in Standard.
+  - inline_form_errors
+  - config
+config:
+  actions:
+    system.site:
+      simpleConfigUpdate:
+        # The Home page, built in Canvas.
+        page.front: '/home'
+    system.theme:
+      simpleConfigUpdate:
+        default: mercury
+    project_browser.admin_settings:
+      simpleConfigUpdate:
+        enabled_sources:
+          recommended:
+            # @see recommended.yml
+            uri: 'https://git.drupalcode.org/api/v4/projects/167158/repository/files/recommended.yml/raw?ref=HEAD'
+            ttl: 1
+          drupalorg_jsonapi: []
+        default_source: recommended
+extra:
+  recipe_installer_kit:
+    finish_url: '/admin/dashboard/welcome'

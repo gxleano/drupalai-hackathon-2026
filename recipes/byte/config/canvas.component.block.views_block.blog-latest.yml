@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - views.view.blog
+  module:
+    - views
+active_version: 2502069c92ce84d7
+versioned_properties:
+  active:
+    settings:
+      default_settings:
+        id: 'views_block:blog-latest'
+        label: 'Blog: Latest blog posts'
+        label_display: '0'
+        provider: views
+        views_label: ''
+        items_per_page: null
+    fallback_metadata:
+      slot_definitions: null
+label: 'Blog: Latest blog posts'
+id: block.views_block.blog-latest
+provider: views
+source: block
+source_local_id: 'views_block:blog-latest'
+category: 'Lists (Views)'

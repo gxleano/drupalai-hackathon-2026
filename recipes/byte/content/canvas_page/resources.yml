@@ -1,0 +1,133 @@
+_meta:
+  version: '1.0'
+  entity_type: canvas_page
+  uuid: e149c5f8-38b6-4b32-80de-4c5163879458
+  default_langcode: en
+default:
+  status:
+    -
+      value: true
+  owner:
+    -
+      target_id: 1
+  title:
+    -
+      value: Resources
+  components:
+    -
+      uuid: a2696d74-622b-4bdc-906e-f52f6cd98f05
+      component_id: sdc.byte_theme.section
+      inputs:
+        columns: 100
+        mobile_columns: '1'
+        width: '80%'
+        margin_block_start: '96'
+        margin_block_end: '64'
+        padding_block_start: '0'
+        padding_block_end: '0'
+        section_header: true
+        section_footer: true
+    -
+      parent_uuid: a2696d74-622b-4bdc-906e-f52f6cd98f05
+      slot: main_slot
+      uuid: cc1b4ca9-bc25-4c56-a7a2-45b5aac3f275
+      component_id: sdc.byte_theme.heading
+      inputs:
+        heading_text: 'Resources & Support'
+        level: 1
+        text_size: default
+        text_color: default
+        align: center
+    -
+      parent_uuid: a2696d74-622b-4bdc-906e-f52f6cd98f05
+      slot: main_slot
+      uuid: 8f0bb2a9-5e7d-4c3a-b302-42d15732d561
+      component_id: sdc.byte_theme.text
+      inputs:
+        text:
+          value: '<p class="text-align-center">Whether you''re just getting started, or looking to accelerate your journey, we''ve got you covered with our comprehensive online resources.</p>'
+        text_size: normal
+        text_color: default
+    -
+      uuid: 5cfee834-e77f-4c4d-b7fa-007a62185962
+      component_id: sdc.byte_theme.section
+      inputs:
+        columns: 50-50
+        mobile_columns: '1'
+        width: '80%'
+        margin_block_start: '48'
+        margin_block_end: '96'
+        padding_block_start: '0'
+        padding_block_end: '0'
+        section_header: true
+        section_footer: true
+    -
+      parent_uuid: 5cfee834-e77f-4c4d-b7fa-007a62185962
+      slot: main_slot
+      uuid: 12b80685-ff24-41cc-96a5-1c7cf0db45d2
+      component_id: sdc.byte_theme.card-icon
+      inputs:
+        border_radius: 'large'
+        background_color: 'secondary'
+        text: 'Quick start guide'
+        description:
+          value: '<p>Get up and running in minutes with our step-by-step setup guide. Learn how to create your account, issue your first cards, configure approval workflows, and connect your accounting software.</p>'
+        text_align: 'center'
+        icon: rocket
+        icon_size: 'large'
+        icon_align: 'center'
+    -
+      parent_uuid: 5cfee834-e77f-4c4d-b7fa-007a62185962
+      slot: main_slot
+      uuid: 6e991ab6-39db-4201-8c62-b372f29bc46c
+      component_id: sdc.byte_theme.card-icon
+      inputs:
+        border_radius: 'large'
+        background_color: 'secondary'
+        text: 'Developer docs'
+        description:
+          value: '<p>Build powerful integrations with our comprehensive API documentation. Access detailed endpoints, code examples, and SDKs to connect our expense platform with your existing tools and workflows.</p>'
+        text_align: 'center'
+        icon: book-open
+        icon_size: 'large'
+        icon_align: 'center'
+    -
+      parent_uuid: 5cfee834-e77f-4c4d-b7fa-007a62185962
+      slot: main_slot
+      uuid: ebbf9e40-f3dc-4e80-bdc2-6d24194fbf66
+      component_id: sdc.byte_theme.card-icon
+      inputs:
+        background_color: 'secondary'
+        text: 'Community forum'
+        description:
+          value: '<p>Connect with other finance leaders, share best practices, and discover new ways to optimize your expense processes. Our active community is here to help you get the most out of the platform.</p>'
+        text_align: 'center'
+        icon: users-three
+        icon_size: 'large'
+        icon_align: 'center'
+        border_radius: 'large'
+    -
+      parent_uuid: 5cfee834-e77f-4c4d-b7fa-007a62185962
+      slot: main_slot
+      uuid: ab48969d-ea3b-41b9-b007-3b97886d4b96
+      component_id: sdc.byte_theme.card-icon
+      inputs:
+        border_radius: 'large'
+        background_color: 'secondary'
+        text: 'Support desk'
+        description:
+          value: '<p>Our dedicated support team is ready to help you succeed. Submit tickets, track issues, and get expert assistance whenever you need it—because great software deserves great support.</p>'
+        text_align: 'center'
+        icon: question
+        icon_size: 'large'
+        icon_align: 'center'
+  path:
+    -
+      alias: /resources
+      langcode: en
+  created:
+    -
+      value: 1735191284
+  revision_translation_affected:
+    -
+      value: true

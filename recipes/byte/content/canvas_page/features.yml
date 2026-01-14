@@ -1,0 +1,313 @@
+_meta:
+  version: '1.0'
+  entity_type: canvas_page
+  uuid: 715b996b-bbc2-4fa7-aa34-97a4cdd53022
+  default_langcode: en
+default:
+  status:
+    -
+      value: true
+  owner:
+    -
+      target_id: 1
+  title:
+    -
+      value: Features
+  components:
+    -
+      uuid: 444b09c4-0836-46a7-8e42-60d321395538
+      component_id: sdc.byte_theme.section
+      inputs:
+        columns: '100'
+        width: '80%'
+        margin_block_start: '96'
+        margin_block_end: '48'
+        mobile_columns: 1
+        padding_block_start: '0'
+        padding_block_end: '0'
+        section_header: true
+        section_footer: true
+    -
+      parent_uuid: 444b09c4-0836-46a7-8e42-60d321395538
+      slot: header_slot
+      uuid: 43f8716b-db59-42b1-816e-bcb329533d14
+      component_id: sdc.byte_theme.heading
+      inputs:
+        heading_text: 'Take control of team spending'
+        level: 1
+        text_size: default
+        text_color: default
+        align: center
+    -
+      parent_uuid: 444b09c4-0836-46a7-8e42-60d321395538
+      slot: main_slot
+      uuid: b1c0efe7-3b46-4d12-a553-e6378c8b6393
+      component_id: sdc.byte_theme.text
+      inputs:
+        text:
+          value: '<p class="text-align-center">Stop chasing receipts and waiting on spreadsheets. Our all-in-one expense platform gives you real-time visibility and control over every dollar your team spends.</p>'
+        text_size: normal
+        text_color: default
+    -
+      uuid: 36e0da58-59f1-43ff-8561-be380e981663
+      component_id: sdc.byte_theme.section
+      inputs:
+        columns: 50-50
+        width: '80%'
+        margin_block_start: '48'
+        margin_block_end: '48'
+        mobile_columns: 1
+        padding_block_start: '0'
+        padding_block_end: '0'
+        section_header: true
+        section_footer: true
+    -
+      parent_uuid: 36e0da58-59f1-43ff-8561-be380e981663
+      slot: header_slot
+      uuid: bdd05881-5bfe-4020-89cb-4b91eafdf8a8
+      component_id: sdc.byte_theme.hero-side-by-side
+      inputs:
+        hero_flex_gap: 'large'
+        hero_flex_direction_mobile: 'vertical'
+        padding_block_start: '64'
+        padding_block_end: '64'
+        image_size: '4:3'
+        image_position: 'right'
+        image_radius: 'small'
+        media:
+          sourceType: default-relative-url
+          value:
+            src: assets/boliviainteligente-QPu42AAJ5ZY-unsplash.jpg
+            alt: 'Placeholder image'
+            width: 1920
+            height: 1075
+          jsonSchema:
+            type: object
+            properties:
+              alt:
+                type: string
+              height:
+                type: integer
+              src:
+                type: string
+                contentMediaType: 'image/*'
+                format: uri-reference
+                x-allowed-schemes:
+                  - http
+                  - https
+              width:
+                type: integer
+            required:
+              - src
+          componentId: sdc.byte_theme.hero-side-by-side
+    -
+      parent_uuid: bdd05881-5bfe-4020-89cb-4b91eafdf8a8
+      slot: hero_slot
+      uuid: b3123e04-10ea-4400-90a8-77280fe65e8a
+      component_id: sdc.byte_theme.heading
+      inputs:
+        heading_text: 'Smart card controls'
+        level: 2
+        text_size: heading-responsive-5xl
+        text_color: default
+        align: left
+    -
+      parent_uuid: bdd05881-5bfe-4020-89cb-4b91eafdf8a8
+      slot: hero_slot
+      uuid: 1fbd534c-980d-40ba-a5f6-2d7a2ddb65ca
+      component_id: sdc.byte_theme.text
+      inputs:
+        text:
+          value: '<p>Issue virtual and physical cards with custom spending limits, merchant restrictions, and department-specific rules. Empower your team to spend confidently while you maintain complete oversight.</p>'
+        text_size: normal
+        text_color: default
+    -
+      parent_uuid: 36e0da58-59f1-43ff-8561-be380e981663
+      slot: header_slot
+      uuid: 14da9362-2cba-471c-b47a-d6ad5fd343e9
+      component_id: sdc.byte_theme.hero-side-by-side
+      inputs:
+        hero_flex_gap: 'large'
+        hero_flex_direction_mobile: 'vertical'
+        padding_block_start: '64'
+        padding_block_end: '64'
+        image_size: '4:3'
+        image_position: 'left'
+        image_radius: 'small'
+        media:
+          sourceType: default-relative-url
+          value:
+            src: assets/boliviainteligente-QPu42AAJ5ZY-unsplash.jpg
+            alt: 'Placeholder image'
+            width: 1920
+            height: 1075
+          jsonSchema:
+            type: object
+            properties:
+              alt:
+                type: string
+              height:
+                type: integer
+              src:
+                type: string
+                contentMediaType: 'image/*'
+                format: uri-reference
+                x-allowed-schemes:
+                  - http
+                  - https
+              width:
+                type: integer
+            required:
+              - src
+          componentId: sdc.byte_theme.hero-side-by-side
+    -
+      parent_uuid: 14da9362-2cba-471c-b47a-d6ad5fd343e9
+      slot: hero_slot
+      uuid: 7e255ebb-4c7f-480c-aae8-5d5f9a8dc2ba
+      component_id: sdc.byte_theme.heading
+      inputs:
+        heading_text: 'Effortless approval workflows'
+        level: 2
+        text_size: heading-responsive-5xl
+        text_color: default
+        align: left
+    -
+      parent_uuid: 14da9362-2cba-471c-b47a-d6ad5fd343e9
+      slot: hero_slot
+      uuid: 701be6a0-c93b-466f-b750-c09d46cc302c
+      component_id: sdc.byte_theme.text
+      inputs:
+        text:
+          value: '<p>Set up custom approval chains based on amount, category, or team role. Requests route automatically to the right people, eliminating bottlenecks and keeping projects moving.</p>'
+        text_size: normal
+        text_color: default
+    -
+      parent_uuid: 36e0da58-59f1-43ff-8561-be380e981663
+      slot: header_slot
+      uuid: 4844c3d6-a4f9-45c2-9c03-03fb18abf10f
+      component_id: sdc.byte_theme.hero-side-by-side
+      inputs:
+        hero_flex_gap: 'large'
+        hero_flex_direction_mobile: 'vertical'
+        padding_block_start: '64'
+        padding_block_end: '64'
+        image_size: '4:3'
+        image_position: 'right'
+        image_radius: 'small'
+        media:
+          sourceType: default-relative-url
+          value:
+            src: assets/boliviainteligente-QPu42AAJ5ZY-unsplash.jpg
+            alt: 'Placeholder image'
+            width: 1920
+            height: 1075
+          jsonSchema:
+            type: object
+            properties:
+              alt:
+                type: string
+              height:
+                type: integer
+              src:
+                type: string
+                contentMediaType: 'image/*'
+                format: uri-reference
+                x-allowed-schemes:
+                  - http
+                  - https
+              width:
+                type: integer
+            required:
+              - src
+          componentId: sdc.byte_theme.hero-side-by-side
+    -
+      parent_uuid: 4844c3d6-a4f9-45c2-9c03-03fb18abf10f
+      slot: hero_slot
+      uuid: 0bd601c3-f5d6-4720-8f30-eaf56d220eb9
+      component_id: sdc.byte_theme.heading
+      inputs:
+        heading_text: 'Real-time expense tracking'
+        level: 2
+        text_size: heading-responsive-5xl
+        text_color: default
+        align: left
+    -
+      parent_uuid: 4844c3d6-a4f9-45c2-9c03-03fb18abf10f
+      slot: hero_slot
+      uuid: 6c7d97df-e300-413f-a7ca-03a198d0ed29
+      component_id: sdc.byte_theme.text
+      inputs:
+        text:
+          value: '<p>Capture receipts instantly with our mobile app. Every transaction is categorized automatically and synced in real-time, so your finance team always knows where you stand.</p>'
+        text_size: normal
+        text_color: default
+    -
+      parent_uuid: 36e0da58-59f1-43ff-8561-be380e981663
+      slot: header_slot
+      uuid: 6194f116-119b-47d8-82f5-0aab1bda7bfc
+      component_id: sdc.byte_theme.hero-side-by-side
+      inputs:
+        hero_flex_gap: 'large'
+        hero_flex_direction_mobile: 'vertical'
+        padding_block_start: '64'
+        padding_block_end: '64'
+        image_size: '4:3'
+        image_position: 'left'
+        image_radius: 'small'
+        media:
+          sourceType: default-relative-url
+          value:
+            src: assets/boliviainteligente-QPu42AAJ5ZY-unsplash.jpg
+            alt: 'Placeholder image'
+            width: 1920
+            height: 1075
+          jsonSchema:
+            type: object
+            properties:
+              alt:
+                type: string
+              height:
+                type: integer
+              src:
+                type: string
+                contentMediaType: 'image/*'
+                format: uri-reference
+                x-allowed-schemes:
+                  - http
+                  - https
+              width:
+                type: integer
+            required:
+              - src
+          componentId: sdc.byte_theme.hero-side-by-side
+    -
+      parent_uuid: 6194f116-119b-47d8-82f5-0aab1bda7bfc
+      slot: hero_slot
+      uuid: 91f9b734-6ed1-449a-9f52-129567e25cea
+      component_id: sdc.byte_theme.heading
+      inputs:
+        heading_text: 'Seamless accounting integration'
+        level: 2
+        text_size: heading-responsive-5xl
+        text_color: default
+        align: left
+    -
+      parent_uuid: 6194f116-119b-47d8-82f5-0aab1bda7bfc
+      slot: hero_slot
+      uuid: 1a9b9de6-1c3e-4e4f-9e75-685b75937c84
+      component_id: sdc.byte_theme.text
+      inputs:
+        text:
+          value: '<p>Connect directly to Xero, QuickBooks, NetSuite, and more. Two-way sync means no double entry, no manual reconciliation, and month-end close in half the time.</p>'
+        text_size: normal
+        text_color: default
+  path:
+    -
+      alias: /features
+      langcode: en
+  created:
+    -
+      value: 1735191284
+  revision_translation_affected:
+    -
+      value: true

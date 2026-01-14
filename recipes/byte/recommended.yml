@@ -1,0 +1,55 @@
+#
+# A curated list of recommended add-ons. This file is part of Byte's API and should
+# not be renamed or removed unless you know precisely what you're doing. Its
+# canonical URL is:
+# https://git.drupalcode.org/api/v4/projects/194416/repository/files/recommended.yml/raw?ref=HEAD
+#
+drupal/drupal_cms_accessibility_tools:
+  title: 'Accessibility Tools'
+  type: recipe
+  logo: null
+  core: '^11.3'
+  machineName: drupal_cms_accessibility_tools
+  body:
+    summary: 'Adds automated checks to help ensure content conforms to web accessibility guidelines.'
+  packageName: drupal/drupal_cms_accessibility_tools
+
+drupal/drupal_cms_ai:
+  title: 'AI Assistant'
+  type: recipe
+  logo: null
+  core: '^11.3'
+  machineName: drupal_cms_ai
+  body:
+    summary: 'Adds integration with AI services, such as alt text generation and a chat bot to assist with site building. Requires an API key from Open AI or Anthropic.'
+  packageName: drupal/drupal_cms_ai
+
+drupal/drupal_cms_google_analytics:
+  title: 'Google Analytics'
+  type: recipe
+  logo: null
+  core: '^11.3'
+  machineName: drupal_cms_google_analytics
+  body:
+    summary: 'Adds tracking of website traffic using Google Analytics and Google Tag Manager. Requires a Google Tag Manager ID.'
+  packageName: drupal/drupal_cms_google_analytics
+
+drupal/mailchimp_signup_forms:
+  title: 'Mailchimp'
+  type: recipe
+  logo: null
+  core: '>=11.2'
+  machineName: mailchimp_signup_forms
+  body:
+    summary: 'Adds integration with Mailchimp, creating signup forms for each audience. Requires authentication with Mailchimp.'
+  packageName: drupal/mailchimp_signup_forms
+
+drupal/drupal_cms_search:
+  title: Search
+  type: recipe
+  logo: null
+  core: '^11.3'
+  machineName: drupal_cms_search
+  body:
+    summary: 'Adds a search to help visitors find content.'
+  packageName: drupal/drupal_cms_search

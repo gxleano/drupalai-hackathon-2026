@@ -1,0 +1,27 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.secondary
+  module:
+    - system
+active_version: 2f5ebe22feed1255
+versioned_properties:
+  active:
+    settings:
+      default_settings:
+        id: 'system_menu_block:secondary'
+        label: 'Secondary navigation'
+        label_display: '0'
+        provider: system
+        level: 1
+        depth: null
+        expand_all_items: false
+    fallback_metadata:
+      slot_definitions: null
+label: 'Secondary navigation'
+id: block.system_menu_block.secondary
+provider: system
+source: block
+source_local_id: 'system_menu_block:secondary'
+category: Menus

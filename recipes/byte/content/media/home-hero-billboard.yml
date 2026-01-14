@@ -1,0 +1,35 @@
+_meta:
+  version: '1.0'
+  entity_type: media
+  uuid: 49f9181f-76e8-4f05-9fe7-6cd82deea0fb
+  bundle: image
+  default_langcode: en
+  depends:
+    8967d9f1-abee-41ca-a2fd-3ed3700871a1: file
+default:
+  status:
+    -
+      value: true
+  uid:
+    -
+      target_id: 1
+  name:
+    -
+      value: pexels-therato-13555023.jpg
+  thumbnail:
+    -
+      alt: 'A large, snow-covered, icy mountain in the foreground with the northern lights in the sky above, with streaks of green, blue and white light.'
+      title: ''
+      width: 1920
+      height: 1188
+      entity: 8967d9f1-abee-41ca-a2fd-3ed3700871a1
+  revision_translation_affected:
+    -
+      value: true
+  field_media_image:
+    -
+      alt: 'A large, snow-covered, icy mountain in the foreground with the northern lights in the sky above, with streaks of green, blue and white light.'
+      title: ''
+      width: 1920
+      height: 1188
+      entity: 8967d9f1-abee-41ca-a2fd-3ed3700871a1

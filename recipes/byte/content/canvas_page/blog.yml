@@ -1,0 +1,145 @@
+_meta:
+  version: '1.0'
+  entity_type: canvas_page
+  uuid: 30ff6149-af31-4818-be29-07148e06bf47
+  default_langcode: en
+default:
+  status:
+    -
+      value: true
+  owner:
+    -
+      target_id: 1
+  title:
+    -
+      value: Blog
+  components:
+    -
+      uuid: 8eb23c47-e32e-474d-9a3f-b4bd40a4df07
+      component_id: sdc.byte_theme.section
+      inputs:
+        columns: '100'
+        width: '80%'
+        margin_block_start: '96'
+        margin_block_end: '48'
+        mobile_columns: 1
+        padding_block_start: '0'
+        padding_block_end: '0'
+        section_header: true
+        section_footer: true
+    -
+      parent_uuid: 8eb23c47-e32e-474d-9a3f-b4bd40a4df07
+      slot: main_slot
+      uuid: 9729a70a-d6f9-407d-9e93-3ebc1950bb5c
+      component_id: sdc.byte_theme.hero-side-by-side
+      inputs:
+        hero_flex_gap: 'large'
+        hero_flex_direction_mobile: 'vertical'
+        padding_block_start: '0'
+        padding_block_end: '0'
+        image_size: '4:3'
+        image_position: 'right'
+        image_radius: 'small'
+        media:
+          sourceType: default-relative-url
+          value:
+            src: assets/boliviainteligente-QPu42AAJ5ZY-unsplash.jpg
+            alt: 'Placeholder image'
+            width: 1920
+            height: 1075
+          jsonSchema:
+            type: object
+            properties:
+              alt:
+                type: string
+              height:
+                type: integer
+              src:
+                type: string
+                contentMediaType: 'image/*'
+                format: uri-reference
+                x-allowed-schemes:
+                  - http
+                  - https
+              width:
+                type: integer
+            required:
+              - src
+          componentId: sdc.byte_theme.hero-side-by-side
+    -
+      parent_uuid: 9729a70a-d6f9-407d-9e93-3ebc1950bb5c
+      slot: hero_slot
+      uuid: ace6c8b2-6479-4752-b009-1865eb87ec51
+      component_id: sdc.byte_theme.heading
+      inputs:
+        heading_text: 'Smart budgeting how-tos'
+        level: 2
+        text_size: default
+        text_color: default
+        align: left
+    -
+      parent_uuid: 9729a70a-d6f9-407d-9e93-3ebc1950bb5c
+      slot: hero_slot
+      uuid: cdae5104-0b18-4cc9-b02b-fe536205b889
+      component_id: sdc.byte_theme.text
+      inputs:
+        text:
+          value: '<p>Track spending against budgets with visual dashboards that show you what matters. Spot trends, prevent overruns, and make data-driven decisions in seconds.</p>'
+        text_size: normal
+        text_color: default
+    -
+      parent_uuid: 9729a70a-d6f9-407d-9e93-3ebc1950bb5c
+      slot: hero_slot
+      uuid: 6a532a69-5217-45bd-8b61-a6edbfff788f
+      component_id: sdc.byte_theme.button
+      inputs:
+        variant: primary
+        disabled: false
+        label: 'Read more'
+        size: medium
+        icon: arrow-right
+        icon_first: false
+    -
+      uuid: 5e6c8391-7b01-46b8-b0d4-be62c668cc60
+      component_id: sdc.byte_theme.section
+      inputs:
+        columns: '100'
+        width: '100%'
+        margin_block_start: '48'
+        margin_block_end: '48'
+        mobile_columns: 1
+        padding_block_start: '0'
+        padding_block_end: '0'
+        section_header: true
+        section_footer: true
+    -
+      parent_uuid: 5e6c8391-7b01-46b8-b0d4-be62c668cc60
+      slot: header_slot
+      uuid: 90264468-63d4-4663-b672-a99849ac84bb
+      component_id: sdc.byte_theme.heading
+      inputs:
+        heading_text: Articles
+        level: 2
+        text_size: default
+        text_color: default
+        align: center
+    -
+      parent_uuid: 5e6c8391-7b01-46b8-b0d4-be62c668cc60
+      slot: main_slot
+      uuid: 4522dd81-b1fc-4f58-a384-7d07b289db7c
+      component_id: block.views_block.blog-all
+      inputs:
+        label: 'Blog: All blog posts'
+        label_display: '0'
+        views_label: ''
+        items_per_page: null
+  path:
+    -
+      alias: /blog
+      langcode: en
+  created:
+    -
+      value: 1735191284
+  revision_translation_affected:
+    -
+      value: true

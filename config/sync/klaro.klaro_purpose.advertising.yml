@@ -1,0 +1,10 @@
+uuid: 9b71b58f-c741-41d7-83c5-44942678f3d3
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: p0Xmtt8DXCK7YDyQCjx9e34PXU7oZopObzexorM4geo
+id: advertising
+label: 'Advertising and Marketing'
+description: ''
+weight: 0

@@ -1,0 +1,125 @@
+variables:
+  # Keeping this low helps jobs find an available runner without waiting.
+  # @see https://git.drupalcode.org/project/gitlab_templates/-/blob/main/includes/include.drupalci.main.yml?ref_type=heads
+  KUBERNETES_CPU_REQUEST: 2
+  # For faster performance, don't audit dependencies automatically.
+  COMPOSER_NO_AUDIT: 1
+  COMPOSER_NO_INTERACTION: 1
+
+# Define when this pipeline runs.
+workflow:
+  rules:
+    # Run on merge requests.
+    - if: $CI_MERGE_REQUEST_IID || $CI_PIPELINE_SOURCE == 'merge_request_event'
+    # Run on a regular schedule (i.e., nightly builds).
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    # Run when manually triggered via the web UI.
+    - if: $CI_PIPELINE_SOURCE == "web"
+    # Run when manually triggered via the Web IDE.
+    - if: $CI_PIPELINE_SOURCE == "webide"
+    # Run when we push to a release branch (not in a fork).
+    - if: $CI_COMMIT_BRANCH =~ /^([0-9]+\.)?[0-9]+\.x$/ && $CI_PIPELINE_SOURCE == "push" && $CI_PROJECT_ROOT_NAMESPACE == "project"
+    # Run when we push a tag.
+    - if: $CI_COMMIT_TAG
+
+default:
+  # New pushes can stop the current job and start a new one.
+  interruptible: true
+  image:
+    # This image has a version of SQLite that is compatible with Drupal 11.
+    name: 'drupalci/php-8.3-ubuntu-apache:production'
+
+build project:
+  stage: build
+  script:
+    # @todo Don't hard-code the branch name.
+    - composer config version 1.x-dev
+    - composer archive --file=byte
+    - mkdir artifacts
+    - mv byte.tar artifacts
+    - composer create-project drupal/cms:^2 --stability=beta --no-install build
+    - cd build
+    # Drupal CMS 2 is in development, so allow dev versions of all dependencies.
+    - composer config minimum-stability beta
+    # Enable plugins required by drupal/core-dev.
+    - composer config allow-plugins.phpstan/extension-installer true
+    - composer config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+    - composer require --no-update --dev drupal/core-dev:^11
+    # Temporarily require Byte Themes's dev branch.
+    - composer require --no-update drupal/byte_theme:1.x-dev@dev
+    # Configure Composer to install Byte from the archive we just created.
+    - composer config repositories.byte artifact $CI_PROJECT_DIR/artifacts
+    - composer require --no-update drupal/byte:1.x-dev@dev
+    # Build the code base.
+    - composer install
+  artifacts:
+    paths:
+      - build
+    expire_in: 1 hour
+
+.phpunit-base:
+  stage: test
+  needs:
+    - build project
+  services:
+    - name: 'drupalci/mysql-8'
+      alias: database
+    - name: selenium/standalone-chrome:latest
+      alias: selenium
+      variables:
+        JAVA_OPTS: '-Dwebdriver.chrome.logfile=/builds/chromedriver.log'
+        SE_NODE_OVERRIDE_MAX_SESSIONS: 'true'
+        SE_NODE_MAX_SESSIONS: '16'
+        # Give each Selenium node a long timeout (10 minutes); site templates can take
+        # a while to apply because they're naturally hefty.
+        SE_NODE_SESSION_TIMEOUT: 600
+        SE_SESSION_RETRY_INTERVAL: '1'
+        SE_SESSION_REQUEST_TIMEOUT: '10'
+        SE_START_XVFB: 'false'
+        SE_START_VNC: 'false'
+  variables:
+    SIMPLETEST_BASE_URL: http://localhost/web
+    SIMPLETEST_DB: mysql://drupaltestbot:drupaltestbotpw@database/mysql
+    MINK_DRIVER_ARGS_WEBDRIVER: '["chrome", {"browserName":"chrome", "goog:chromeOptions":{"w3c": true, "args":["--no-sandbox","--ignore-certificate-errors", "--allow-insecure-localhost", "--headless", "--dns-prefetch-disable"]}}, "http://selenium:4444"]'
+    WEB_ROOT: $CI_PROJECT_DIR/build/web
+  before_script:
+    # Set up Apache to point to the project's document root.
+    - ln -s -f $WEB_ROOT /var/www/html/$(basename $WEB_ROOT)
+    - chown -R www-data:www-data $WEB_ROOT
+    - service apache2 start
+  script:
+    - cd build
+    - sudo --preserve-env -u www-data ./vendor/bin/phpunit --display-skipped --log-junit $CI_PROJECT_DIR/junit.xml --configuration=$WEB_ROOT/core $CI_PROJECT_DIR/tests $PHPUNIT_OPTIONS
+  artifacts:
+    paths:
+      - $WEB_ROOT/sites/simpletest
+    when: on_failure
+    expire_in: 3 days
+    reports:
+      junit: junit.xml
+
+phpunit:
+  extends: .phpunit-base
+  variables:
+    # Don't run performance tests normally.
+    PHPUNIT_OPTIONS: '--exclude-group=OpenTelemetry'
+  rules:
+    # If we're only running a performance test, don't run this job.
+    - { if: $PERFORMANCE_TEST == "1", when: never }
+    # Run this job in all other cases.
+    - when: on_success
+
+test performance:
+    extends: .phpunit-base
+    variables:
+      # OPEN_TELEMETRY_COLLECTOR is defined in the project's CI settings so that we
+      # can send performance data to Tag1 Consulting.
+      # @see https://www.drupal.org/i/3564128
+      OTEL_COLLECTOR: '$OPEN_TELEMETRY_COLLECTOR'
+      # Only run performance tests in this job.
+      PHPUNIT_OPTIONS: '--group=OpenTelemetry'
+    rules:
+      # If we're explicitly running a performance test, run this job.
+      - { if: $PERFORMANCE_TEST == "1", when: always }
+      # In all other cases, this job should not block the rest of the pipeline.
+      - { when: on_success, allow_failure: true }

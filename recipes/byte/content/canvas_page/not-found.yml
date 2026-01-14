@@ -1,0 +1,96 @@
+_meta:
+  version: '1.0'
+  entity_type: canvas_page
+  uuid: c5b0a0f8-b958-49ad-b2ca-81930195f7b8
+  default_langcode: en
+default:
+  revision_user:
+    -
+      target_id: 1
+  status:
+    -
+      value: true
+  owner:
+    -
+      target_id: 1
+  title:
+    -
+      value: 'Page not found'
+  components:
+    -
+      uuid: 0475cc16-c341-4de9-9fbf-44dc436ba86d
+      component_id: sdc.byte_theme.section
+      inputs:
+        width: 75%
+        columns: '100'
+        mobile_columns: '1'
+        margin_block_start: '128'
+        margin_block_end: '128'
+        padding_block_start: '0'
+        padding_block_end: '0'
+        section_header: true
+        section_footer: true
+    -
+      parent_uuid: 0475cc16-c341-4de9-9fbf-44dc436ba86d
+      slot: main_slot
+      uuid: c2db610a-338c-4dbe-8d4b-706c22fe47d0
+      component_id: sdc.byte_theme.group
+      inputs:
+        flex_direction: column
+        flex_gap: lg
+        items_align: center
+        flex_align: center
+        radius: sm
+        padding: sm
+    -
+      parent_uuid: c2db610a-338c-4dbe-8d4b-706c22fe47d0
+      slot: group_slot
+      uuid: f452ca22-2e4b-4388-9202-dce71ba1a5c8
+      component_id: sdc.byte_theme.icon
+      inputs:
+        icon: smiley-x-eyes
+        icon_size: extra-large
+    -
+      parent_uuid: c2db610a-338c-4dbe-8d4b-706c22fe47d0
+      slot: group_slot
+      uuid: 7f55c0d0-7f40-4bba-85cc-abfa617336ec
+      component_id: sdc.byte_theme.text
+      inputs:
+        text:
+          value: '<p class="text-align-center">We can''t find the page you''re looking for.&nbsp;</p>'
+          format: canvas_html_block
+        text_size: text-2xl
+        text_color: default
+    -
+      parent_uuid: c2db610a-338c-4dbe-8d4b-706c22fe47d0
+      slot: group_slot
+      uuid: 5f596ffc-c447-440a-a118-7300cb9a5088
+      component_id: sdc.byte_theme.button
+      inputs:
+        variant: secondary-inverted
+        label: 'Go back home'
+        size: medium
+        mobile_width: false
+        icon_first: false
+        disabled: false
+        href: /
+    -
+      uuid: 4552beef-d1e1-49ad-a4db-7065fb59338f
+      component_id: sdc.byte_theme.section
+      inputs:
+        width: 100%
+        columns: 50-50
+        mobile_columns: '1'
+        margin_block_start: '48'
+        margin_block_end: '48'
+        padding_block_start: '0'
+        padding_block_end: '0'
+        section_header: true
+        section_footer: true
+  path:
+    -
+      alias: /404
+      langcode: en
+  revision_translation_affected:
+    -
+      value: true

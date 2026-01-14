@@ -1,0 +1,94 @@
+_meta:
+  version: '1.0'
+  entity_type: canvas_page
+  uuid: bb5bbbb1-4a16-4b86-bbea-b215ab8096cf
+  default_langcode: en
+default:
+  revision_user:
+    -
+      target_id: 1
+  status:
+    -
+      value: true
+  owner:
+    -
+      target_id: 1
+  title:
+    -
+      value: Home
+  components:
+    -
+      uuid: e596ba9b-7e33-442a-8246-db50a820fc38
+      component_id: sdc.mercury.hero-billboard
+      inputs:
+        height: large
+        flex_position: center-left
+        overlay_opacity: 20%
+        object_position: center
+        media:
+          sourceType: default-relative-url
+          value:
+            src: assets/boliviainteligente-QPu42AAJ5ZY-unsplash.jpg
+            alt: 'Placeholder image'
+            width: 1920
+            height: 1075
+          jsonSchema:
+            type: object
+            properties:
+              src:
+                type: string
+                contentMediaType: 'image/*'
+                format: uri-reference
+                x-allowed-schemes:
+                  - http
+                  - https
+              alt:
+                type: string
+              width:
+                type: integer
+              height:
+                type: integer
+            required:
+              - src
+          componentId: sdc.mercury.hero-billboard
+    -
+      parent_uuid: e596ba9b-7e33-442a-8246-db50a820fc38
+      slot: hero_slot
+      uuid: 2f9c37fa-e494-4383-969a-4f74dee5874d
+      component_id: sdc.mercury.heading
+      inputs:
+        level: 2
+        text_color: inverted
+        align: left
+        text_size: heading-responsive-8xl
+        heading_text: 'Your content goes here'
+    -
+      parent_uuid: e596ba9b-7e33-442a-8246-db50a820fc38
+      slot: hero_slot
+      uuid: c59a40fd-f8d0-4c11-ba17-f91ec6401771
+      component_id: sdc.mercury.text
+      inputs:
+        text_size: text-xl
+        text_color: inverted
+        text:
+          value: '<p>Bring your site to life, starting here.</p>'
+          format: canvas_html_block
+    -
+      parent_uuid: e596ba9b-7e33-442a-8246-db50a820fc38
+      slot: hero_slot
+      uuid: dcf29181-b2fe-4093-98e6-dd3d65370b3a
+      component_id: sdc.mercury.button
+      inputs:
+        variant: primary
+        size: medium
+        label: 'Call to action'
+        mobile_width: false
+        icon: arrow-right
+        icon_first: false
+        disabled: false
+  path:
+    - alias: /home
+      langcode: en
+  revision_translation_affected:
+    -
+      value: true

@@ -1,0 +1,25 @@
+uuid: 5b01c89d-79f4-42ff-97e8-f4e58c66186d
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: nnyPLVusxAhlFozBQli4AvhjUsZMpc7rX4PjyaKQTww
+id: user_created_by_admin
+label: 'User: Created - By Administrator'
+module: user
+key: register_admin_created
+easy_email_type: user_created_by_admin
+param_map:
+  -
+    source: account
+    destination: recipient_uid
+copied_fields:
+  from: false
+  reply_to: false
+  to: false
+  cc: false
+  bcc: false
+  subject: false
+  body_html: false
+  body_plain: false
+  attachments: false

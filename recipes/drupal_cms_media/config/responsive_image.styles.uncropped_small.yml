@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.uncropped_300w_webp
+  enforced:
+    config:
+      - eca.eca.define_breakpoints
+id: uncropped_small
+label: 'Uncropped Small'
+image_style_mappings:
+  -
+    image_mapping_type: image_style
+    image_mapping: uncropped_300w_webp
+    breakpoint_id: custom.sm
+    multiplier: 1x
+breakpoint_group: custom
+fallback_image_style: uncropped_300w_webp

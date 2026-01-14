@@ -1,0 +1,155 @@
+_meta:
+  version: '1.0'
+  entity_type: canvas_page
+  uuid: dc12fc4d-5d38-47f9-9f55-143e7299d7f7
+  default_langcode: en
+default:
+  status:
+    -
+      value: true
+  owner:
+    -
+      target_id: 1
+  title:
+    -
+      value: Contact
+  components:
+    -
+      uuid: eb460b40-0fe8-4ff4-b488-e041d6e7d497
+      component_id: sdc.byte_theme.section
+      inputs:
+        columns: 50-50
+        width: '100%'
+        margin_block_start: '96'
+        margin_block_end: '48'
+        mobile_columns: 1
+        padding_block_start: '0'
+        padding_block_end: '0'
+        section_header: true
+        section_footer: true
+    -
+      parent_uuid: eb460b40-0fe8-4ff4-b488-e041d6e7d497
+      slot: header_slot
+      uuid: c275b2d7-dd51-42dd-a9b6-193647319092
+      component_id: sdc.byte_theme.heading
+      inputs:
+        heading_text: 'Contact our team'
+        level: 1
+        text_size: default
+        text_color: default
+        align: center
+    -
+      uuid: 4a115f1d-adc2-46b7-a548-665013a2bf33
+      component_id: sdc.byte_theme.section
+      inputs:
+        columns: 50-50
+        width: '80%'
+        margin_block_start: '48'
+        margin_block_end: '48'
+        mobile_columns: 1
+        padding_block_start: '0'
+        padding_block_end: '0'
+        section_header: true
+        section_footer: true
+    -
+      parent_uuid: 4a115f1d-adc2-46b7-a548-665013a2bf33
+      slot: main_slot
+      uuid: 9e717e40-1082-41cb-8b69-23bc2d028a2c
+      component_id: sdc.byte_theme.group
+      inputs:
+        flex_direction: column
+        flex_gap: md
+        flex_align: start
+        items_align: start
+    -
+      parent_uuid: 9e717e40-1082-41cb-8b69-23bc2d028a2c
+      slot: group_slot
+      uuid: d72c2006-688d-434f-848b-6d1c540136fa
+      component_id: sdc.byte_theme.group
+      inputs:
+        flex_direction: column
+        flex_gap: sm
+        flex_align: center
+        items_align: start
+    -
+      parent_uuid: d72c2006-688d-434f-848b-6d1c540136fa
+      slot: group_slot
+      uuid: 52aebe53-4920-4fd9-913b-8d7d8db279b6
+      component_id: sdc.byte_theme.heading
+      inputs:
+        heading_text: 'Want to learn more?'
+        level: 2
+        text_size: default
+        text_color: default
+        align: left
+    -
+      parent_uuid: d72c2006-688d-434f-848b-6d1c540136fa
+      slot: group_slot
+      uuid: 9bf34e57-4396-449c-8e10-40b8f6df04a7
+      component_id: sdc.byte_theme.text
+      inputs:
+        text:
+          value: '<p>Have a question? Want to schedule a demo? Tell us a bit about yourself, and we''ll get in touch as soon as we can.</p>'
+          format: canvas_html_block
+        text_size: normal
+        text_color: default
+    -
+      parent_uuid: 9e717e40-1082-41cb-8b69-23bc2d028a2c
+      slot: group_slot
+      uuid: a7b582af-6c1a-4b60-aed9-f48a3f50a856
+      component_id: sdc.byte_theme.group
+      inputs:
+        flex_direction: column
+        flex_gap: sm
+        flex_align: start
+        items_align: start
+    -
+      parent_uuid: a7b582af-6c1a-4b60-aed9-f48a3f50a856
+      slot: group_slot
+      uuid: bab2b882-e545-4c5a-9506-b4bcd28be7ca
+      component_id: sdc.byte_theme.heading
+      inputs:
+        heading_text: 'Connect with us'
+        level: 2
+        text_size: heading-responsive-4xl
+        text_color: default
+        align: left
+    -
+      parent_uuid: a7b582af-6c1a-4b60-aed9-f48a3f50a856
+      slot: group_slot
+      uuid: ce875550-07c1-4f33-995b-5095a63cc625
+      component_id: block.system_menu_block.social
+      inputs:
+        label: Social
+        label_display: '0'
+        level: 1
+        depth: null
+        expand_all_items: false
+    -
+      parent_uuid: 4a115f1d-adc2-46b7-a548-665013a2bf33
+      slot: main_slot
+      uuid: bfeaa1c7-b309-4320-b7a4-7ec7aaa465d6
+      component_id: sdc.byte_theme.group
+      inputs:
+        flex_direction: column
+        flex_align: center
+        items_align: start
+    -
+      parent_uuid: bfeaa1c7-b309-4320-b7a4-7ec7aaa465d6
+      slot: group_slot
+      uuid: 77fedeec-9696-42d0-9be5-1599059bdb34
+      component_id: block.webform_block
+      inputs:
+        label: Webform
+        label_display: '0'
+        webform_id: contact_form
+        default_data: ''
+        redirect: false
+        lazy: false
+  path:
+    -
+      alias: /contact
+      langcode: en
+  revision_translation_affected:
+    -
+      value: true

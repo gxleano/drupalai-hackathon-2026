@@ -1,0 +1,90 @@
+/.env
+/behat.yml
+.idea
+backup/*.sql
+backup/*.tar.bz2
+.DS_Store
+.vscode
+cache
+vendor/
+build.*.properties
+.aliases
+*.bz2
+*.gz
+*.zip
+tmp*
+exit_code
+tests/behat/screenshots
+tests/screenshots/
+test-results
+phpunit-results.xml
+.phpunit.result.cache
+phpunit.xml
+
+# Drupal 8 specific.
+drush/contrib
+vendor
+web/.*
+web/themes/contrib
+web/libraries
+web/update.php
+web/autoload.php
+web/web.config
+web/robots.txt
+web/sites/*/drush/drush.yml
+web/sites/*/files
+web/sites/*/private
+web/sites/default/services.yml
+web/core
+web/modules/contrib
+web/profiles/contrib
+web/sites/simpletest
+web/sites/*/settings.local.php
+
+web/index.php
+web/sites/default/default.settings.php
+web/sites/example.settings.local.php
+web/sites/example.sites.php
+web/sites/sites.php
+
+# Ignore Drupal's file directory
+web/sites/default/files
+
+# Docker specific.
+docker-compose.override.yml
+docker-compose.services.ci.deploy.yml
+docker-compose.ci.deploy.yml
+
+# Ignore docker4drupal stuff:
+.env
+Makefile.d4d
+mariadb-init
+db_archive
+
+# Ignore DEV files/folders:
+node_modules
+bower_components
+
+# Ag ack ignore file
+/.ignore
+/.local.vimrc
+# phpactor https://phpactor.github.io/phpactor/
+/.phpactor.yml
+/.phpactor_autoloader
+
+# Ignore local service overrides.
+/web/sites/local.services.yml
+drush/drush.yml
+.editorconfig
+.gitattributes
+.pnpm-store
+
+# platform.sh
+/drush/contrib/
+console/
+tmp
+private
+.drush
+drush-backups
+.console
+platformsh-template

@@ -1,0 +1,146 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - eca_base
+    - eca_config
+    - eca_misc
+    - eca_user
+    - modeler_api
+third_party_settings:
+  modeler_api:
+    modeler_id: bpmn_io
+    data: 'hash:5eabcf7f04cd66c5c38685db69de27ff'
+    label: 'Disable administrative components'
+    documentation: 'Disables Canvas components which are administrative in nature and not normally useful for page building.'
+    version: 1.0.0
+id: disable_admin_components
+weight: 0
+events:
+  config__save_1_1:
+    plugin: 'config:save'
+    label: 'Component created'
+    configuration:
+      config_name: canvas.component.
+      sync_mode: ''
+      write_mode: new
+    successors:
+      -
+        id: eca_token_set_value_0m175am
+        condition: ''
+  drupal__recipe_applied_1fyx1gt_1:
+    plugin: 'drupal:recipe_applied'
+    label: 'Content Basics recipe applied'
+    configuration:
+      recipe_base_path: drupal_cms_content_type_base
+    successors:
+      -
+        id: list_config_0kyy3xk
+        condition: ''
+conditions:
+  eca_list_contains_1txbft8:
+    plugin: eca_list_contains
+    label: 'Component in reject list?'
+    configuration:
+      negate: false
+      list_token: reject_list
+      method: value
+      value: '[component_id]'
+  eca_scalar_18u1l51:
+    plugin: eca_scalar
+    label: 'Component is a Project Browser block?'
+    configuration:
+      negate: false
+      left: '[component_id]'
+      right: block.project_browser_block.
+      operator: beginswith
+      type: value
+      case: false
+  eca_count_0wp9z1p:
+    plugin: eca_count
+    label: 'List not empty?'
+    configuration:
+      negate: false
+      left: all_components
+      right: '0'
+      operator: greaterthan
+      type: numeric
+      case: false
+gateways:
+  Gateway_11751ek:
+    type: 0
+    successors:
+      -
+        id: eca_list_remove_0ovk2qy
+        condition: eca_count_0wp9z1p
+actions:
+  eca_token_set_value_1l5cu8o:
+    label: 'Define reject list'
+    plugin: eca_token_set_value
+    configuration:
+      token_name: reject_list
+      token_value: "['block.system_menu_block.navigation-user-links', 'block.system_menu_block.top-tasks', 'block.navigation_dashboard', 'block.navigation_link', 'block.navigation_shortcuts', 'block.navigation_user', 'sdc.navigation.title', 'block.announce_block', 'block.dashboard_site_status', 'block.local_actions_block', 'block.local_tasks_block', 'block.system_menu_block.admin', 'block.system_menu_block.tools', 'block.system_messages_block', 'block.views_block.publishing_content-block_drafts', 'block.views_block.publishing_content-block_scheduled', 'block.views_block.recent_pages-block_recent_pages', 'block.dashboard_optional']"
+      use_yaml: true
+      validate_yaml: true
+    successors:
+      -
+        id: eca_switch_account_1qxw36r
+        condition: eca_list_contains_1txbft8
+      -
+        id: eca_switch_account_1qxw36r
+        condition: eca_scalar_18u1l51
+  eca_token_set_value_0m175am:
+    label: 'Rename token'
+    plugin: eca_token_set_value
+    configuration:
+      token_name: component_id
+      token_value: '[config:id]'
+      use_yaml: false
+      validate_yaml: false
+    successors:
+      -
+        id: eca_token_set_value_1l5cu8o
+        condition: ''
+  list_config_0kyy3xk:
+    label: 'Find all compoments'
+    plugin: eca_config_list
+    configuration:
+      token_name: all_components
+      prefix: canvas.component.
+    successors:
+      -
+        id: Gateway_11751ek
+        condition: ''
+  eca_list_remove_0ovk2qy:
+    label: 'For each component...'
+    plugin: eca_list_remove
+    configuration:
+      value: ''
+      token_name: component_id
+      method: first
+      index: ''
+      list_token: all_component
+    successors:
+      -
+        id: eca_token_set_value_1l5cu8o
+        condition: ''
+  eca_config_action_1tn5vk1:
+    label: 'Disable component'
+    plugin: eca_config_action
+    configuration:
+      action_id: 'entity_method:canvas.component:disable'
+      config_name: 'canvas.component.[component_id]'
+      data: '[]'
+    successors:
+      -
+        id: Gateway_11751ek
+        condition: ''
+  eca_switch_account_1qxw36r:
+    label: 'Temporarily become administrator'
+    plugin: eca_switch_account
+    configuration:
+      user_id: '1'
+    successors:
+      -
+        id: eca_config_action_1tn5vk1
+        condition: ''
