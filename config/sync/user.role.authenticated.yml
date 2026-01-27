@@ -13,7 +13,6 @@ dependencies:
     - honeypot
     - klaro
     - media
-    - navigation
     - node
     - system
 _core:
@@ -27,7 +26,6 @@ permissions:
   - 'access coffee'
   - 'access content'
   - 'access contextual links'
-  - 'access navigation'
   - 'bypass honeypot protection'
   - 'delete own files'
   - 'skip CAPTCHA'

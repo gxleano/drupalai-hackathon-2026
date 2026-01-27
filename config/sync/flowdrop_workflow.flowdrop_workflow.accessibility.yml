@@ -5,9 +5,324 @@ dependencies: {  }
 id: accessibility
 label: Accessibility
 description: ''
-nodes: {  }
-edges: {  }
-metadata: {  }
+nodes:
+  -
+    id: confirmation.1
+    type: universalNode
+    position:
+      x: -320
+      'y': 610
+    data:
+      label: Confirmation
+      config:
+        message: 'Do you want to continue?'
+        confirm_label: 'Yes'
+        cancel_label: 'No'
+        branches:
+          -
+            name: 'True'
+            value: true
+          -
+            name: 'False'
+            value: false
+        nodeType: default
+      metadata:
+        id: confirmation
+        name: Confirmation
+        type: default
+        supportedTypes:
+          - default
+          - simple
+          - gateway
+        description: 'Pauses workflow for user confirmation (Yes/No)'
+        category: human_in_loop
+        icon: 'mdi:help-circle-outline'
+        color: '#f59e0b'
+        plugin_version: 1.0.0
+        enabled: true
+        tags:
+          - human-in-loop
+          - interrupt
+          - confirmation
+        executor_plugin: 'flowdrop_interrupt:confirmation'
+        inputs:
+          -
+            id: message
+            name: 'Confirmation Message'
+            type: input
+            dataType: string
+            required: false
+            description: 'The message to display to the user'
+            defaultValue: 'Do you want to continue?'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: confirmed
+            name: confirmed
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether the user confirmed (true) or cancelled (false)'
+          -
+            id: response_time
+            name: response_time
+            type: output
+            dataType: number
+            required: false
+            description: 'Unix timestamp when the user responded'
+          -
+            id: user_id
+            name: user_id
+            type: output
+            dataType: number
+            required: false
+            description: 'ID of the user who responded (null if anonymous)'
+          -
+            id: interrupt_id
+            name: interrupt_id
+            type: output
+            dataType: string
+            required: false
+            description: 'UUID of the interrupt that was resolved'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          message: 'Do you want to continue?'
+          confirm_label: 'Yes'
+          cancel_label: 'No'
+          branches:
+            -
+              name: 'True'
+              value: true
+            -
+              name: 'False'
+              value: false
+          type: default
+        configSchema:
+          type: object
+          properties:
+            message:
+              type: string
+              title: 'Confirmation Message'
+              description: 'The message to display to the user'
+              default: 'Do you want to continue?'
+              format: multiline
+            confirm_label:
+              type: string
+              title: 'Confirm Button Label'
+              description: 'Label for the confirmation button'
+              default: 'Yes'
+            cancel_label:
+              type: string
+              title: 'Cancel Button Label'
+              description: 'Label for the cancel button'
+              default: 'No'
+            branches:
+              type: array
+              description: 'The available branches for gateway visual mode'
+              readOnly: true
+              default:
+                -
+                  name: 'True'
+                  value: true
+                -
+                  name: 'False'
+                  value: false
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: 'The name of the branch'
+                  value:
+                    type: boolean
+                    description: 'The value of the branch'
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - gateway
+              default: default
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: confirmation.1
+    deletable: true
+    measured:
+      width: 288
+      height: 665
+    selected: true
+    dragging: false
+  -
+    id: chat_output.1
+    type: universalNode
+    position:
+      x: 300
+      'y': 880
+    data:
+      label: 'Chat Output'
+      config:
+        format: text
+        showTimestamp: false
+        nodeType: simple
+      metadata:
+        id: chat_output
+        name: 'Chat Output'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Output chat messages in various formats'
+        category: processing
+        icon: 'mdi:chat-alert-outline'
+        color: '#14b8a6'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:chat_output'
+        inputs:
+          -
+            id: message
+            name: Message
+            type: input
+            dataType: string
+            required: false
+            description: 'Default chat message'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: message
+            name: message
+            type: output
+            dataType: string
+            required: false
+            description: 'The chat message content'
+          -
+            id: format
+            name: format
+            type: output
+            dataType: string
+            required: false
+            description: 'The message format (text, markdown, html)'
+          -
+            id: timestamp
+            name: timestamp
+            type: output
+            dataType: number
+            required: false
+            description: 'The message timestamp (if showTimestamp is enabled)'
+          -
+            id: metadata
+            name: metadata
+            type: output
+            dataType: json
+            required: false
+            description: 'Additional metadata for message linking'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          format: text
+          showTimestamp: false
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            format:
+              type: string
+              title: Format
+              description: 'Message format (text, markdown, html)'
+              default: text
+            showTimestamp:
+              type: boolean
+              title: 'Show Timestamp'
+              description: 'Whether to include timestamp'
+              default: false
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: chat_output.1
+    deletable: true
+    measured:
+      width: 288
+      height: 88
+edges:
+  -
+    id: xy-edge__confirmation.1confirmation.1-output-interrupt_id-chat_output.1chat_output.1-input-message
+    source: confirmation.1
+    target: chat_output.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: confirmation.1-output-interrupt_id
+    targetHandle: chat_output.1-input-message
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+metadata:
+  version: 1.0.0
+  createdAt: '2026-01-27T23:15:13.867Z'
+  updatedAt: '2026-01-27T23:20:38.257Z'
 created: 1769523955
-changed: 1769525682
+changed: 1769556038
 uid: 0

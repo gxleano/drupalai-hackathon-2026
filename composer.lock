@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4df50e305be9a69546d63a7b2183ee27",
+    "content-hash": "dce60c59b910d05e26a28fbf426ab43e",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -5120,7 +5120,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/flowdrop.git",
-                "reference": "c6b460b66f38664562648384c7cfc784a9249218"
+                "reference": "ad43bd6"
             },
             "require": {
                 "d34dman/vanilla-icon-picker": "^1.4",
@@ -5160,7 +5160,7 @@
                 },
                 "drupal": {
                     "version": "1.x-dev",
-                    "datestamp": "1769554792",
+                    "datestamp": "1769557020",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
