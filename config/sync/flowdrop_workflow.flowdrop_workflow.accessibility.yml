@@ -1,0 +1,13 @@
+uuid: 9bbeee15-fa95-4a67-b44e-6253152cb009
+langcode: en
+status: true
+dependencies: {  }
+id: accessibility
+label: Accessibility
+description: ''
+nodes: {  }
+edges: {  }
+metadata: {  }
+created: 1769523955
+changed: 1769523955
+uid: 0

@@ -1,0 +1,13 @@
+uuid: 0055dd78-98c7-447f-a0d0-0d84123babf2
+langcode: en
+status: true
+dependencies: {  }
+id: seo_metadata
+label: 'SEO & Metadata'
+description: ''
+nodes: {  }
+edges: {  }
+metadata: {  }
+created: 1769523947
+changed: 1769523947
+uid: 0
