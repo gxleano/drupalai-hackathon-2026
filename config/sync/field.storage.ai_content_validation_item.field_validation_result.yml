@@ -1,15 +1,17 @@
+uuid: 761c4223-b4be-4d66-b015-742613946911
 langcode: en
 status: true
 dependencies:
   module:
     - ai_content_validation
-    - flowdrop_workflow
-id: ai_content_validation_item.field_flowdrop_workflow
-field_name: field_flowdrop_workflow
+_core:
+  default_config_hash: yqoShY3q1AkTQsqxOl7UaM3PqlC3fx4EbIRHLARIgN0
+id: ai_content_validation_item.field_validation_result
+field_name: field_validation_result
 entity_type: ai_content_validation_item
-type: entity_reference
+type: string_long
 settings:
-  target_type: flowdrop_workflow
+  case_sensitive: false
 module: core
 locked: false
 cardinality: 1

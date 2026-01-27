@@ -1,3 +1,4 @@
+uuid: 86a117c6-3997-494f-9e40-568bef2f27ab
 langcode: en
 status: true
 dependencies:
@@ -5,6 +6,8 @@ dependencies:
     - field.storage.ai_content_validation_item.field_validation_result
   module:
     - ai_content_validation
+_core:
+  default_config_hash: QdEOenD7mltPDDITb3VkCVefcNZqjA9pZoYtjD79NUY
 id: ai_content_validation_item.ai_content_validation_item.field_validation_result
 field_name: field_validation_result
 entity_type: ai_content_validation_item

@@ -1,3 +1,4 @@
+uuid: a176691b-e76c-454d-b14e-b77d8e6143dc
 langcode: en
 status: true
 dependencies:
@@ -5,6 +6,8 @@ dependencies:
     - field.storage.ai_content_validation_item.field_flowdrop_workflow
   module:
     - ai_content_validation
+_core:
+  default_config_hash: PyZGcPwX03bRAcGLgYxYbeiBw4lBlV_I29IHZob-63o
 id: ai_content_validation_item.ai_content_validation_item.field_flowdrop_workflow
 field_name: field_flowdrop_workflow
 entity_type: ai_content_validation_item

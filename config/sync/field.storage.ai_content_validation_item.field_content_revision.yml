@@ -1,3 +1,4 @@
+uuid: 324d2b9c-682e-4253-b26d-18f69343d968
 langcode: en
 status: true
 dependencies:
@@ -5,6 +6,8 @@ dependencies:
     - ai_content_validation
     - entity_reference_revisions
     - node
+_core:
+  default_config_hash: 6hJpVByk7V32tb8PQ56qc3Idj3yTtJSvIbmwQPTcRZw
 id: ai_content_validation_item.field_content_revision
 field_name: field_content_revision
 entity_type: ai_content_validation_item

@@ -1,3 +1,4 @@
+uuid: 569a83ac-d13b-47e2-80f3-b417acc4bb5c
 langcode: en
 status: true
 dependencies:
@@ -8,6 +9,8 @@ dependencies:
   module:
     - ai_content_validation
     - entity_reference_revisions
+_core:
+  default_config_hash: _EyB3Ok42VlZE-IcNzq119PBYQDAKBxWjgxw3GyWxp8
 id: ai_content_validation_item.ai_content_validation_item.field_content_revision
 field_name: field_content_revision
 entity_type: ai_content_validation_item

@@ -1,3 +1,4 @@
+uuid: 55faef72-c729-43ba-ad0d-be9199d47227
 langcode: en
 status: true
 dependencies:
@@ -11,6 +12,8 @@ dependencies:
     - entity_reference_revisions
     - tagify
     - text
+_core:
+  default_config_hash: xfmdS6LEwYJM1uKJzkT1MiRn57a6YbZEsYnM5m0NUCc
 id: ai_content_validation_item.ai_content_validation_item.default
 targetEntityType: ai_content_validation_item
 bundle: ai_content_validation_item
