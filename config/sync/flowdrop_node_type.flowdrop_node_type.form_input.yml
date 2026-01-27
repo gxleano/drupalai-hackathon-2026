@@ -12,6 +12,10 @@ icon: 'mdi:form-select'
 plugin_version: 1.0.0
 enabled: true
 parameters:
+  default_values:
+    configurable: true
+    connectable: true
+    required: false
   message:
     configurable: true
     connectable: true
@@ -20,10 +24,6 @@ parameters:
     configurable: true
     connectable: true
     required: true
-  default_values:
-    configurable: true
-    connectable: true
-    required: false
 outputs:
   data:
     exposed: true

@@ -12,26 +12,21 @@ icon: 'mdi:lightbulb-outline'
 plugin_version: 1.0.0
 enabled: true
 parameters:
-  title:
-    configurable: true
-    connectable: false
-    required: false
-    default: 'New Idea'
-  description:
-    configurable: true
-    connectable: false
-    required: false
-    default: 'Describe your idea here...'
-  icon:
-    configurable: true
-    connectable: false
-    required: false
-    default: 'mdi:lightbulb-outline'
   color:
     configurable: true
     connectable: false
     required: false
     default: '#6366f1'
+  description:
+    configurable: true
+    connectable: false
+    required: false
+    default: 'Describe your idea here...'
+  enableBottomPort:
+    configurable: true
+    connectable: false
+    required: false
+    default: false
   enableLeftPort:
     configurable: true
     connectable: false
@@ -47,19 +42,22 @@ parameters:
     connectable: false
     required: false
     default: false
-  enableBottomPort:
+  icon:
     configurable: true
     connectable: false
     required: false
-    default: false
-outputs:
+    default: 'mdi:lightbulb-outline'
   title:
+    configurable: true
+    connectable: false
+    required: false
+    default: 'New Idea'
+outputs:
+  color:
     exposed: false
   description:
     exposed: false
-  icon:
-    exposed: false
-  color:
+  enableBottomPort:
     exposed: false
   enableLeftPort:
     exposed: false
@@ -67,9 +65,11 @@ outputs:
     exposed: false
   enableTopPort:
     exposed: false
-  enableBottomPort:
+  icon:
     exposed: false
   message:
+    exposed: false
+  title:
     exposed: false
 tags:
   - idea
