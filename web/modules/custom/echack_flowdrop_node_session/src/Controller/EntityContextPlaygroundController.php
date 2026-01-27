@@ -71,8 +71,8 @@ class EntityContextPlaygroundController extends ControllerBase {
    * - revision_id (optional): Specific revision ID to load
    * - session_name (optional): Custom name for the session
    *
-   * @param \Drupal\flowdrop_workflow\Entity\FlowDropWorkflow $flowdrop_workflow
-   *   The workflow entity.
+   * @param string $workflow_id
+   *   The workflow ID.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request.
    *
@@ -84,7 +84,12 @@ class EntityContextPlaygroundController extends ControllerBase {
    * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
    *   If the user cannot access the entity.
    */
-  public function playgroundPage(FlowDropWorkflow $flowdrop_workflow, Request $request): array {
+  public function playgroundPage(string $workflow_id, Request $request): array {
+    // Load the workflow entity.
+    $flowdrop_workflow = $this->entityTypeManager()->getStorage("flowdrop_workflow")->load($workflow_id);
+    if (!$flowdrop_workflow instanceof FlowDropWorkflow) {
+      throw new NotFoundHttpException("Workflow not found: {$workflow_id}");
+    }
     // Extract entity context parameters from query string.
     $entityType = $request->query->get("entity_type", "");
     $entityId = $request->query->get("entity_id", "");
@@ -219,15 +224,21 @@ class EntityContextPlaygroundController extends ControllerBase {
   /**
    * Title callback for the entity-context playground page.
    *
-   * @param \Drupal\flowdrop_workflow\Entity\FlowDropWorkflow $flowdrop_workflow
-   *   The workflow entity.
+   * @param string $workflow_id
+   *   The workflow ID.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request.
    *
    * @return string
    *   The page title.
    */
-  public function playgroundTitle(FlowDropWorkflow $flowdrop_workflow, Request $request): string {
+  public function playgroundTitle(string $workflow_id, Request $request): string {
+    // Load the workflow entity.
+    $flowdrop_workflow = $this->entityTypeManager()->getStorage("flowdrop_workflow")->load($workflow_id);
+    $workflowLabel = $flowdrop_workflow instanceof FlowDropWorkflow
+      ? $flowdrop_workflow->label()
+      : $workflow_id;
+
     $entityType = $request->query->get("entity_type", "");
     $entityId = $request->query->get("entity_id", "");
 
@@ -237,14 +248,14 @@ class EntityContextPlaygroundController extends ControllerBase {
       if ($entity !== NULL) {
         $entityLabel = $entity->label() ?? "{$entityType} {$entityId}";
         return $this->t("Playground - @workflow (@entity)", [
-          "@workflow" => $flowdrop_workflow->label(),
+          "@workflow" => $workflowLabel,
           "@entity" => $entityLabel,
         ])->__toString();
       }
     }
 
     return $this->t("Playground - @name (Entity Context)", [
-      "@name" => $flowdrop_workflow->label(),
+      "@name" => $workflowLabel,
     ])->__toString();
   }
 
