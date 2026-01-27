@@ -1,0 +1,19 @@
+uuid: 1390e825-b68a-482f-a85c-058f84be35b0
+langcode: en
+status: true
+dependencies:
+  module:
+    - ai_content_validation
+id: ai_content_validation_item.field_validation_result
+field_name: field_validation_result
+entity_type: ai_content_validation_item
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

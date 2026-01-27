@@ -1,22 +1,21 @@
-uuid: 9e0920f7-87ce-41e0-96d0-9fb5bed30808
+uuid: 93175b5f-4d24-4041-8235-9bea49c99825
 langcode: en
 status: true
 dependencies:
   module:
     - ai_content_validation
+    - entity_reference_revisions
     - node
-_core:
-  default_config_hash: sOCyByXTBZQ5rXbaH6aDeOHDKi1BqrE88evYHBJzt4s
-id: ai_content_validation_item.field_related_node
-field_name: field_related_node
+id: ai_content_validation_item.field_content_revision
+field_name: field_content_revision
 entity_type: ai_content_validation_item
-type: entity_reference
+type: entity_reference_revisions
 settings:
   target_type: node
-module: core
+module: entity_reference_revisions
 locked: false
 cardinality: 1
-translatable: false
+translatable: true
 indexes: {  }
 persist_with_no_fields: false
 custom_storage: false

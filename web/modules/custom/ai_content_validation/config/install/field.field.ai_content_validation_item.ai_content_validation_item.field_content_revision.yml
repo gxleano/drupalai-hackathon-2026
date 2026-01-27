@@ -1,0 +1,33 @@
+uuid: d0706f7d-b3c3-490d-982f-5ce743420a88
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.ai_content_validation_item.field_content_revision
+    - node.type.article
+    - node.type.page
+  module:
+    - ai_content_validation
+    - entity_reference_revisions
+id: ai_content_validation_item.ai_content_validation_item.field_content_revision
+field_name: field_content_revision
+entity_type: ai_content_validation_item
+bundle: ai_content_validation_item
+label: 'Content revision'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      article: article
+      page: page
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: article
+field_type: entity_reference_revisions

@@ -3,13 +3,18 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.ai_content_validation_item.ai_content_validation_item.field_related_node
+    - field.field.ai_content_validation_item.ai_content_validation_item.field_content_revision
+    - field.field.ai_content_validation_item.ai_content_validation_item.field_flowdrop_workflow
+    - field.field.ai_content_validation_item.ai_content_validation_item.field_validation_result
     - field.field.ai_content_validation_item.ai_content_validation_item.field_validation_status
   module:
     - ai_content_validation
+    - entity_reference_revisions
     - options
     - text
     - user
+_core:
+  default_config_hash: kwtLtsGPUh21WiZtCCghp6n7LettDpTKBzBVUxMtUGg
 id: ai_content_validation_item.ai_content_validation_item.default
 targetEntityType: ai_content_validation_item
 bundle: ai_content_validation_item
@@ -41,13 +46,29 @@ content:
     third_party_settings: {  }
     weight: 2
     region: content
-  field_related_node:
+  field_content_revision:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 8
+    region: content
+  field_flowdrop_workflow:
     type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    weight: 5
+    weight: 7
+    region: content
+  field_validation_result:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 9
     region: content
   field_validation_status:
     type: list_default

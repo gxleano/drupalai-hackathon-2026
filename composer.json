@@ -37,6 +37,7 @@
         "drupal/drupal_cms_google_analytics": "^2",
         "drupal/drupal_cms_seo_tools": "^2",
         "drupal/drupal_cms_starter": "^2",
+        "drupal/entity_reference_revisions": "^1.14",
         "drupal/flowdrop": "^1.x-dev#ad43bd6",
         "drupal/flowdrop_ai_provider": "^0.1.0",
         "drupal/flowdrop_ui": "1.x-dev",

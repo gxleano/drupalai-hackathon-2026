@@ -5,6 +5,8 @@ dependencies:
   module:
     - ai_content_validation
     - options
+_core:
+  default_config_hash: PqIMh2bvnus_jVwIx1WCVHltdLkVG-QcoNkhLxkziDQ
 id: ai_content_validation_item.field_validation_status
 field_name: field_validation_status
 entity_type: ai_content_validation_item
