@@ -1,0 +1,13 @@
+uuid: e3bfced2-1b58-4e7d-bfa6-439f0c76112a
+langcode: en
+status: true
+dependencies: {  }
+id: related_content
+label: 'Related Content'
+description: ''
+nodes: {  }
+edges: {  }
+metadata: {  }
+created: 1769523975
+changed: 1769523975
+uid: 0

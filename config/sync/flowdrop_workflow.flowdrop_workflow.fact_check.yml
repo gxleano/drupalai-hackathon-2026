@@ -1,0 +1,13 @@
+uuid: 118f2991-110c-4178-9a6e-eb08bce3adb2
+langcode: en
+status: true
+dependencies: {  }
+id: fact_check
+label: 'Fact Check'
+description: ''
+nodes: {  }
+edges: {  }
+metadata: {  }
+created: 1769523938
+changed: 1769523938
+uid: 0
