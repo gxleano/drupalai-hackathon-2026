@@ -2,6 +2,9 @@ _core:
   default_config_hash: 4GIX5Esnc_umpXUBj4IIocRX7Mt5fPhm4AgXfE3E56E
 module:
   ai: 0
+  ai_agents: 0
+  ai_agents_explorer: 0
+  ai_api_explorer: 0
   ai_provider_amazeeio: 0
   announcements_feed: 0
   automated_cron: 0
@@ -43,6 +46,8 @@ module:
   field_ui: 0
   file: 0
   filter: 0
+  flowdrop_ui: 0
+  flowdrop_ui_agents: 0
   focal_point: 0
   friendlycaptcha: 0
   gin_login: 0

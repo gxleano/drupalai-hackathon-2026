@@ -2,5 +2,20 @@ _core:
   default_config_hash: RGedRkFydKZjS0ZJ6vbtZH00KbhYVGsK-ABILHdQLyw
 prompt_logging: false
 prompt_logging_tags: ''
-default_providers: {  }
+default_providers:
+  chat:
+    provider_id: amazeeio
+    model_id: mistral-large-latest
+  chat_with_complex_json:
+    provider_id: amazeeio
+    model_id: mistral-large-latest
+  chat_with_structured_response:
+    provider_id: amazeeio
+    model_id: mistral-large-latest
+  chat_with_tools:
+    provider_id: amazeeio
+    model_id: mistral-large-latest
+  embeddings:
+    provider_id: amazeeio
+    model_id: mistral-embed
 default_vdb_provider: ''
