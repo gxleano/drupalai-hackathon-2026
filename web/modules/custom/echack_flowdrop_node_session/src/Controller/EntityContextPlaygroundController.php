@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\echack_flowdrop_node_session\Controller;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -30,12 +31,30 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class EntityContextPlaygroundController implements ContainerInjectionInterface {
   use StringTranslationTrait;
+
+  /**
+   * Constructs an EntityContextPlaygroundController.
+   *
+   * @param \Drupal\flowdrop_ui_components\Service\FlowDropEndpointConfigService $endpointConfigService
+   *   The FlowDrop endpoint config service.
+   * @param \Drupal\echack_flowdrop_node_session\Service\NodeSessionService $nodeSessionService
+   *   The node session service.
+   * @param \Drupal\flowdrop_playground\Service\PlaygroundService $playgroundService
+   *   The playground service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
+   *   The language manager.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory.
+   */
   public function __construct(
     protected readonly FlowDropEndpointConfigService $endpointConfigService,
     protected readonly NodeSessionService $nodeSessionService,
     protected readonly PlaygroundService $playgroundService,
     protected readonly EntityTypeManagerInterface $entityTypeManager,
-    protected readonly LanguageManagerInterface $languageManager
+    protected readonly LanguageManagerInterface $languageManager,
+    protected readonly ConfigFactoryInterface $configFactory
   ) {}
 
   /**
@@ -47,7 +66,8 @@ class EntityContextPlaygroundController implements ContainerInjectionInterface {
       $container->get("echack_flowdrop_node_session.service"),
       $container->get("flowdrop_playground.service"),
       $container->get("entity_type.manager"),
-      $container->get("language_manager")
+      $container->get("language_manager"),
+      $container->get("config.factory")
     );
   }
 
@@ -179,24 +199,55 @@ class EntityContextPlaygroundController implements ContainerInjectionInterface {
     $sessionData = $this->playgroundService->formatSessionForApi($session);
     $sessionData["entity_context"] = $entityContext;
 
+    // Build a display name that includes both workflow and entity info.
+    $entityLabel = $entity->label() ?? "Entity {$entityId}";
+    $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityType);
+    $entityTypeSingularLabel = $entityTypeDefinition->getSingularLabel();
+    $displayName = sprintf(
+      "%s: %s (%s)",
+      $flowdrop_workflow->label(),
+      $entityLabel,
+      $entityTypeSingularLabel
+    );
+
+    // Check if workflow has a chat input node to determine UI configuration.
+    // Workflows without chat input should hide the text input and only show
+    // the Run button.
+    $has_chat_input = $this->playgroundService->hasChatInputNode($flowdrop_workflow);
+
+    // Determine if auto-run should be enabled.
+    // Only auto-run if: config is enabled AND workflow has no chat input.
+    $config = $this->configFactory->get("flowdrop_playground.settings");
+    $auto_run_enabled = $config->get("auto_run") ?? TRUE;
+    $auto_run = $auto_run_enabled && !$has_chat_input;
+
+    // Build component props.
+    $props = [
+      "workflow" => $workflow_data,
+      "endpoint_config" => $endpoint_config,
+      "container_id" => "flowdrop-playground-entity-" . $flowdrop_workflow->id(),
+      "mode" => "standalone",
+      "height" => "100vh",
+      "width" => "100vw",
+      "back_url" => $back_url,
+      "editor_url" => $editor_url,
+      "workflow_name" => $displayName,
+      // Pass the pre-created session to auto-select it.
+      "initial_session" => $sessionData,
+      // Show chat input only if workflow has a chat input node.
+      "show_chat_input" => $has_chat_input,
+      // Always show run button.
+      "show_run_button" => TRUE,
+      // Auto-run if enabled and workflow has no chat input.
+      "auto_run" => $auto_run,
+    ];
+
     // Render using the SDC playground component in standalone mode.
     // Pass the pre-created session so the playground opens with it active.
     $build["content"] = [
       "#type" => "component",
       "#component" => "flowdrop_ui_components:playground",
-      "#props" => [
-        "workflow" => $workflow_data,
-        "endpoint_config" => $endpoint_config,
-        "container_id" => "flowdrop-playground-entity-" . $flowdrop_workflow->id(),
-        "mode" => "standalone",
-        "height" => "100vh",
-        "width" => "100vw",
-        "back_url" => $back_url,
-        "editor_url" => $editor_url,
-        "workflow_name" => $flowdrop_workflow->label(),
-        // Pass the pre-created session to auto-select it.
-        "initial_session" => $sessionData,
-      ],
+      "#props" => $props,
       "#attached" => [
         "library" => [
           "flowdrop_playground/playground",
