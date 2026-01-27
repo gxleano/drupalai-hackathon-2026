@@ -1,0 +1,10 @@
+# Permissions for FlowDrop Node Session module.
+#
+# Note: This module uses the existing flowdrop_playground permissions for
+# session creation and access. The permissions below are for module-specific
+# functionality.
+
+create entity context sessions:
+  title: "Create entity-context playground sessions"
+  description: "Allows users to create playground sessions with entity context via the API."
+  restrict access: true
