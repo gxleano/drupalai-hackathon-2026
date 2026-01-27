@@ -1,0 +1,49 @@
+uuid: 42fac491-2d18-476c-a4e7-c798cb2a6cd2
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: QCknj7x499AYMBXAyZ-GMY_ZUq1BQhmzdP67179OLQI
+id: data_extractor
+label: 'Data Extractor'
+description: 'Extract data from JSON using JSONPath or property path notation.'
+category: data
+icon: 'mdi:database-arrow-down-outline'
+plugin_version: 2.0.0
+enabled: true
+parameters:
+  data:
+    configurable: false
+    connectable: true
+    required: false
+  default:
+    configurable: true
+    connectable: false
+    required: false
+  extract_all:
+    configurable: true
+    connectable: false
+    required: false
+    default: false
+  path:
+    configurable: true
+    connectable: false
+    required: false
+outputs:
+  data:
+    exposed: true
+  is_jsonpath:
+    exposed: true
+  match_count:
+    exposed: true
+  path:
+    exposed: true
+  success:
+    exposed: true
+tags: {  }
+executor_plugin: 'flowdrop_node_processor:data_extractor'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false

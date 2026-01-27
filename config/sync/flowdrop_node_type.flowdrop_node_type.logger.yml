@@ -1,0 +1,46 @@
+uuid: e7da40a8-0dbd-41f0-8ee5-b027ce16a414
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: f076HCDbKTmrGUuz3mvGSoAY04n7Syyq4NChmpJWlS4
+id: logger
+label: Logger
+description: "Log messages using Drupal's logger service"
+category: helpers
+icon: 'mdi:database-eye-outline'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  channel:
+    configurable: true
+    connectable: false
+    required: false
+    default: flowdrop
+  level:
+    configurable: true
+    connectable: false
+    required: false
+    default: debug
+  message:
+    configurable: false
+    connectable: true
+    required: false
+outputs:
+  channel:
+    exposed: true
+  level:
+    exposed: true
+  logged:
+    exposed: true
+  message:
+    exposed: true
+tags: {  }
+executor_plugin: 'flowdrop_node_processor:logger'
+visual_type: simple
+supported_visual_types:
+  - default
+  - simple
+  - square
+unified_input_exposed: false
+unified_output_exposed: false

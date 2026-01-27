@@ -1,0 +1,44 @@
+uuid: 65662bec-10c2-4a20-8b9a-4f17408c4c1a
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: aNrnoER4ZttrUFuqAY8jyQsNW4iWwll89QkPVBUygew
+id: form_input
+label: 'Form Input'
+description: 'Pauses workflow for user to fill a JSON Schema form'
+category: human_in_loop
+icon: 'mdi:form-select'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  message:
+    configurable: true
+    connectable: true
+    required: true
+  schema:
+    configurable: true
+    connectable: true
+    required: true
+  default_values:
+    configurable: true
+    connectable: true
+    required: false
+outputs:
+  data:
+    exposed: true
+  response_time:
+    exposed: true
+  user_id:
+    exposed: true
+tags:
+  - human-in-loop
+  - interrupt
+  - form
+  - json-schema
+executor_plugin: 'flowdrop_interrupt:form_input'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
