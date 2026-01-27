@@ -1,0 +1,12 @@
+uuid: 9cc49e98-fd3f-4178-a292-e369f280dee0
+langcode: en
+status: true
+dependencies: {  }
+name: FlowDrop
+configEntityTypeId: component
+weight: 0
+items:
+  - sdc.flowdrop_ui_components.detail-section
+  - sdc.flowdrop_ui_components.flowdrop-logo
+  - sdc.flowdrop_ui_components.grid
+  - sdc.flowdrop_ui_components.search-toolbar

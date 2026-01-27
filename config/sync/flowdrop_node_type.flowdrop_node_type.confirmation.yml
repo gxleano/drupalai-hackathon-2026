@@ -1,0 +1,58 @@
+uuid: 275b167c-09a3-4006-bb2c-4b4d2be6414a
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: 84pms2McK2x22683zP0MK_dKupclYg2CEodsRWiwmHE
+id: confirmation
+label: Confirmation
+description: 'Pauses workflow for user confirmation (Yes/No)'
+category: human_in_loop
+icon: 'mdi:help-circle-outline'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  message:
+    configurable: true
+    connectable: true
+    required: true
+  confirm_label:
+    configurable: true
+    connectable: false
+    required: false
+  cancel_label:
+    configurable: true
+    connectable: false
+    required: false
+  branches:
+    configurable: true
+    connectable: false
+    required: false
+    default:
+      -
+        name: 'True'
+        value: true
+      -
+        name: 'False'
+        value: false
+outputs:
+  confirmed:
+    exposed: true
+  response_time:
+    exposed: true
+  user_id:
+    exposed: true
+  active_branches:
+    exposed: false
+tags:
+  - human-in-loop
+  - interrupt
+  - confirmation
+executor_plugin: 'flowdrop_interrupt:confirmation'
+visual_type: default
+supported_visual_types:
+  - default
+  - simple
+  - gateway
+unified_input_exposed: false
+unified_output_exposed: false

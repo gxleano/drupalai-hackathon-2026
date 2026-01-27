@@ -1,0 +1,12 @@
+uuid: 089617ef-385b-4365-a369-eb2dc53ea515
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: 6_REIafX4O3Xa4MMDxSq_ZU5VPzCOKcUeYQhdncaijg
+id: vector_stores
+label: 'Vector Stores'
+description: 'Store and search through large collections of data using vector databases for semantic similarity matching and retrieval.'
+icon: 'mdi:vector-square'
+color: '#10b981'
+enabled: true

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8a4379c3cd762949cc8a2860fd91241a",
+    "content-hash": "95980bca0dd28395ea08d17d49f73894",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1477,6 +1477,38 @@
                 }
             ],
             "time": "2025-10-30T23:44:22+00:00"
+        },
+        {
+            "name": "d34dman/vanilla-icon-picker",
+            "version": "1.4.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/d34dman/vanilla-icon-picker.git",
+                "reference": "b707836e9f4998028627ab297b56b9ede443f3b5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/d34dman/vanilla-icon-picker/zipball/b707836e9f4998028627ab297b56b9ede443f3b5",
+                "reference": "b707836e9f4998028627ab297b56b9ede443f3b5",
+                "shasum": ""
+            },
+            "type": "drupal-library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Shibin Das",
+                    "email": "shibinkidd@gmail.com"
+                }
+            ],
+            "description": "Package appolodev/vanilla-icon-picker as \"drupal-library\" type composer library",
+            "support": {
+                "issues": "https://github.com/d34dman/vanilla-icon-picker/issues",
+                "source": "https://github.com/d34dman/vanilla-icon-picker/tree/1.4.2"
+            },
+            "time": "2026-01-17T01:04:22+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
@@ -4986,6 +5018,137 @@
             "support": {
                 "source": "https://git.drupalcode.org/project/field_group",
                 "issues": "https://www.drupal.org/project/issues/field_group"
+            }
+        },
+        {
+            "name": "drupal/flowdrop",
+            "version": "0.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/flowdrop.git",
+                "reference": "0.5.0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/flowdrop-0.5.0.zip",
+                "reference": "0.5.0",
+                "shasum": "c2eae6104950fe0402397586f21eeb1073baab4b"
+            },
+            "require": {
+                "d34dman/vanilla-icon-picker": "^1.4",
+                "dragonmantank/cron-expression": "^3.3",
+                "drupal/core": "^11.2",
+                "drupal/flowdrop_ui_components": "*",
+                "loilo/jsonpath": "^0.3.1",
+                "php": ">=8.2",
+                "symfony/property-access": "^7.0 || ^8.0"
+            },
+            "require-dev": {
+                "drupal/ai_provider_mistral": "^1.1@beta",
+                "drupal/ai_provider_openai": "^1.2",
+                "drupal/coffee": "^2.0",
+                "drupal/flowdrop_ai_provider": "dev-1.0.x",
+                "drupal/flowdrop_interrupt": "*",
+                "drupal/flowdrop_job": "*",
+                "drupal/flowdrop_node_category": "*",
+                "drupal/flowdrop_node_type": "*",
+                "drupal/flowdrop_pipeline": "*",
+                "drupal/flowdrop_playground": "*",
+                "drupal/flowdrop_runtime": "*",
+                "drupal/flowdrop_stategraph": "*",
+                "drupal/flowdrop_trigger": "*",
+                "drupal/flowdrop_ui_components": "*",
+                "drupal/flowdrop_workflow": "*",
+                "drupal/gin": "^5.0",
+                "drupal/orchestration": "^1.0",
+                "drupal/queue_ui": "^3.2",
+                "drupal/ultimate_cron": "^2.0@beta",
+                "drush/drush": "^13.0"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "0.5.0",
+                    "datestamp": "1769454310",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Project has not opted into security advisory coverage!"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Drupal\\flowdrop\\": "src/"
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "d34dman",
+                    "homepage": "https://www.drupal.org/user/751698"
+                },
+                {
+                    "name": "muschpusch",
+                    "homepage": "https://www.drupal.org/user/257634"
+                },
+                {
+                    "name": "stmh",
+                    "homepage": "https://www.drupal.org/user/35538"
+                }
+            ],
+            "description": "A visual workflow editor for Drupal",
+            "homepage": "https://www.drupal.org/project/flowdrop",
+            "keywords": [
+                "Drupal"
+            ],
+            "support": {
+                "source": "https://git.drupalcode.org/project/flowdrop",
+                "issues": "https://www.drupal.org/project/issues/flowdrop"
+            }
+        },
+        {
+            "name": "drupal/flowdrop_ui_components",
+            "version": "0.5.0",
+            "require": {
+                "drupal/core": "^11",
+                "drupal/flowdrop": "^0"
+            },
+            "type": "metapackage",
+            "extra": {
+                "drupal": {
+                    "version": "0.5.0",
+                    "datestamp": "1769454310",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Project has not opted into security advisory coverage!"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "d34dman",
+                    "homepage": "https://www.drupal.org/user/751698"
+                },
+                {
+                    "name": "muschpusch",
+                    "homepage": "https://www.drupal.org/user/257634"
+                },
+                {
+                    "name": "stmh",
+                    "homepage": "https://www.drupal.org/user/35538"
+                }
+            ],
+            "description": "Provides reusable Single Directory Components (SDC) for the FlowDrop dashboard and administrative interfaces. Delivers a consistent visual language matching the FlowDrop workflow editor.",
+            "homepage": "https://www.drupal.org/project/flowdrop",
+            "support": {
+                "source": "https://git.drupalcode.org/project/flowdrop"
             }
         },
         {
@@ -9167,6 +9330,83 @@
             "time": "2023-07-12T21:21:09+00:00"
         },
         {
+            "name": "loilo/jsonpath",
+            "version": "0.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/loilo/jsonpath-php.git",
+                "reference": "5b1fa709f654a1899a885f03f00eb6fa93a03426"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/loilo/jsonpath-php/zipball/5b1fa709f654a1899a885f03f00eb6fa93a03426",
+                "reference": "5b1fa709f654a1899a885f03f00eb6fa93a03426",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "pestphp/pest": "^3.0",
+                "phpstan/phpstan": "^2.1",
+                "squizlabs/php_codesniffer": "^3.6 || ^4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/comparator/compare-nulls.php",
+                    "src/comparator/compare-arrays.php",
+                    "src/comparator/compare-nodes.php",
+                    "src/comparator/compare-booleans.php",
+                    "src/comparator/compare-objects.php",
+                    "src/comparator/compare-strings.php",
+                    "src/comparator/compare-numbers.php",
+                    "src/parsers/array-slice-selector.php",
+                    "src/parsers/function-extensions.php",
+                    "src/parsers/root.php",
+                    "src/parsers/filter-selector.php",
+                    "src/types/nothing.php",
+                    "src/types/node.php",
+                    "src/types/path-result.php",
+                    "src/types/path-segments-result.php",
+                    "src/PeggyParser.php",
+                    "src/parser.php",
+                    "src/JsonPath.php",
+                    "src/utils/enumerate-node.php",
+                    "src/utils/escape-member-name.php",
+                    "src/utils/is-equal.php",
+                    "src/utils/traverse-descendant.php",
+                    "src/utils/helpers.php",
+                    "src/utils/array.php",
+                    "src/utils/convert-i-regexp-to-php-regexp.php",
+                    "src/functions/function-types.php",
+                    "src/functions/search.php",
+                    "src/functions/value.php",
+                    "src/functions/count.php",
+                    "src/functions/function-definitions.php",
+                    "src/functions/match.php",
+                    "src/functions/length.php",
+                    "src/utils.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Florian Reuschel",
+                    "email": "florian@loilo.de"
+                }
+            ],
+            "description": "Runs RFC9535 compatible JSONPath queries against a data set",
+            "support": {
+                "issues": "https://github.com/loilo/jsonpath-php/issues",
+                "source": "https://github.com/loilo/jsonpath-php/tree/v0.3.1"
+            },
+            "time": "2026-01-26T14:32:59+00:00"
+        },
+        {
             "name": "marc-mabe/php-enum",
             "version": "v4.7.2",
             "source": {
@@ -13254,6 +13494,177 @@
             "time": "2025-12-19T10:00:43+00:00"
         },
         {
+            "name": "symfony/property-access",
+            "version": "v7.4.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/property-access.git",
+                "reference": "fa49bf1ca8fce1ba0e2dba4e4658554cfb9364b1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/property-access/zipball/fa49bf1ca8fce1ba0e2dba4e4658554cfb9364b1",
+                "reference": "fa49bf1ca8fce1ba0e2dba4e4658554cfb9364b1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2",
+                "symfony/property-info": "^6.4.32|~7.3.10|^7.4.4|^8.0.4"
+            },
+            "require-dev": {
+                "symfony/cache": "^6.4|^7.0|^8.0",
+                "symfony/var-exporter": "^6.4.1|^7.0.1|^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\PropertyAccess\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Provides functions to read and write from/to an object or array using a simple string notation",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "access",
+                "array",
+                "extraction",
+                "index",
+                "injection",
+                "object",
+                "property",
+                "property-path",
+                "reflection"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/property-access/tree/v7.4.4"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2026-01-05T08:47:25+00:00"
+        },
+        {
+            "name": "symfony/property-info",
+            "version": "v7.4.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/property-info.git",
+                "reference": "b5305f3bc5727d0395e9681237e870ed5a5d21ae"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/property-info/zipball/b5305f3bc5727d0395e9681237e870ed5a5d21ae",
+                "reference": "b5305f3bc5727d0395e9681237e870ed5a5d21ae",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2",
+                "symfony/deprecation-contracts": "^2.5|^3",
+                "symfony/string": "^6.4|^7.0|^8.0",
+                "symfony/type-info": "~7.3.10|^7.4.4|^8.0.4"
+            },
+            "conflict": {
+                "phpdocumentor/reflection-docblock": "<5.2",
+                "phpdocumentor/type-resolver": "<1.5.1",
+                "symfony/cache": "<6.4",
+                "symfony/dependency-injection": "<6.4",
+                "symfony/serializer": "<6.4"
+            },
+            "require-dev": {
+                "phpdocumentor/reflection-docblock": "^5.2",
+                "phpstan/phpdoc-parser": "^1.0|^2.0",
+                "symfony/cache": "^6.4|^7.0|^8.0",
+                "symfony/dependency-injection": "^6.4|^7.0|^8.0",
+                "symfony/serializer": "^6.4|^7.0|^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\PropertyInfo\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kévin Dunglas",
+                    "email": "dunglas@gmail.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Extracts information about PHP class' properties using metadata of popular sources",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "doctrine",
+                "phpdoc",
+                "property",
+                "symfony",
+                "type",
+                "validator"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/property-info/tree/v7.4.4"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2026-01-23T10:51:15+00:00"
+        },
+        {
             "name": "symfony/psr-http-message-bridge",
             "version": "v7.4.0",
             "source": {
@@ -13788,6 +14199,89 @@
                 }
             ],
             "time": "2025-07-15T13:41:35+00:00"
+        },
+        {
+            "name": "symfony/type-info",
+            "version": "v7.4.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/type-info.git",
+                "reference": "f83c725e72b39b2704b9d6fc85070ad6ac7a5889"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/type-info/zipball/f83c725e72b39b2704b9d6fc85070ad6ac7a5889",
+                "reference": "f83c725e72b39b2704b9d6fc85070ad6ac7a5889",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2",
+                "psr/container": "^1.1|^2.0",
+                "symfony/deprecation-contracts": "^2.5|^3"
+            },
+            "conflict": {
+                "phpstan/phpdoc-parser": "<1.30"
+            },
+            "require-dev": {
+                "phpstan/phpdoc-parser": "^1.30|^2.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\TypeInfo\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mathias Arlaud",
+                    "email": "mathias.arlaud@gmail.com"
+                },
+                {
+                    "name": "Baptiste LEDUC",
+                    "email": "baptiste.leduc@gmail.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Extracts PHP types information.",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "PHPStan",
+                "phpdoc",
+                "symfony",
+                "type"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/type-info/tree/v7.4.4"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2026-01-09T12:14:21+00:00"
         },
         {
             "name": "symfony/validator",

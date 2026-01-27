@@ -1,0 +1,12 @@
+uuid: b76c7baa-d637-4632-9211-98a33fabb545
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: EQevZbb1nAvl_QSjzRyerZgL39iyI_yuKuK7HuZjGnk
+id: human_in_loop
+label: 'Human in Loop'
+description: 'Pause workflow execution to request user input, confirmations, choices, or form submissions before continuing.'
+icon: 'mdi:account-clock'
+color: '#f59e0b'
+enabled: true
