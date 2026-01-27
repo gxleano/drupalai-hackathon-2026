@@ -1,0 +1,14 @@
+# Github
+name: issue-greeter
+on:
+  push:
+    branches:
+      - master
+jobs:
+  notify-devpanel-master:
+    runs-on: ubuntu-latest
+    steps:
+      - name: notify
+        run: |
+          curl -s -X PUT https://console.devpanel.com/webhooks/applications/69788b72ff2c4b3087fe4465/git -d "{\"username\": \"${{ secrets.DP_USERNAME }}\", \"token\": \"${{ secrets.DP_ACCESS_TOKEN }}\"}" -H "content-type: application/json"
+          
