@@ -1,0 +1,12 @@
+uuid: 889c277a-d0bc-4845-9280-c73c7da66412
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: KLQ5ik2eyYGEGaL1xVYO5bLCui4cbxo3XEotoMMCCkM
+id: outputs
+label: Outputs
+description: 'Send results from your workflow to destinations like displays, files, APIs, or external services.'
+icon: 'mdi:arrow-up-circle'
+color: '#3b82f6'
+enabled: true

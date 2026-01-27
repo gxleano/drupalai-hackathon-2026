@@ -1,0 +1,12 @@
+uuid: 22993585-d82e-4075-9e3d-fa1ae67f36dc
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: cSb9kIY0F5hs4DNYlVzRKqS2ppgmx-Khwxv60pT4FHA
+id: bundles
+label: Bundles
+description: 'Pre-built workflow components and reusable node packages that combine multiple nodes into a single, easy-to-use building block.'
+icon: 'mdi:package-variant'
+color: '#64748b'
+enabled: true

@@ -37,6 +37,7 @@
         "drupal/drupal_cms_google_analytics": "^2",
         "drupal/drupal_cms_seo_tools": "^2",
         "drupal/drupal_cms_starter": "^2",
+        "drupal/flowdrop": "^0.5.0",
         "drupal/mercury": "@beta",
         "drupal/recipe_installer_kit": "^1",
         "drupal/webform": "@beta"

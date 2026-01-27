@@ -1,0 +1,30 @@
+uuid: 89f2f0c8-cb3e-450a-b897-2858a9898223
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: M0MUecPk2FJyLGf1vSwczZ5hT6dtIvc1X87x7JtaTkk
+id: data_to_json
+label: 'Data to JSON'
+description: 'Convert structured data (array/object) to JSON string'
+category: data
+icon: 'mdi:code-json'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  data:
+    configurable: false
+    connectable: true
+    required: false
+outputs:
+  json:
+    exposed: true
+  success:
+    exposed: true
+tags: {  }
+executor_plugin: 'flowdrop_node_processor:data_to_json'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false

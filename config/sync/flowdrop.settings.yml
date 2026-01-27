@@ -1,0 +1,13 @@
+_core:
+  default_config_hash: vA-33Zsr0Yf_26An561EOAneQtCihP4us4MW--ykkOk
+logging:
+  verbosity: standard
+  log_to_watchdog: true
+execution:
+  default_orchestrator: synchronous
+  max_execution_time: 300
+realtime:
+  enabled: true
+  polling_interval: 2000
+ui:
+  icon_picker_enabled: true

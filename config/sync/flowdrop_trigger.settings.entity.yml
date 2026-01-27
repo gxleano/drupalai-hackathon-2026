@@ -1,0 +1,11 @@
+_core:
+  default_config_hash: ux1NKVnlrC_mWyx72Ba78KnlScjtWs0K0PdzXMDAeo4
+enabled: true
+allowed_event_types:
+  - entity.delete
+  - entity.insert
+  - entity.update
+allowed_entity_types:
+  - node
+allowed_bundles: {  }
+log_entity_changes: false

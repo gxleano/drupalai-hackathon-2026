@@ -1,0 +1,13 @@
+uuid: 507f4622-4901-40cc-8cba-0c2fb6345018
+langcode: en
+status: true
+dependencies: {  }
+id: token_burners_smoke_test
+label: 'Token Burners Smoke Test'
+description: ''
+nodes: {  }
+edges: {  }
+metadata: {  }
+created: 1769515857
+changed: 1769515857
+uid: 0
