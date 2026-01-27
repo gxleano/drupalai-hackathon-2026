@@ -7,6 +7,8 @@ namespace Drupal\echack_flowdrop_node_session\Controller;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\echack_flowdrop_node_session\Service\NodeSessionService;
 use Drupal\flowdrop_playground\Service\PlaygroundService;
@@ -20,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
  * Provides RESTful endpoints for creating playground sessions with entity
  * context. This is a separate endpoint from the core FlowDrop playground API.
  */
-class NodeSessionApiController extends ControllerBase {
+class NodeSessionApiController implements ContainerInjectionInterface{
 
   /**
    * Constructs a NodeSessionApiController object.
@@ -33,6 +35,7 @@ class NodeSessionApiController extends ControllerBase {
   public function __construct(
     protected readonly NodeSessionService $nodeSessionService,
     protected readonly PlaygroundService $playgroundService,
+    protected readonly EntityTypeManagerInterface $entityTypeManager,
   ) {}
 
   /**
@@ -42,6 +45,7 @@ class NodeSessionApiController extends ControllerBase {
     return new static(
       $container->get("echack_flowdrop_node_session.service"),
       $container->get("flowdrop_playground.service"),
+      $container->get("entity_type.manager"),
     );
   }
 
@@ -59,7 +63,7 @@ class NodeSessionApiController extends ControllerBase {
   public function createSession(string $workflow_id, Request $request): JsonResponse {
     try {
       // Load and verify workflow exists.
-      $workflowStorage = $this->entityTypeManager()->getStorage("flowdrop_workflow");
+      $workflowStorage = $this->entityTypeManager->getStorage("flowdrop_workflow");
       $workflow = $workflowStorage->load($workflow_id);
 
       if ($workflow === NULL) {
@@ -128,7 +132,7 @@ class NodeSessionApiController extends ControllerBase {
 
       // Validate entity type exists.
       try {
-        $this->entityTypeManager()->getDefinition($entityType);
+        $this->entityTypeManager->getDefinition($entityType);
       }
       catch (\Exception $e) {
         return new JsonResponse([
@@ -278,7 +282,7 @@ class NodeSessionApiController extends ControllerBase {
    *   The session entity or NULL if not found.
    */
   protected function loadSessionByUuid(string $uuid): ?object {
-    $sessionStorage = $this->entityTypeManager()->getStorage("flowdrop_playground_session");
+    $sessionStorage = $this->entityTypeManager->getStorage("flowdrop_playground_session");
 
     $sessions = $sessionStorage->loadByProperties(["uuid" => $uuid]);
 

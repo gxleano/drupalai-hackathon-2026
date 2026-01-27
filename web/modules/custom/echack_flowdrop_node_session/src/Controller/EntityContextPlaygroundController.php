@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\echack_flowdrop_node_session\Controller;
 
-use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\echack_flowdrop_node_session\Service\NodeSessionService;
 use Drupal\flowdrop_playground\Service\PlaygroundService;
+use Drupal\flowdrop_ui_components\Service\FlowDropEndpointConfigService;
 use Drupal\flowdrop_workflow\Entity\FlowDropWorkflow;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,38 +28,27 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * URL format:
  * /admin/flowdrop/workflows/{workflow_id}/playground/entity?entity_type=node&entity_id=1&revision_id=5
  */
-class EntityContextPlaygroundController extends ControllerBase {
-
-  /**
-   * The FlowDrop endpoint config service.
-   *
-   * @var \Drupal\flowdrop_ui_components\Service\FlowDropEndpointConfigService
-   */
-  protected $endpointConfigService;
-
-  /**
-   * The node session service.
-   *
-   * @var \Drupal\echack_flowdrop_node_session\Service\NodeSessionService
-   */
-  protected NodeSessionService $nodeSessionService;
-
-  /**
-   * The playground service.
-   *
-   * @var \Drupal\flowdrop_playground\Service\PlaygroundService
-   */
-  protected PlaygroundService $playgroundService;
+class EntityContextPlaygroundController implements ContainerInjectionInterface {
+  use StringTranslationTrait;
+  public function __construct(
+    protected readonly FlowDropEndpointConfigService $endpointConfigService,
+    protected readonly NodeSessionService $nodeSessionService,
+    protected readonly PlaygroundService $playgroundService,
+    protected readonly EntityTypeManagerInterface $entityTypeManager,
+    protected readonly LanguageManagerInterface $languageManager
+  ) {}
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): static {
-    $instance = new static();
-    $instance->endpointConfigService = $container->get("flowdrop_ui_components.endpoint_config");
-    $instance->nodeSessionService = $container->get("echack_flowdrop_node_session.service");
-    $instance->playgroundService = $container->get("flowdrop_playground.service");
-    return $instance;
+    return new static(
+      $container->get("flowdrop_ui_components.endpoint_config"),
+      $container->get("echack_flowdrop_node_session.service"),
+      $container->get("flowdrop_playground.service"),
+      $container->get("entity_type.manager"),
+      $container->get("language_manager")
+    );
   }
 
   /**
@@ -86,7 +79,7 @@ class EntityContextPlaygroundController extends ControllerBase {
    */
   public function playgroundPage(string $workflow_id, Request $request): array {
     // Load the workflow entity.
-    $flowdrop_workflow = $this->entityTypeManager()->getStorage("flowdrop_workflow")->load($workflow_id);
+    $flowdrop_workflow = $this->entityTypeManager->getStorage("flowdrop_workflow")->load($workflow_id);
     if (!$flowdrop_workflow instanceof FlowDropWorkflow) {
       throw new NotFoundHttpException("Workflow not found: {$workflow_id}");
     }
@@ -108,7 +101,7 @@ class EntityContextPlaygroundController extends ControllerBase {
 
     // Validate entity type exists.
     try {
-      $this->entityTypeManager()->getDefinition($entityType);
+      $this->entityTypeManager->getDefinition($entityType);
     }
     catch (\Exception $e) {
       throw new NotFoundHttpException("Invalid entity type: {$entityType}");
@@ -167,7 +160,7 @@ class EntityContextPlaygroundController extends ControllerBase {
     // Build the API base URL.
     $url_options = [
       "absolute" => TRUE,
-      "language" => $this->languageManager()->getCurrentLanguage(),
+      "language" => $this->languageManager->getCurrentLanguage(),
     ];
     $base_url = Url::fromRoute("<front>", [], $url_options)->toString() . "/api/flowdrop";
 
@@ -234,7 +227,7 @@ class EntityContextPlaygroundController extends ControllerBase {
    */
   public function playgroundTitle(string $workflow_id, Request $request): string {
     // Load the workflow entity.
-    $flowdrop_workflow = $this->entityTypeManager()->getStorage("flowdrop_workflow")->load($workflow_id);
+    $flowdrop_workflow = $this->entityTypeManager->getStorage("flowdrop_workflow")->load($workflow_id);
     $workflowLabel = $flowdrop_workflow instanceof FlowDropWorkflow
       ? $flowdrop_workflow->label()
       : $workflow_id;
