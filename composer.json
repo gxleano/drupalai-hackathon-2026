@@ -42,6 +42,7 @@
         "drupal/flowdrop_ui-flowdrop_ui": "^0.0",
         "drupal/flowdrop_ui_agents": "^0.1",
         "drupal/mercury": "@beta",
+        "drupal/metatag": "^2.2",
         "drupal/recipe_installer_kit": "^1",
         "drupal/webform": "@beta"
     },

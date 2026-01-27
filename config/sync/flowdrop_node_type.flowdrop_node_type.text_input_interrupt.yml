@@ -12,11 +12,19 @@ icon: 'mdi:text-box-edit-outline'
 plugin_version: 1.0.0
 enabled: true
 parameters:
+  default_value:
+    configurable: true
+    connectable: true
+    required: false
+  max_length:
+    configurable: true
+    connectable: false
+    required: false
   message:
     configurable: true
     connectable: true
     required: true
-  placeholder:
+  min_length:
     configurable: true
     connectable: false
     required: false
@@ -24,24 +32,16 @@ parameters:
     configurable: true
     connectable: false
     required: false
-  min_length:
+  placeholder:
     configurable: true
     connectable: false
-    required: false
-  max_length:
-    configurable: true
-    connectable: false
-    required: false
-  default_value:
-    configurable: true
-    connectable: true
     required: false
 outputs:
-  text:
-    exposed: true
   length:
     exposed: true
   response_time:
+    exposed: true
+  text:
     exposed: true
   user_id:
     exposed: true

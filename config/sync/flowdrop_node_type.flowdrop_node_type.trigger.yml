@@ -18,19 +18,19 @@ parameters:
     required: false
     default: start
 outputs:
+  cron:
+    exposed: true
   data:
     exposed: true
-  user:
-    exposed: true
   form:
-    exposed: true
-  form_values:
     exposed: true
   form_id:
     exposed: true
   form_state:
     exposed: true
-  cron:
+  form_values:
+    exposed: true
+  user:
     exposed: true
 tags: {  }
 executor_plugin: 'flowdrop_trigger:trigger'
