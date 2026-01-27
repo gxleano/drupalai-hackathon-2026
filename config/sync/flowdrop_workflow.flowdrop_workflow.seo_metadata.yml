@@ -4,7 +4,7 @@ status: true
 dependencies: {  }
 id: seo_metadata
 label: 'SEO & Metadata'
-description: ''
+description: 'AI-powered workflow to generate article content with SEO-optimized meta titles and descriptions'
 nodes:
   -
     id: chat_input.1
@@ -155,39 +155,35 @@ nodes:
         model: mistral-large-latest
         temperature: 0.7
         maxTokens: 1000
-        systemPrompt: |
-          Use the user message to generate content for an article. Create a funny title. Body should be 3 paragraphs with proper intro content and conclusion.
+        systemPrompt: |-
+          CRITICAL INSTRUCTIONS - READ CAREFULLY:
 
-          Create a valid json string that could represent the values for a Drupal Article Node. 
+          1. You MUST output ONLY pure JSON - NO markdown, NO code fences, NO backticks, NO explanations
+          2. Start your response with { and end with }
+          3. Do NOT wrap your response in ```json or ```
+          4. Output the JSON directly as plain text
 
-          It is critically important the the output must be valid json in the following format
+          TASK:
+          Generate article content based on user's message with 3 paragraphs (intro, main, conclusion) and SEO metadata.
 
-          {
-            "title": "{{ title }}",
-            "body": 
-            {
-              "value": "{{ body }}",
-              "summary": "{{ summary }}",
-              "format": "basic_html"
-            }
-            
-          }
+          REQUIRED JSON STRUCTURE (use actual content, not placeholders):
+          {"title":"Article title here","field_body":[{"value":"<p>Paragraph 1</p><p>Paragraph 2</p><p>Paragraph 3</p>","summary":"One sentence summary","format":"content_format"}],"field_metatags":[{"value":"{\"title\":\"SEO title 50-60 chars\",\"description\":\"SEO description 150-160 chars\"}"}]}
 
-          ---
+          CRITICAL FIELD NAMES AND STRUCTURE:
+          - title: REQUIRED, non-empty string (article title)
+          - field_body: REQUIRED array with one object containing value, summary, format
+          - field_body[0].value: HTML with <p> tags
+          - field_body[0].summary: Brief one-sentence overview
+          - field_body[0].format: MUST be "content_format" (exactly this string)
+          - field_metatags: REQUIRED array with one object containing value
+          - field_metatags[0].value: JSON string with title and description (use \" for inner quotes)
+          - Meta title: 50-60 characters, SEO-focused
+          - Meta description: 150-160 characters with keywords
+          - Use double quotes, escape inner quotes with \"
+          - Compact format (no line breaks)
 
-          It is critically important it must have title and body field.
-
-          Example:
-
-          {
-            "title": "A cool article about watermelons",
-            "body": 
-            {
-              "value": "Watermelons are great. they are awesome.\nThey are such an awesome fruit that i eat them every day.",
-              "summary": "Watermelons are great. they are awesome.",
-              "format": "basic_html"
-            }  
-          }
+          EXAMPLE OUTPUT (copy this EXACT structure - note format is "content_format"):
+          {"title":"Understanding the European Commission's Role in EU Policy","field_body":[{"value":"<p>The European Commission serves as the executive branch of the European Union, responsible for proposing legislation, implementing decisions, and managing day-to-day EU operations.</p><p>With 27 Commissioners representing each member state, the Commission drafts new EU laws, enforces regulations, and manages the EU budget. It acts as guardian of EU treaties.</p><p>Through its directorates-general, the Commission shapes policies affecting over 450 million EU citizens, from trade to environment and digital transformation.</p>","summary":"Learn about the European Commission's key role in EU governance and policy-making.","format":"content_format"}],"field_metatags":[{"value":"{\"title\":\"European Commission: Role, Powers & EU Policy Impact\",\"description\":\"Discover how the European Commission shapes EU policy and legislation. Learn about its structure, powers, and impact on member states.\"}"}]}
         instanceTitle: ''
         instanceDescription: ''
       metadata:
@@ -308,11 +304,11 @@ nodes:
       nodeId: flowdrop_ai_provider_chat_model.1
       extensions:
         ui:
-          hideUnconnectedHandles: false
+          hideUnconnectedHandles: true
     deletable: true
     measured:
       width: 288
-      height: 440
+      height: 330
     selected: false
     dragging: true
   -
@@ -323,7 +319,9 @@ nodes:
       'y': -140
     data:
       label: 'JSON to Data'
-      config: {  }
+      config:
+        instanceTitle: ''
+        instanceDescription: ''
       metadata:
         id: json_to_data
         name: 'JSON to Data'
@@ -393,18 +391,21 @@ nodes:
               x-display-order: -1
           required: {  }
       nodeId: json_to_data.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
     deletable: true
     measured:
       width: 288
-      height: 515
+      height: 330
     selected: false
     dragging: false
   -
     id: chat_output.1
     type: universalNode
     position:
-      x: 1980
-      'y': 110
+      x: 2070
+      'y': -110
     data:
       label: 'Chat Output'
       config:
@@ -528,24 +529,26 @@ nodes:
       width: 288
       height: 88
     selected: false
-    dragging: true
+    dragging: false
   -
     id: prompt_template.1
     type: universalNode
     position:
-      x: 1540
-      'y': 110
+      x: 1680
+      'y': -120
     data:
       label: 'Prompt Template'
       config:
         template: |+
-          Article Draft
+          Article Draft Preview
 
           # {{ title }}
 
-          {{ field_body.value }}
+          {{ field_body.0.value }}
 
-          {{ field_metatags.value }}
+          ---
+
+          SEO Metadata: {{ field_metatags.0.value }}
 
         nodeType: simple
         instanceTitle: ''
@@ -656,8 +659,8 @@ nodes:
     id: confirmation.1
     type: universalNode
     position:
-      x: 2550
-      'y': -210
+      x: 2560
+      'y': -20
     data:
       label: Confirmation
       config:
@@ -666,18 +669,18 @@ nodes:
         cancel_label: 'No'
         branches:
           -
-            name: 'True'
+            name: 'true'
             value: true
           -
-            name: 'False'
-            value: true
-        nodeType: default
+            name: 'false'
+            value: false
+        nodeType: gateway
         instanceTitle: ''
         instanceDescription: ''
-        branches-0-name: 'True'
+        branches-0-name: 'true'
         branches-0-value: true
-        branches-1-name: 'False'
-        branches-1-value: true
+        branches-1-name: 'false'
+        branches-1-value: false
       metadata:
         id: confirmation
         name: Confirmation
@@ -824,57 +827,423 @@ nodes:
       nodeId: confirmation.1
       extensions:
         ui:
-          hideUnconnectedHandles: false
+          hideUnconnectedHandles: true
     deletable: true
     measured:
       width: 288
-      height: 665
-    selected: true
+      height: 250
+    selected: false
     dragging: true
+  -
+    id: data_to_json.1
+    type: universalNode
+    position:
+      x: 3490
+      'y': 230
+    data:
+      label: 'Data to JSON'
+      config:
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: data_to_json
+        name: 'Data to JSON'
+        type: default
+        supportedTypes:
+          - default
+        description: 'Convert structured data (array/object) to JSON string'
+        category: data
+        icon: 'mdi:code-json'
+        color: '#f97316'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:data_to_json'
+        inputs:
+          -
+            id: data
+            name: Data
+            type: input
+            dataType: mixed
+            required: false
+            description: 'The data to convert to JSON'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: json
+            name: json
+            type: output
+            dataType: string
+            required: false
+            description: 'The JSON string representation'
+          -
+            id: success
+            name: success
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether the conversion was successful'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config: {  }
+        configSchema:
+          type: object
+          properties:
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: data_to_json.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 288
+      height: 330
+    selected: false
+    dragging: true
+  -
+    id: flowdrop_ai_provider_chat_model.2
+    type: universalNode
+    position:
+      x: 3980
+      'y': 300
+    data:
+      label: 'Chat Model (Drupal AI)'
+      config:
+        model: mistral-large-latest
+        temperature: 0.7
+        maxTokens: 1000
+        systemPrompt: |-
+          Analyze the Drupal article node provided in JSON format and provide feedback on:
+
+          1. SEO METADATA QUALITY:
+             - Is the meta title compelling and within 50-60 characters?
+             - Does the meta description effectively summarize the content in 150-160 characters?
+             - Are there keywords that could improve search visibility?
+
+          2. CONTENT QUALITY:
+             - Is the article well-structured and engaging?
+             - Does the body content support the meta description?
+             - Is the summary accurate?
+
+          3. RECOMMENDATIONS:
+             - Suggest improvements for meta title and description
+             - Rate overall SEO optimization (1-10)
+
+          Keep feedback concise and actionable.
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: flowdrop_ai_provider_chat_model
+        name: 'Chat Model (Drupal AI)'
+        type: default
+        supportedTypes:
+          - default
+        description: 'AI chat model for conversation and text generation'
+        category: ai
+        icon: 'mdi:robot'
+        color: '#a855f7'
+        plugin_version: 1.0.0
+        enabled: true
+        tags:
+          - model
+          - ai
+        executor_plugin: 'flowdrop_ai_provider:chat_model'
+        inputs:
+          -
+            id: message
+            name: Message
+            type: input
+            dataType: string
+            required: false
+            description: 'Message to send to AI model'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: response
+            name: response
+            type: output
+            dataType: string
+            required: false
+            description: 'The AI model response'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          model: mistral-large-latest
+          temperature: 0.7
+          maxTokens: 1000
+          systemPrompt: ''
+        configSchema:
+          type: object
+          properties:
+            model:
+              type: string
+              title: Model
+              description: 'AI model to use for chat'
+              default: mistral-large-latest
+              enum:
+                - chat
+                - claude-4-5-sonnet
+                - claude-4-5-opus
+                - mistral-large-latest
+                - mistral-medium-latest
+              options:
+                -
+                  value: chat
+                  label: 'chat (amazeeio)'
+                -
+                  value: claude-4-5-sonnet
+                  label: 'claude-4-5-sonnet (amazeeio)'
+                -
+                  value: claude-4-5-opus
+                  label: 'claude-4-5-opus (amazeeio)'
+                -
+                  value: mistral-large-latest
+                  label: 'mistral-large-latest (amazeeio)'
+                -
+                  value: mistral-medium-latest
+                  label: 'mistral-medium-latest (amazeeio)'
+            temperature:
+              type: number
+              title: Temperature
+              description: 'Model temperature (0.0 to 2.0)'
+              default: 0.7
+              minimum: 0
+              maximum: 2
+              step: '0.01'
+              format: range
+            maxTokens:
+              type: integer
+              title: 'Max Tokens'
+              description: 'Maximum tokens to generate'
+              default: 1000
+              minimum: 1
+              maximum: 4000
+            systemPrompt:
+              type: string
+              title: 'System Prompt'
+              description: 'System prompt to set the AI behavior and context'
+              default: ''
+              format: multiline
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: flowdrop_ai_provider_chat_model.2
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 288
+      height: 330
+    selected: false
+    dragging: true
+  -
+    id: chat_output.2
+    type: universalNode
+    position:
+      x: 4490
+      'y': 420
+    data:
+      label: 'Chat Output'
+      config:
+        format: text
+        showTimestamp: false
+        nodeType: square
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: chat_output
+        name: 'Chat Output'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Output chat messages in various formats'
+        category: processing
+        icon: 'mdi:chat-alert-outline'
+        color: '#14b8a6'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:chat_output'
+        inputs:
+          -
+            id: message
+            name: Message
+            type: input
+            dataType: string
+            required: false
+            description: 'Default chat message'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: message
+            name: message
+            type: output
+            dataType: string
+            required: false
+            description: 'The chat message content'
+          -
+            id: format
+            name: format
+            type: output
+            dataType: string
+            required: false
+            description: 'The message format (text, markdown, html)'
+          -
+            id: timestamp
+            name: timestamp
+            type: output
+            dataType: number
+            required: false
+            description: 'The message timestamp (if showTimestamp is enabled)'
+          -
+            id: metadata
+            name: metadata
+            type: output
+            dataType: json
+            required: false
+            description: 'Additional metadata for message linking'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          format: text
+          showTimestamp: false
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            format:
+              type: string
+              title: Format
+              description: 'Message format (text, markdown, html)'
+              default: text
+            showTimestamp:
+              type: boolean
+              title: 'Show Timestamp'
+              description: 'Whether to include timestamp'
+              default: false
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: chat_output.2
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 80
+      height: 80
+    selected: false
+    dragging: false
   -
     id: entity_save.1
     type: universalNode
     position:
-      x: 3210
-      'y': -180
+      x: 3030
+      'y': 240
     data:
       label: 'Entity Save'
       config:
         entity_type: node
-        bundle: ''
-        values: {  }
-        allowed_fields: {  }
+        bundle: article
+        allowed_fields:
+          - title
+          - field_body
+          - field_metatags
+        nodeType: default
+        instanceTitle: ''
+        instanceDescription: ''
       metadata:
         id: entity_save
         name: 'Entity Save'
         type: default
         supportedTypes:
           - default
+          - simple
+          - square
         description: 'Create or update Drupal entities'
-        category: data
+        category: processing
         icon: 'mdi:content-save'
-        color: '#f97316'
+        color: '#14b8a6'
         plugin_version: 1.0.0
         enabled: true
         tags: {  }
         executor_plugin: 'flowdrop_node_processor:entity_save'
         inputs:
-          -
-            id: entity_type
-            name: 'Entity Type'
-            type: input
-            dataType: string
-            required: false
-            description: 'The entity type to create/update (e.g., node, user, taxonomy_term)'
-            defaultValue: node
-          -
-            id: bundle
-            name: Bundle
-            type: input
-            dataType: string
-            required: false
-            description: 'The bundle/content type for the entity (required for new entities with bundles)'
-            defaultValue: ''
           -
             id: entity_id
             name: 'Entity ID'
@@ -900,69 +1269,6 @@ nodes:
             description: ''
         outputs:
           -
-            id: entity_id
-            name: entity_id
-            type: output
-            dataType: string
-            required: false
-            description: 'The ID of the saved entity'
-          -
-            id: entity_type
-            name: entity_type
-            type: output
-            dataType: string
-            required: false
-            description: 'The entity type'
-          -
-            id: bundle
-            name: bundle
-            type: output
-            dataType: string
-            required: false
-            description: 'The entity bundle (if applicable)'
-          -
-            id: is_new
-            name: is_new
-            type: output
-            dataType: boolean
-            required: false
-            description: 'Whether a new entity was created (true) or existing was updated (false)'
-          -
-            id: label
-            name: label
-            type: output
-            dataType: string
-            required: false
-            description: 'The label/title of the entity'
-          -
-            id: uuid
-            name: uuid
-            type: output
-            dataType: string
-            required: false
-            description: 'The UUID of the entity'
-          -
-            id: created
-            name: created
-            type: output
-            dataType: number
-            required: false
-            description: 'The creation timestamp (if available)'
-          -
-            id: changed
-            name: changed
-            type: output
-            dataType: number
-            required: false
-            description: 'The last changed timestamp (if available)'
-          -
-            id: skipped_fields
-            name: skipped_fields
-            type: output
-            dataType: array
-            required: false
-            description: 'List of field names that were skipped due to allowed_fields restriction'
-          -
             id: entity
             name: entity
             type: output
@@ -978,9 +1284,12 @@ nodes:
             description: 'Emitted when this node completes execution'
         config:
           entity_type: node
-          bundle: ''
-          values: {  }
-          allowed_fields: {  }
+          bundle: article
+          allowed_fields:
+            - title
+            - body
+            - field_metatags
+          type: default
         configSchema:
           type: object
           properties:
@@ -994,12 +1303,6 @@ nodes:
               title: Bundle
               description: 'The bundle/content type for the entity (required for new entities with bundles)'
               default: ''
-            values:
-              type: object
-              format: json
-              title: 'Field Values'
-              description: 'The field values to set on the entity as key-value pairs'
-              default: {  }
             allowed_fields:
               type: array
               title: 'Allowed Fields'
@@ -1007,6 +1310,15 @@ nodes:
               default: {  }
               items:
                 type: string
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: default
             instanceTitle:
               type: string
               title: Title
@@ -1020,10 +1332,13 @@ nodes:
               x-display-order: -1
           required: {  }
       nodeId: entity_save.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
     deletable: true
     measured:
       width: 288
-      height: 1340
+      height: 365
     selected: false
     dragging: false
 edges:
@@ -1122,10 +1437,104 @@ edges:
       height: 16
       color: '#111827'
     class: flowdrop--edge--trigger
+  -
+    id: xy-edge__data_to_json.1data_to_json.1-output-json-flowdrop_ai_provider_chat_model.2flowdrop_ai_provider_chat_model.2-input-message
+    source: data_to_json.1
+    target: flowdrop_ai_provider_chat_model.2
+    data:
+      targetNodeType: universalNode
+      targetCategory: ai
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: data_to_json.1-output-json
+    targetHandle: flowdrop_ai_provider_chat_model.2-input-message
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__flowdrop_ai_provider_chat_model.2flowdrop_ai_provider_chat_model.2-output-response-chat_output.2chat_output.2-input-message
+    source: flowdrop_ai_provider_chat_model.2
+    target: chat_output.2
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: flowdrop_ai_provider_chat_model.2-output-response
+    targetHandle: chat_output.2-input-message
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__json_to_data.1json_to_data.1-output-data-entity_save.1entity_save.1-input-values
+    source: json_to_data.1
+    target: entity_save.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: mixed
+    sourceHandle: json_to_data.1-output-data
+    targetHandle: entity_save.1-input-values
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__confirmation.1confirmation.1-output-true-entity_save.1entity_save.1-input-trigger
+    source: confirmation.1
+    target: entity_save.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+    sourceHandle: confirmation.1-output-true
+    targetHandle: entity_save.1-input-trigger
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__entity_save.1entity_save.1-output-entity-data_to_json.1data_to_json.1-input-data
+    source: entity_save.1
+    target: data_to_json.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: data
+      metadata:
+        edgeType: data
+        sourcePortDataType: json
+    sourceHandle: entity_save.1-output-entity
+    targetHandle: data_to_json.1-input-data
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
 metadata:
   version: 1.0.0
   createdAt: '2026-01-27T15:28:49.762Z'
-  updatedAt: '2026-01-27T15:40:45.276Z'
+  updatedAt: '2026-01-27T16:36:28.000Z'
 created: 1769523947
-changed: 1769528445
+changed: 1769531788
 uid: 0

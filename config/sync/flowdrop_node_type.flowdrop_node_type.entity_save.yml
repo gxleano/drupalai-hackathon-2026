@@ -7,7 +7,7 @@ _core:
 id: entity_save
 label: 'Entity Save'
 description: 'Create or update Drupal entities'
-category: data
+category: processing
 icon: 'mdi:content-save'
 plugin_version: 1.0.0
 enabled: true
@@ -19,47 +19,49 @@ parameters:
     default: {  }
   bundle:
     configurable: true
-    connectable: true
+    connectable: false
     required: false
-    default: ''
   entity_id:
     configurable: false
     connectable: true
     required: false
-    default: ''
   entity_type:
     configurable: true
-    connectable: true
-    required: true
+    connectable: false
+    required: false
     default: node
   values:
-    configurable: true
+    configurable: false
     connectable: true
     required: false
     default: {  }
 outputs:
   bundle:
-    exposed: true
+    exposed: false
   changed:
-    exposed: true
+    exposed: false
   created:
+    exposed: false
+  entity:
     exposed: true
   entity_id:
-    exposed: true
+    exposed: false
   entity_type:
-    exposed: true
+    exposed: false
   is_new:
-    exposed: true
+    exposed: false
   label:
-    exposed: true
+    exposed: false
   skipped_fields:
-    exposed: true
+    exposed: false
   uuid:
-    exposed: true
+    exposed: false
 tags: {  }
 executor_plugin: 'flowdrop_node_processor:entity_save'
 visual_type: default
 supported_visual_types:
   - default
+  - simple
+  - square
 unified_input_exposed: false
 unified_output_exposed: false
