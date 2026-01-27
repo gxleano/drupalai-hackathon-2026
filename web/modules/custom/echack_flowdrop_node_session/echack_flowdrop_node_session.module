@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for FlowDrop Node Session module.
+ *
+ * This module provides entity context support for FlowDrop playground sessions,
+ * allowing workflows to be initialized with a Drupal entity (node, term, etc.)
+ * as context data.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\flowdrop_playground\Entity\FlowDropPlaygroundMessageInterface;
+
+/**
+ * Implements hook_entity_presave().
+ *
+ * Injects entity context data into playground messages for sessions that have
+ * entity context configured. This allows EntityContext nodes in workflows to
+ * receive the pre-loaded entity data via initialData.
+ */
+function echack_flowdrop_node_session_entity_presave(EntityInterface $entity): void {
+  // Only process playground message entities.
+  if (!$entity instanceof FlowDropPlaygroundMessageInterface) {
+    return;
+  }
+
+  // Get the injector service and inject entity context.
+  /** @var \Drupal\echack_flowdrop_node_session\EventSubscriber\EntityContextInjectorSubscriber $injector */
+  $injector = \Drupal::service("echack_flowdrop_node_session.entity_context_injector");
+  $injector->injectEntityContext($entity);
+}

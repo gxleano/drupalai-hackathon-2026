@@ -1,0 +1,37 @@
+# ===== ENTITY-CONTEXT PLAYGROUND UI ROUTES =====
+
+# Playground page with entity context from URL parameters.
+# URL: /admin/flowdrop/workflows/{workflow_id}/playground/entity?entity_type=node&entity_id=1&revision_id=5
+echack_flowdrop_node_session.playground.entity:
+  path: "/admin/flowdrop/workflows/{flowdrop_workflow}/playground/entity"
+  defaults:
+    _controller: '\Drupal\echack_flowdrop_node_session\Controller\EntityContextPlaygroundController::playgroundPage'
+    _title_callback: '\Drupal\echack_flowdrop_node_session\Controller\EntityContextPlaygroundController::playgroundTitle'
+  requirements:
+    _permission: "create flowdrop_playground_session"
+    flowdrop_workflow: "[a-z0-9_]+"
+  options:
+    parameters:
+      flowdrop_workflow:
+        type: entity:flowdrop_workflow
+
+# ===== ENTITY-CONTEXT SESSION API ROUTES =====
+
+# Create a new playground session with entity context for a workflow.
+# This is a separate endpoint from the core FlowDrop playground API.
+echack_flowdrop_node_session.api.create_session:
+  path: "/api/flowdrop-node-session/workflows/{workflow_id}/sessions"
+  defaults:
+    _controller: '\Drupal\echack_flowdrop_node_session\Controller\NodeSessionApiController::createSession'
+  methods: [POST]
+  requirements:
+    _permission: "create flowdrop_playground_session"
+
+# Get entity context information for a session.
+echack_flowdrop_node_session.api.get_entity_context:
+  path: "/api/flowdrop-node-session/sessions/{session_id}/entity-context"
+  defaults:
+    _controller: '\Drupal\echack_flowdrop_node_session\Controller\NodeSessionApiController::getEntityContext'
+  methods: [GET]
+  requirements:
+    _custom_access: '\Drupal\echack_flowdrop_node_session\Controller\NodeSessionApiController::accessSession'
