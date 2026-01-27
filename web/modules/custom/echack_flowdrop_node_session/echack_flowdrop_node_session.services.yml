@@ -1,0 +1,20 @@
+services:
+  # Main service for managing entity-context playground sessions.
+  echack_flowdrop_node_session.service:
+    class: Drupal\echack_flowdrop_node_session\Service\NodeSessionService
+    arguments:
+      - "@entity_type.manager"
+      - "@flowdrop_playground.service"
+      - "@flowdrop.entity_serializer"
+      - "@current_user"
+      - "@logger.factory"
+
+  # Event subscriber / injector for entity context.
+  # Called from hook_entity_presave() to inject entity context into messages.
+  echack_flowdrop_node_session.entity_context_injector:
+    class: Drupal\echack_flowdrop_node_session\EventSubscriber\EntityContextInjectorSubscriber
+    arguments:
+      - "@echack_flowdrop_node_session.service"
+      - "@entity_type.manager"
+    tags:
+      - { name: event_subscriber }
