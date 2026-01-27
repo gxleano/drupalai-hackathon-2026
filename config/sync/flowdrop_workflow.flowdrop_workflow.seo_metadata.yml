@@ -164,26 +164,27 @@ nodes:
           4. Output the JSON directly as plain text
 
           TASK:
-          Generate article content based on user's message with 3 paragraphs (intro, main, conclusion) and SEO metadata.
+          Generate high-quality article content based on user's message with 3 well-structured paragraphs (engaging intro, informative main content, strong conclusion) and SEO-optimized metadata.
 
           REQUIRED JSON STRUCTURE (use actual content, not placeholders):
-          {"title":"Article title here","field_body":[{"value":"<p>Paragraph 1</p><p>Paragraph 2</p><p>Paragraph 3</p>","summary":"One sentence summary","format":"content_format"}],"field_metatags":[{"value":"{\"title\":\"SEO title 50-60 chars\",\"description\":\"SEO description 150-160 chars\"}"}]}
+          {"title":"Article title here","field_body":[{"value":"<p>Paragraph 1</p><p>Paragraph 2</p><p>Paragraph 3</p>","summary":"One sentence summary","format":"content_format"}],"field_metatags":[{"value":"{\"title\":\"SEO title 50-60 chars\",\"description\":\"SEO description 150-160 chars\"}"}],"meta_title":"SEO title 50-60 chars","meta_description":"SEO description 150-160 chars"}
 
           CRITICAL FIELD NAMES AND STRUCTURE:
           - title: REQUIRED, non-empty string (article title)
           - field_body: REQUIRED array with one object containing value, summary, format
-          - field_body[0].value: HTML with <p> tags
+          - field_body[0].value: HTML with <p> tags (will be displayed as plain text in preview)
           - field_body[0].summary: Brief one-sentence overview
           - field_body[0].format: MUST be "content_format" (exactly this string)
-          - field_metatags: REQUIRED array with one object containing value
+          - field_metatags: REQUIRED array for Drupal (with nested JSON string)
           - field_metatags[0].value: JSON string with title and description (use \" for inner quotes)
-          - Meta title: 50-60 characters, SEO-focused
-          - Meta description: 150-160 characters with keywords
+          - meta_title: REQUIRED string (same as field_metatags title), 50-60 characters, SEO-focused
+          - meta_description: REQUIRED string (same as field_metatags description), 150-160 characters with keywords
+          - Note: meta_title and meta_description are duplicates for easy preview display
           - Use double quotes, escape inner quotes with \"
-          - Compact format (no line breaks)
+          - Compact format (no line breaks in JSON)
 
-          EXAMPLE OUTPUT (copy this EXACT structure - note format is "content_format"):
-          {"title":"Understanding the European Commission's Role in EU Policy","field_body":[{"value":"<p>The European Commission serves as the executive branch of the European Union, responsible for proposing legislation, implementing decisions, and managing day-to-day EU operations.</p><p>With 27 Commissioners representing each member state, the Commission drafts new EU laws, enforces regulations, and manages the EU budget. It acts as guardian of EU treaties.</p><p>Through its directorates-general, the Commission shapes policies affecting over 450 million EU citizens, from trade to environment and digital transformation.</p>","summary":"Learn about the European Commission's key role in EU governance and policy-making.","format":"content_format"}],"field_metatags":[{"value":"{\"title\":\"European Commission: Role, Powers & EU Policy Impact\",\"description\":\"Discover how the European Commission shapes EU policy and legislation. Learn about its structure, powers, and impact on member states.\"}"}]}
+          EXAMPLE OUTPUT (copy this EXACT structure):
+          {"title":"Understanding the European Commission's Role in EU Policy","field_body":[{"value":"<p>The European Commission serves as the executive branch of the European Union, responsible for proposing legislation, implementing decisions, and managing day-to-day EU operations.</p><p>With 27 Commissioners representing each member state, the Commission drafts new EU laws, enforces regulations, and manages the EU budget. It acts as guardian of EU treaties.</p><p>Through its directorates-general, the Commission shapes policies affecting over 450 million EU citizens, from trade to environment and digital transformation.</p>","summary":"Learn about the European Commission's key role in EU governance and policy-making.","format":"content_format"}],"field_metatags":[{"value":"{\"title\":\"European Commission: Role, Powers & EU Policy Impact\",\"description\":\"Discover how the European Commission shapes EU policy and legislation. Learn about its structure, powers, and impact on member states.\"}"}],"meta_title":"European Commission: Role, Powers & EU Policy Impact","meta_description":"Discover how the European Commission shapes EU policy and legislation. Learn about its structure, powers, and impact on member states."}
         instanceTitle: ''
         instanceDescription: ''
       metadata:
@@ -540,15 +541,26 @@ nodes:
       label: 'Prompt Template'
       config:
         template: |+
-          Article Draft Preview
+          ## 📄 Article Preview
 
-          # {{ title }}
+          ### Title
+          **{{ title }}**
 
-          {{ field_body.0.value }}
+          ### Content
+          {{ field_body.0.value|striptags }}
+
+          ### Summary
+          {{ field_body.0.summary }}
 
           ---
 
-          SEO Metadata: {{ field_metatags.0.value }}
+          ## 🔍 SEO Metadata
+          **Meta Title:** {{ meta_title }}
+          **Meta Description:** {{ meta_description }}
+
+          ---
+
+          **Ready to publish?** Review the content above and confirm to create this article.
 
         nodeType: simple
         instanceTitle: ''
@@ -1534,7 +1546,7 @@ edges:
 metadata:
   version: 1.0.0
   createdAt: '2026-01-27T15:28:49.762Z'
-  updatedAt: '2026-01-27T16:36:28.000Z'
+  updatedAt: '2026-01-27T16:42:40.000Z'
 created: 1769523947
-changed: 1769531788
+changed: 1769542695
 uid: 0

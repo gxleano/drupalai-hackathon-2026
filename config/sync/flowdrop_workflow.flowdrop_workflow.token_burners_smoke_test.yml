@@ -5,9 +5,534 @@ dependencies: {  }
 id: token_burners_smoke_test
 label: 'Token Burners Smoke Test'
 description: ''
-nodes: {  }
-edges: {  }
-metadata: {  }
+nodes:
+  -
+    id: echack_flowdrop_agents_ai_agents_executor.1
+    type: universalNode
+    position:
+      x: 450
+      'y': 350
+    data:
+      label: 'AI Agent Executor'
+      config:
+        agent_id: node_content_type_agent
+        task_title: ''
+        create_directly: true
+        additional_context: ''
+        nodeType: default
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: echack_flowdrop_agents_ai_agents_executor
+        name: 'AI Agent Executor'
+        type: default
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Execute AI Agents from the ai_agents module with full status tracking'
+        category: agents
+        icon: 'mdi:robot-outline'
+        color: '#28c3c0'
+        plugin_version: 1.0.0
+        enabled: true
+        tags:
+          - agents
+          - ai
+          - automation
+        executor_plugin: 'echack_flowdrop_agents:ai_agents_executor'
+        inputs:
+          -
+            id: task_description
+            name: 'Task Description'
+            type: input
+            dataType: string
+            required: true
+            description: 'Detailed description of the task for the agent to perform'
+          -
+            id: chat_history
+            name: 'Chat History'
+            type: input
+            dataType: array
+            required: false
+            description: 'Array of previous chat messages with role and content keys'
+            defaultValue: {  }
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: response
+            name: response
+            type: output
+            dataType: string
+            required: false
+            description: 'Agent response text'
+          -
+            id: agent_id
+            name: agent_id
+            type: output
+            dataType: string
+            required: false
+            description: 'ID of the executed agent'
+          -
+            id: agent_type
+            name: agent_type
+            type: output
+            dataType: string
+            required: false
+            description: 'Type of agent (Plugin or Config)'
+          -
+            id: job_status
+            name: job_status
+            type: output
+            dataType: number
+            required: false
+            description: 'Job status code'
+          -
+            id: job_status_label
+            name: job_status_label
+            type: output
+            dataType: string
+            required: false
+            description: 'Human-readable job status'
+          -
+            id: structured_output
+            name: structured_output
+            type: output
+            dataType: json
+            required: false
+            description: 'Created/edited/deleted configs and entities'
+          -
+            id: questions
+            name: questions
+            type: output
+            dataType: array
+            required: false
+            description: 'Questions if agent needs answers'
+          -
+            id: success
+            name: success
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether execution was successful'
+          -
+            id: error_message
+            name: error_message
+            type: output
+            dataType: string
+            required: false
+            description: 'Error details if failed'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          agent_id: node_content_type_agent
+          create_directly: true
+          type: default
+        configSchema:
+          type: object
+          properties:
+            agent_id:
+              type: string
+              title: 'AI Agent'
+              description: 'Select the AI agent to execute'
+              default: node_content_type_agent
+              enum:
+                - node_content_type_agent
+                - field_type_agent
+                - taxonomy_agent
+                - content_type_agent_triage
+                - field_agent_triage
+                - taxonomy_agent_config
+              options:
+                -
+                  value: node_content_type_agent
+                  label: 'Node Content Type Agent (Plugin)'
+                -
+                  value: field_type_agent
+                  label: 'Field Type Agent (Plugin)'
+                -
+                  value: taxonomy_agent
+                  label: 'Taxonomy Agent (Plugin)'
+                -
+                  value: content_type_agent_triage
+                  label: 'Content Type Agent (Config)'
+                -
+                  value: field_agent_triage
+                  label: 'Field Agent (Config)'
+                -
+                  value: taxonomy_agent_config
+                  label: 'Taxonomy Agent (Config)'
+            task_title:
+              type: string
+              title: 'Task Title'
+              description: 'Optional short title for the task'
+              required: false
+            create_directly:
+              type: boolean
+              title: 'Create Directly'
+              description: 'If true, agent creates entities/configs immediately. If false, returns blueprint.'
+              required: false
+              default: true
+            additional_context:
+              type: string
+              title: 'Additional Context'
+              description: 'Extra context or instructions for the agent'
+              required: false
+              format: textarea
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: default
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required:
+            - agent_id
+      nodeId: echack_flowdrop_agents_ai_agents_executor.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 288
+      height: 330
+    selected: false
+    dragging: false
+  -
+    id: chat_output.1
+    type: universalNode
+    position:
+      x: 1080
+      'y': 610
+    data:
+      label: 'Chat Output'
+      config:
+        format: markdown
+        showTimestamp: false
+        nodeType: square
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: chat_output
+        name: 'Chat Output'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Output chat messages in various formats'
+        category: processing
+        icon: 'mdi:chat-alert-outline'
+        color: '#14b8a6'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:chat_output'
+        inputs:
+          -
+            id: message
+            name: Message
+            type: input
+            dataType: string
+            required: false
+            description: 'Default chat message'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: message
+            name: message
+            type: output
+            dataType: string
+            required: false
+            description: 'The chat message content'
+          -
+            id: format
+            name: format
+            type: output
+            dataType: string
+            required: false
+            description: 'The message format (text, markdown, html)'
+          -
+            id: timestamp
+            name: timestamp
+            type: output
+            dataType: number
+            required: false
+            description: 'The message timestamp (if showTimestamp is enabled)'
+          -
+            id: metadata
+            name: metadata
+            type: output
+            dataType: json
+            required: false
+            description: 'Additional metadata for message linking'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          format: text
+          showTimestamp: false
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            format:
+              type: string
+              title: Format
+              description: 'Message format (text, markdown, html)'
+              default: text
+            showTimestamp:
+              type: boolean
+              title: 'Show Timestamp'
+              description: 'Whether to include timestamp'
+              default: false
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: chat_output.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 80
+      height: 80
+    selected: false
+    dragging: false
+  -
+    id: chat_input.1
+    type: universalNode
+    position:
+      x: 30
+      'y': 330
+    data:
+      label: 'Chat Input'
+      config:
+        nodeType: simple
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: chat_input
+        name: 'Chat Input'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Chat input for playground workflows with optional conversation history'
+        category: inputs
+        icon: 'mdi:chat-plus-outline'
+        color: '#10b981'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:chat_input'
+        inputs:
+          -
+            id: message
+            name: Message
+            type: input
+            dataType: string
+            required: false
+            description: 'The chat message content (typically injected from playground)'
+            defaultValue: ''
+          -
+            id: history
+            name: 'Conversation History'
+            type: input
+            dataType: array
+            required: false
+            description: 'Optional conversation history for context-aware processing'
+          -
+            id: sessionId
+            name: 'Session ID'
+            type: input
+            dataType: number
+            required: false
+            description: 'Playground session ID (for tracking)'
+          -
+            id: messageId
+            name: 'Message ID'
+            type: input
+            dataType: number
+            required: false
+            description: 'Playground message ID (for tracking)'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: message
+            name: message
+            type: output
+            dataType: string
+            required: false
+            description: 'The chat message content'
+          -
+            id: history
+            name: history
+            type: output
+            dataType: array
+            required: false
+            description: 'Conversation history (if included)'
+          -
+            id: sessionId
+            name: sessionId
+            type: output
+            dataType: number
+            required: false
+            description: 'Playground session ID'
+          -
+            id: messageId
+            name: messageId
+            type: output
+            dataType: number
+            required: false
+            description: 'Playground message ID'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: chat_input.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 288
+      height: 103
+    selected: true
+    dragging: false
+edges:
+  -
+    id: xy-edge__chat_input.1chat_input.1-output-message-echack_flowdrop_agents_ai_agents_executor.1echack_flowdrop_agents_ai_agents_executor.1-input-task_description
+    source: chat_input.1
+    target: echack_flowdrop_agents_ai_agents_executor.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: agents
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: chat_input.1-output-message
+    targetHandle: echack_flowdrop_agents_ai_agents_executor.1-input-task_description
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__echack_flowdrop_agents_ai_agents_executor.1echack_flowdrop_agents_ai_agents_executor.1-output-response-chat_output.1chat_output.1-input-message
+    source: echack_flowdrop_agents_ai_agents_executor.1
+    target: chat_output.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: echack_flowdrop_agents_ai_agents_executor.1-output-response
+    targetHandle: chat_output.1-input-message
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+metadata:
+  version: 1.0.0
+  createdAt: '2026-01-27T21:48:59.267Z'
+  updatedAt: '2026-01-27T22:07:25.322Z'
 created: 1769515857
-changed: 1769525682
+changed: 1769551645
 uid: 0

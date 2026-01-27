@@ -1,0 +1,11 @@
+uuid: 443a53c5-c3b0-4e68-b320-3cc9de9bf636
+langcode: en
+status: true
+dependencies: {  }
+name: Event
+type: event
+description: 'A content type for managing and displaying upcoming events on the website.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: true

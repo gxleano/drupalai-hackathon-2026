@@ -1,0 +1,76 @@
+uuid: 982a454c-bd2f-4425-a8dc-e1d6663f31ae
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: Xvq_JpQIDKD11GuVDC2v3ClGQ5GuumLpsbSTucDAqSI
+id: echack_flowdrop_agents_ai_agents_executor
+label: 'AI Agent Executor'
+description: 'Execute AI Agents from the ai_agents module with full status tracking'
+category: agents
+icon: 'mdi:robot-outline'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  additional_context:
+    configurable: true
+    connectable: false
+    required: false
+  agent_id:
+    configurable: true
+    connectable: false
+    required: true
+    default: node_content_type_agent
+  chat_history:
+    configurable: false
+    connectable: true
+    required: false
+    default: {  }
+  create_directly:
+    configurable: true
+    connectable: false
+    required: false
+    default: true
+  task_description:
+    configurable: false
+    connectable: true
+    required: true
+  task_title:
+    configurable: true
+    connectable: false
+    required: false
+outputs:
+  agent_id:
+    exposed: true
+  agent_type:
+    exposed: true
+  error_message:
+    exposed: true
+  execution_metadata:
+    exposed: false
+  information:
+    exposed: false
+  job_status:
+    exposed: true
+  job_status_label:
+    exposed: true
+  questions:
+    exposed: true
+  response:
+    exposed: true
+  structured_output:
+    exposed: true
+  success:
+    exposed: true
+tags:
+  - agents
+  - ai
+  - automation
+executor_plugin: 'echack_flowdrop_agents:ai_agents_executor'
+visual_type: default
+supported_visual_types:
+  - default
+  - simple
+  - square
+unified_input_exposed: false
+unified_output_exposed: false
