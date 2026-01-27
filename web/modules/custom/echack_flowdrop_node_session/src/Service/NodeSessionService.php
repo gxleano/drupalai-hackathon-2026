@@ -333,16 +333,21 @@ class NodeSessionService {
     $patterns = [
       "entity_context",
       "entitycontext",
-      "echack_flowdrop_node_session:entity_context",
     ];
 
     foreach ($nodes as $node) {
-      $nodeType = $node["type"] ?? "";
-      $nodeTypeLower = strtolower($nodeType);
+      if (!is_array($node) || !isset($node["id"])) {
+        continue;
+      }
 
-      // Check if node type matches any of our patterns.
+      // Get the node type ID from metadata (same pattern as core FlowDrop).
+      // The node type is stored in $node['data']['metadata']['id'].
+      $metadata = $node["data"]["metadata"] ?? [];
+      $nodeTypeId = strtolower((string) ($metadata["id"] ?? ""));
+
+      // Check if node type ID contains any of our patterns.
       foreach ($patterns as $pattern) {
-        if ($nodeTypeLower === $pattern || str_ends_with($nodeTypeLower, ":" . $pattern)) {
+        if (str_contains($nodeTypeId, $pattern)) {
           $entityContextNodes[] = $node;
           break;
         }

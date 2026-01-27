@@ -59,7 +59,7 @@ use Drupal\Core\Url;
 
 // Basic URL
 $url = Url::fromRoute('echack_flowdrop_node_session.playground.entity', [
-  'flowdrop_workflow' => 'my_workflow',
+  'workflow_id' => 'my_workflow',
 ], [
   'query' => [
     'entity_type' => 'node',
@@ -69,7 +69,7 @@ $url = Url::fromRoute('echack_flowdrop_node_session.playground.entity', [
 
 // With revision
 $url = Url::fromRoute('echack_flowdrop_node_session.playground.entity', [
-  'flowdrop_workflow' => 'my_workflow',
+  'workflow_id' => 'my_workflow',
 ], [
   'query' => [
     'entity_type' => 'node',
@@ -85,7 +85,7 @@ $urlString = $url->toString();
 
 // In Twig
 {{ url('echack_flowdrop_node_session.playground.entity', {
-  'flowdrop_workflow': 'my_workflow'
+  'workflow_id': 'my_workflow'
 }, {
   'query': {
     'entity_type': 'node',
@@ -96,14 +96,14 @@ $urlString = $url->toString();
 
 ### Route Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `flowdrop_workflow` | route | Workflow machine name |
-| `entity_type` | query | Entity type ID (required) |
-| `entity_id` | query | Entity ID (required) |
-| `revision_id` | query | Revision ID (optional) |
-| `bundle` | query | Bundle for validation (optional) |
-| `session_name` | query | Custom session name (optional) |
+| Parameter      | Type  | Description                      |
+| -------------- | ----- | -------------------------------- |
+| `workflow_id`  | route | Workflow machine name            |
+| `entity_type`  | query | Entity type ID (required)        |
+| `entity_id`    | query | Entity ID (required)             |
+| `revision_id`  | query | Revision ID (optional)           |
+| `bundle`       | query | Bundle for validation (optional) |
+| `session_name` | query | Custom session name (optional)   |
 
 ## Services
 

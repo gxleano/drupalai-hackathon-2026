@@ -3,17 +3,16 @@
 # Playground page with entity context from URL parameters.
 # URL: /admin/flowdrop/workflows/{workflow_id}/playground/entity?entity_type=node&entity_id=1&revision_id=5
 echack_flowdrop_node_session.playground.entity:
-  path: "/admin/flowdrop/workflows/{flowdrop_workflow}/playground/entity"
+  path: "/admin/flowdrop/workflows/{workflow_id}/playground/entity"
   defaults:
     _controller: '\Drupal\echack_flowdrop_node_session\Controller\EntityContextPlaygroundController::playgroundPage'
     _title_callback: '\Drupal\echack_flowdrop_node_session\Controller\EntityContextPlaygroundController::playgroundTitle'
   requirements:
     _permission: "create flowdrop_playground_session"
-    flowdrop_workflow: "[a-z0-9_]+"
+    workflow_id: "[a-z0-9_]+"
   options:
-    parameters:
-      flowdrop_workflow:
-        type: entity:flowdrop_workflow
+    _admin_route: TRUE
+    no_cache: TRUE
 
 # ===== ENTITY-CONTEXT SESSION API ROUTES =====
 
