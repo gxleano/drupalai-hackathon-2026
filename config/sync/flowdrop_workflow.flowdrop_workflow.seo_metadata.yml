@@ -164,7 +164,7 @@ nodes:
           4. Output the JSON directly as plain text
 
           TASK:
-          Generate article content based on user's message with 3 paragraphs (intro, main, conclusion) and SEO metadata.
+          Generate high-quality article content based on user's message with 3 well-structured paragraphs (engaging intro, informative main content, strong conclusion) and SEO-optimized metadata.
 
           REQUIRED JSON STRUCTURE (use actual content, not placeholders):
           {"title":"Article title here","field_body":[{"value":"<p>Paragraph 1</p><p>Paragraph 2</p><p>Paragraph 3</p>","summary":"One sentence summary","format":"content_format"}],"field_metatags":[{"value":"{\"title\":\"SEO title 50-60 chars\",\"description\":\"SEO description 150-160 chars\"}"}]}
@@ -540,15 +540,25 @@ nodes:
       label: 'Prompt Template'
       config:
         template: |+
-          Article Draft Preview
+          ## 📄 Article Preview
 
-          # {{ title }}
+          ### Title
+          **{{ title }}**
 
+          ### Content
           {{ field_body.0.value }}
+
+          ### Summary
+          {{ field_body.0.summary }}
 
           ---
 
-          SEO Metadata: {{ field_metatags.0.value }}
+          ## 🔍 SEO Metadata
+          {{ field_metatags.0.value }}
+
+          ---
+
+          **Ready to publish?** Review the content above and confirm to create this article.
 
         nodeType: simple
         instanceTitle: ''
@@ -1534,7 +1544,7 @@ edges:
 metadata:
   version: 1.0.0
   createdAt: '2026-01-27T15:28:49.762Z'
-  updatedAt: '2026-01-27T16:36:28.000Z'
+  updatedAt: '2026-01-27T16:42:40.000Z'
 created: 1769523947
-changed: 1769531788
+changed: 1769532160
 uid: 0
