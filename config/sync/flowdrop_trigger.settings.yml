@@ -1,4 +1,4 @@
 _core:
   default_config_hash: U4ZIB91SejqJXwn5NX2BHApp0GJzWVC8BUzaNsXzHwI
-default_orchestrator: asynchronous
+default_orchestrator: synchronous_pipeline
 log_level: info
