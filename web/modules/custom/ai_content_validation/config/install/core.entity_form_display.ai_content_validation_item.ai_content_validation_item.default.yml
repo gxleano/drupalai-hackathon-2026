@@ -1,0 +1,76 @@
+uuid: b819f696-1849-4612-a794-c795c6a30a87
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.ai_content_validation_item.ai_content_validation_item.field_related_node
+    - field.field.ai_content_validation_item.ai_content_validation_item.field_validation_status
+  module:
+    - ai_content_validation
+    - tagify
+    - text
+id: ai_content_validation_item.ai_content_validation_item.default
+targetEntityType: ai_content_validation_item
+bundle: ai_content_validation_item
+mode: default
+content:
+  created:
+    type: datetime_timestamp
+    weight: 6
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  description:
+    type: text_textarea
+    weight: 2
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_related_node:
+    type: tagify_entity_reference_autocomplete_widget
+    weight: 3
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      placeholder: ''
+      suggestions_dropdown: 1
+      show_entity_id: 0
+      show_info_label: 0
+      info_label: ''
+      parent_selection: 1
+    third_party_settings: {  }
+  field_validation_status:
+    type: options_select
+    weight: 4
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  label:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    weight: 1
+    region: content
+    settings:
+      display_label: false
+    third_party_settings: {  }
+  uid:
+    type: entity_reference_autocomplete
+    weight: 5
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden: {  }

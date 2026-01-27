@@ -1,0 +1,7 @@
+entity.ai_content_validation_item.settings:
+  path: 'admin/structure/ai-content-validation-item'
+  defaults:
+    _form: '\Drupal\ai_content_validation\Form\AiValidationsSettingsForm'
+    _title: 'Ai validations'
+  requirements:
+    _permission: 'administer ai_content_validation_item'

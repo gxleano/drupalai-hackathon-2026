@@ -1,0 +1,24 @@
+uuid: e27a6a4d-dc6c-4e5f-ae68-e60f3492b54c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.ai_content_validation_item.field_related_node
+  module:
+    - ai_content_validation
+_core:
+  default_config_hash: z4a3piMNL-VdjgKCEAUvujbEFA5ogXL4TVgJ-rN58hc
+id: ai_content_validation_item.ai_content_validation_item.field_related_node
+field_name: field_related_node
+entity_type: ai_content_validation_item
+bundle: ai_content_validation_item
+label: Node
+description: 'The node this validation applies to.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings: {  }
+field_type: entity_reference

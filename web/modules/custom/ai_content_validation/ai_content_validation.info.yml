@@ -1,0 +1,7 @@
+name: 'ai_content_validation'
+type: module
+description: 'Contains a content entity to that keeps track of ai proposed validations'
+package: Custom
+core_version_requirement: ^10 || ^11
+dependencies:
+  - flowdrop:flowdrop

@@ -1,0 +1,3 @@
+administer ai_content_validation_item:
+  title: 'Administer ai validations'
+  restrict access: true

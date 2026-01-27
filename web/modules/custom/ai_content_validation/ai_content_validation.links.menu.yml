@@ -1,0 +1,11 @@
+entity.ai_content_validation_item.settings:
+  title: 'Ai validations'
+  description: 'Configure an Ai validations entity type.'
+  route_name:  entity.ai_content_validation_item.settings
+  parent: system.admin_structure
+
+entity.ai_content_validation_item.collection:
+  title: 'Ai validations'
+  description: 'List of ai validations.'
+  route_name: entity.ai_content_validation_item.collection
+  parent: system.admin_content
