@@ -43,7 +43,7 @@ function template_preprocess_ai_content_validation_item(array &$variables): void
 function ai_content_validation_user_cancel($edit, UserInterface $account, $method): void {
   switch ($method) {
     case 'user_cancel_block_unpublish':
-      // Unpublish ai validationss.
+      // Unpublish ai validations.
       $storage = \Drupal::entityTypeManager()->getStorage('ai_content_validation_item');
       $ai_content_validation_item_ids = $storage->getQuery()
         ->condition('uid', $account->id())
@@ -56,7 +56,7 @@ function ai_content_validation_user_cancel($edit, UserInterface $account, $metho
       break;
 
     case 'user_cancel_reassign':
-      // Anonymize ai validationss.
+      // Anonymize ai validations.
       $storage = \Drupal::entityTypeManager()->getStorage('ai_content_validation_item');
       $ai_content_validation_item_ids = $storage->getQuery()
         ->condition('uid', $account->id())
@@ -73,7 +73,7 @@ function ai_content_validation_user_cancel($edit, UserInterface $account, $metho
  * Implements hook_ENTITY_TYPE_predelete() for user entities.
  */
 function ai_content_validation_user_predelete(UserInterface $account): void {
-  // Delete ai validationss that belong to this account.
+  // Delete ai validations that belong to this account.
   $storage = \Drupal::entityTypeManager()->getStorage('ai_content_validation_item');
   $ai_content_validation_item_ids = $storage->getQuery()
     ->condition('uid', $account->id())
