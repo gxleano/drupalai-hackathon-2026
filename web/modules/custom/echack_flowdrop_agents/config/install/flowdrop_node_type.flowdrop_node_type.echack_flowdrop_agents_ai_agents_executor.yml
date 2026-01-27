@@ -1,0 +1,62 @@
+id: echack_flowdrop_agents_ai_agents_executor
+label: 'AI Agent Executor'
+description: 'Execute AI Agents from the ai_agents module with full status tracking'
+category: agents
+icon: 'mdi:robot-outline'
+version: '1.0.0'
+enabled: true
+parameters:
+  agent_id:
+    configurable: true
+    connectable: false
+    required: true
+  task_description:
+    configurable: false
+    connectable: true
+    required: true
+  task_title:
+    configurable: true
+    connectable: false
+    required: false
+  chat_history:
+    configurable: false
+    connectable: true
+    required: false
+    default: []
+  create_directly:
+    configurable: true
+    connectable: false
+    required: false
+    default: true
+  additional_context:
+    configurable: true
+    connectable: false
+    required: false
+outputs:
+  response:
+    exposed: true
+  agent_id:
+    exposed: true
+  agent_type:
+    exposed: true
+  job_status:
+    exposed: true
+  job_status_label:
+    exposed: true
+  structured_output:
+    exposed: true
+  questions:
+    exposed: true
+  information:
+    exposed: false
+  success:
+    exposed: true
+  error_message:
+    exposed: true
+  execution_metadata:
+    exposed: false
+tags:
+  - agents
+  - ai
+  - automation
+executor_plugin: 'echack_flowdrop_agents:ai_agents_executor'

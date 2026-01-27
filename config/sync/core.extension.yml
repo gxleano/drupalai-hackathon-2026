@@ -41,6 +41,7 @@ module:
   eca_render: 0
   eca_ui: 0
   eca_user: 0
+  echack_flowdrop_agents: 0
   echack_flowdrop_node_session: 0
   editor: 0
   field: 0
