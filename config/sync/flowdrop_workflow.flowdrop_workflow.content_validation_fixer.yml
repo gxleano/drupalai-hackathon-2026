@@ -224,7 +224,7 @@ nodes:
           10. Optimize for SEO
 
           EXAMPLE OUTPUT (copy this EXACT structure):
-          {"title":"European Commission: Role, Powers & EU Policy Impact","field_body":[{"value":"<p>The European Commission serves as the executive branch of the European Union, responsible for proposing legislation and managing operations.</p><p>With proper citations and sources added throughout.</p>","summary":"Learn about the European Commission's role in EU governance.","format":"content_format"}],"field_metatags":"Discover how the European Commission shapes EU policy and legislation. Learn about its structure, powers, and impact on member states.","explanation":"Improved title for SEO, added proper citations, simplified language, ensured neutrality, added practical engagement steps."}
+          {"title":"European Commission: Role, Powers & EU Policy Impact","field_body":[{"value":"<p>The European Commission serves as the executive branch of the European Union, responsible for proposing legislation and managing operations.</p><p>With proper citations and sources added throughout.</p>","summary":"Learn about the European Commission's role in EU governance.","format":"content_format"}],"field_metatags":[{"value":"{\"title\":\"European Commission: Role, Powers & EU Policy Impact\",\"description\":\"Discover how the European Commission shapes EU policy and legislation. Learn about its structure, powers, and impact on member states.\"}"}],"meta_title":"European Commission: Role, Powers & EU Policy Impact","meta_description":"Discover how the European Commission shapes EU policy and legislation. Learn about its structure, powers, and impact on member states."}
         instanceTitle: 'Content Fixer AI'
         instanceDescription: ''
       metadata:
@@ -350,7 +350,7 @@ nodes:
     measured:
       width: 288
       height: 440
-    selected: false
+    selected: true
     dragging: false
   -
     id: prompt_template.3
@@ -1246,7 +1246,7 @@ nodes:
     measured:
       width: 288
       height: 103
-    selected: true
+    selected: false
     dragging: true
   -
     id: json_to_data.2
@@ -1555,7 +1555,7 @@ edges:
 metadata:
   version: 1.0.0
   createdAt: '2026-01-28T09:01:32.652Z'
-  updatedAt: '2026-01-28T11:48:07.118Z'
+  updatedAt: '2026-01-28T12:04:44.838Z'
 created: 1769600262
-changed: 1769600887
+changed: 1769601885
 uid: 0
