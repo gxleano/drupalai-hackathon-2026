@@ -52,4 +52,17 @@ final class AiValidationsListBuilder extends EntityListBuilder {
     return $row + parent::buildRow($entity);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDefaultOperations(EntityInterface $entity): array {
+    $operations = parent::getDefaultOperations($entity);
+    $operations['process'] = [
+      'title' => $this->t('Process'),
+      'weight' => 20,
+      'url' => \Drupal\Core\Url::fromRoute('<front>'),
+    ];
+    return $operations;
+  }
+
 }
