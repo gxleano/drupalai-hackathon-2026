@@ -226,8 +226,8 @@ nodes:
     id: chat_output.1
     type: universalNode
     position:
-      x: 1080
-      'y': 610
+      x: 920
+      'y': 470
     data:
       label: 'Chat Output'
       config:
@@ -350,8 +350,8 @@ nodes:
     measured:
       width: 80
       height: 80
-    selected: false
-    dragging: false
+    selected: true
+    dragging: true
   -
     id: chat_input.1
     type: universalNode
@@ -487,7 +487,7 @@ nodes:
     measured:
       width: 288
       height: 103
-    selected: true
+    selected: false
     dragging: false
 edges:
   -
@@ -532,7 +532,7 @@ edges:
 metadata:
   version: 1.0.0
   createdAt: '2026-01-27T21:48:59.267Z'
-  updatedAt: '2026-01-27T22:07:25.322Z'
+  updatedAt: '2026-01-28T07:26:44.289Z'
 created: 1769515857
-changed: 1769555323
+changed: 1769585204
 uid: 0
