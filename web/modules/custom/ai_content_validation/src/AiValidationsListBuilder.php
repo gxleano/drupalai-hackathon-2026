@@ -6,6 +6,7 @@ namespace Drupal\ai_content_validation;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
+use Drupal\Core\Url;
 
 /**
  * Provides a list controller for the ai validations entity type.
@@ -68,13 +69,33 @@ final class AiValidationsListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   protected function getDefaultOperations(EntityInterface $entity): array {
+
+    $workflow = $entity->get('field_flowdrop_workflow')->getValue();
+    $flowdrop_id = $workflow[0]['target_id'] ?? '';
+
+    $revision = $entity->get('field_content_revision')->getValue();
+
+
+    $url = Url::fromRoute('echack_flowdrop_node_session.playground.entity', [
+      'workflow_id' => $flowdrop_id,
+    ], [
+      'query' => [
+        'entity_type' => 'node',
+        'entity_id' => $revision[0]['target_id'],
+        'revision_id' =>  $revision[0]['target_revision_id'],
+      ],
+    ]);
+
     $operations = parent::getDefaultOperations($entity);
     $operations['process'] = [
       'title' => $this->t('Process'),
       'weight' => 20,
-      'url' => \Drupal\Core\Url::fromRoute('<front>'),
+      'url' => $url,
     ];
     return $operations;
+
+
+
   }
 
 }
