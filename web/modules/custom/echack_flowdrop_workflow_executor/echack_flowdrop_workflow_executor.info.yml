@@ -1,0 +1,10 @@
+name: 'FlowDrop Workflow Executor'
+type: module
+description: 'Enables executing FlowDrop workflows from within other workflows, with support for sync and async execution modes.'
+package: FlowDrop
+core_version_requirement: ^10 || ^11
+dependencies:
+  - flowdrop:flowdrop
+  - flowdrop:flowdrop_workflow
+  - flowdrop:flowdrop_playground
+  - echack_flowdrop_node_session:echack_flowdrop_node_session
