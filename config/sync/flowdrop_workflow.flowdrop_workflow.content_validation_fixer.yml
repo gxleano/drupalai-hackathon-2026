@@ -1128,8 +1128,24 @@ nodes:
     data:
       label: 'Prompt Template'
       config:
-        template: ''
+        template: |-
+          # {{ title }}
+
+
+          ## Full content
+
+          <p>{{ field_body.0.value|raw }}</p>
+
+          ## Metatags
+
+          {{ field_metatags }}
+
+          ## Explanation
+
+          {{ explanation }}
         nodeType: simple
+        instanceTitle: ''
+        instanceDescription: ''
       metadata:
         id: prompt_template
         name: 'Prompt Template'
@@ -1223,6 +1239,9 @@ nodes:
               x-display-order: -1
           required: {  }
       nodeId: prompt_template.4
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
     deletable: true
     measured:
       width: 288
@@ -1536,7 +1555,7 @@ edges:
 metadata:
   version: 1.0.0
   createdAt: '2026-01-28T09:01:32.652Z'
-  updatedAt: '2026-01-28T11:33:03.035Z'
-created: 1769597749
-changed: 1769599983
+  updatedAt: '2026-01-28T11:48:07.118Z'
+created: 1769600262
+changed: 1769600887
 uid: 0
