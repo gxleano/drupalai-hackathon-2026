@@ -1,0 +1,960 @@
+uuid: 017ced70-58de-4a59-b074-6e8c4cd3a555
+langcode: en
+status: true
+dependencies: {  }
+id: test_node_input
+label: test_node_input
+description: ''
+nodes:
+  -
+    id: echack_flowdrop_node_session_content_context.1
+    type: universalNode
+    position:
+      x: -70
+      'y': 610
+    data:
+      label: 'Content Context'
+      config:
+        is_default_revision: true
+        nodeType: default
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: echack_flowdrop_node_session_content_context
+        name: 'Content Context'
+        type: default
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Load a Drupal node as context for the workflow. Supports specific revision loading.'
+        category: data
+        icon: 'mdi:page-layout-body'
+        color: '#f97316'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'echack_flowdrop_node_session:entity_context'
+        inputs:
+          -
+            id: entity_type
+            name: 'Entity Type'
+            type: input
+            dataType: string
+            required: false
+            description: 'The entity type to load (e.g., node, taxonomy_term, user)'
+            defaultValue: node
+          -
+            id: entity_id
+            name: 'Entity ID'
+            type: input
+            dataType: string
+            required: false
+            description: 'The ID of the entity to load'
+            defaultValue: ''
+          -
+            id: bundle
+            name: Bundle
+            type: input
+            dataType: string
+            required: false
+            description: 'The entity bundle/content type (optional, used for validation)'
+            defaultValue: ''
+          -
+            id: revision_id
+            name: 'Revision ID'
+            type: input
+            dataType: string
+            required: false
+            description: 'Optional revision ID to load a specific version of the entity. If empty, loads the current/default revision.'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: entity
+            name: Entity
+            type: output
+            dataType: json
+            required: false
+            description: 'Full serialized entity data including fields'
+          -
+            id: entity_type
+            name: entity_type
+            type: output
+            dataType: string
+            required: false
+            description: 'The entity type ID'
+          -
+            id: entity_id
+            name: entity_id
+            type: output
+            dataType: string
+            required: false
+            description: 'The entity ID'
+          -
+            id: bundle
+            name: bundle
+            type: output
+            dataType: string
+            required: false
+            description: 'The entity bundle/content type'
+          -
+            id: revision_id
+            name: revision_id
+            type: output
+            dataType: string
+            required: false
+            description: 'The revision ID (if a specific revision was loaded)'
+          -
+            id: is_default_revision
+            name: is_default_revision
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether this is the default/current revision'
+          -
+            id: loaded_from
+            name: loaded_from
+            type: output
+            dataType: string
+            required: false
+            description: "How the entity was loaded: 'session_context' (pre-injected) or 'parameters' (loaded on demand)"
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          is_default_revision: true
+          type: default
+        configSchema:
+          type: object
+          properties:
+            is_default_revision:
+              type: boolean
+              title: 'Is Default Revision'
+              description: 'Whether the loaded entity is the default revision (injected via session context)'
+              default: true
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: default
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: echack_flowdrop_node_session_content_context.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 288
+      height: 216
+    selected: false
+    dragging: false
+  -
+    id: confirmation.1
+    type: universalNode
+    position:
+      x: 790
+      'y': 690
+    data:
+      label: Confirmation
+      config:
+        message: 'Do you want to continue?'
+        confirm_label: 'Yes'
+        cancel_label: 'No'
+        branches:
+          -
+            name: 'True'
+            value: true
+          -
+            name: 'False'
+            value: false
+        nodeType: default
+        instanceTitle: ''
+        instanceDescription: ''
+        branches-0-name: 'True'
+        branches-0-value: true
+        branches-1-name: 'False'
+        branches-1-value: false
+      metadata:
+        id: confirmation
+        name: Confirmation
+        type: default
+        supportedTypes:
+          - default
+          - simple
+          - gateway
+        description: 'Pauses workflow for user confirmation (Yes/No)'
+        category: human_in_loop
+        icon: 'mdi:help-circle-outline'
+        color: '#f59e0b'
+        plugin_version: 1.0.0
+        enabled: true
+        tags:
+          - human-in-loop
+          - interrupt
+          - confirmation
+        executor_plugin: 'flowdrop_interrupt:confirmation'
+        inputs:
+          -
+            id: message
+            name: 'Confirmation Message'
+            type: input
+            dataType: string
+            required: false
+            description: 'The message to display to the user'
+            defaultValue: 'Do you want to continue?'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: confirmed
+            name: confirmed
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether the user confirmed (true) or cancelled (false)'
+          -
+            id: response_time
+            name: response_time
+            type: output
+            dataType: number
+            required: false
+            description: 'Unix timestamp when the user responded'
+          -
+            id: user_id
+            name: user_id
+            type: output
+            dataType: number
+            required: false
+            description: 'ID of the user who responded (null if anonymous)'
+          -
+            id: interrupt_id
+            name: interrupt_id
+            type: output
+            dataType: string
+            required: false
+            description: 'UUID of the interrupt that was resolved'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          message: 'Do you want to continue?'
+          confirm_label: 'Yes'
+          cancel_label: 'No'
+          branches:
+            -
+              name: 'True'
+              value: true
+            -
+              name: 'False'
+              value: false
+          type: default
+        configSchema:
+          type: object
+          properties:
+            message:
+              type: string
+              title: 'Confirmation Message'
+              description: 'The message to display to the user'
+              default: 'Do you want to continue?'
+              format: multiline
+            confirm_label:
+              type: string
+              title: 'Confirm Button Label'
+              description: 'Label for the confirmation button'
+              default: 'Yes'
+            cancel_label:
+              type: string
+              title: 'Cancel Button Label'
+              description: 'Label for the cancel button'
+              default: 'No'
+            branches:
+              type: array
+              description: 'The available branches for gateway visual mode'
+              readOnly: true
+              default:
+                -
+                  name: 'True'
+                  value: true
+                -
+                  name: 'False'
+                  value: false
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: 'The name of the branch'
+                  value:
+                    type: boolean
+                    description: 'The value of the branch'
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - gateway
+              default: default
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: confirmation.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 288
+      height: 665
+    selected: false
+    dragging: true
+  -
+    id: prompt_template.1
+    type: universalNode
+    position:
+      x: 350
+      'y': 770
+    data:
+      label: 'Prompt Template'
+      config:
+        template: |+
+          Do you want to run check on "{{ title }}?
+
+        nodeType: simple
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: prompt_template
+        name: 'Prompt Template'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+        description: 'Create prompts using templates with variable substitution'
+        category: prompts
+        icon: 'mdi:code-block-braces'
+        color: '#f59e0b'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:prompt_template'
+        inputs:
+          -
+            id: variables
+            name: Variables
+            type: input
+            dataType: json
+            required: false
+            description: 'Default variables for the template'
+            defaultValue: {  }
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: prompt
+            name: prompt
+            type: output
+            dataType: string
+            required: false
+            description: 'The generated prompt'
+          -
+            id: template
+            name: template
+            type: output
+            dataType: string
+            required: false
+            description: 'The original template'
+          -
+            id: variables
+            name: variables
+            type: output
+            dataType: json
+            required: false
+            description: 'The variables used'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          template: ''
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            template:
+              type: string
+              title: Template
+              description: 'The prompt template with variables in {{variable}} format'
+              default: ''
+              format: template
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: prompt_template.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 288
+      height: 103
+    selected: false
+    dragging: false
+  -
+    id: chat_output.1
+    type: universalNode
+    position:
+      x: 2050
+      'y': 840
+    data:
+      label: 'Chat Output'
+      config:
+        format: text
+        showTimestamp: false
+        nodeType: simple
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: chat_output
+        name: 'Chat Output'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Output chat messages in various formats'
+        category: processing
+        icon: 'mdi:chat-alert-outline'
+        color: '#14b8a6'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:chat_output'
+        inputs:
+          -
+            id: message
+            name: Message
+            type: input
+            dataType: string
+            required: false
+            description: 'Default chat message'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: message
+            name: message
+            type: output
+            dataType: string
+            required: false
+            description: 'The chat message content'
+          -
+            id: format
+            name: format
+            type: output
+            dataType: string
+            required: false
+            description: 'The message format (text, markdown, html)'
+          -
+            id: timestamp
+            name: timestamp
+            type: output
+            dataType: number
+            required: false
+            description: 'The message timestamp (if showTimestamp is enabled)'
+          -
+            id: metadata
+            name: metadata
+            type: output
+            dataType: json
+            required: false
+            description: 'Additional metadata for message linking'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          format: text
+          showTimestamp: false
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            format:
+              type: string
+              title: Format
+              description: 'Message format (text, markdown, html)'
+              default: text
+            showTimestamp:
+              type: boolean
+              title: 'Show Timestamp'
+              description: 'Whether to include timestamp'
+              default: false
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: chat_output.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 288
+      height: 88
+    selected: false
+    dragging: false
+  -
+    id: boolean_gateway.1
+    type: universalNode
+    position:
+      x: 1220
+      'y': 840
+    data:
+      label: 'Boolean Gateway'
+      config:
+        branches:
+          -
+            name: 'True'
+            value: true
+          -
+            name: 'False'
+            value: false
+      metadata:
+        id: boolean_gateway
+        name: 'Boolean Gateway'
+        type: gateway
+        supportedTypes:
+          - gateway
+        description: 'Split execution paths based on conditions for workflow branching'
+        category: logic
+        icon: 'mdi:source-branch'
+        color: '#a855f7'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:boolean_gateway'
+        inputs:
+          -
+            id: value
+            name: 'Input Value'
+            type: input
+            dataType: boolean
+            required: false
+            description: 'The value to evaluate against branch conditions'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          branches:
+            -
+              name: 'True'
+              value: true
+            -
+              name: 'False'
+              value: false
+        configSchema:
+          type: object
+          properties:
+            branches:
+              type: array
+              description: 'The active branches'
+              readOnly: true
+              default:
+                -
+                  name: 'True'
+                  value: true
+                -
+                  name: 'False'
+                  value: false
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: 'The name of the branch'
+                  value:
+                    type: boolean
+                    description: 'The value of the branch'
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: boolean_gateway.1
+    deletable: true
+    measured:
+      width: 288
+      height: 360
+    selected: false
+    dragging: false
+  -
+    id: prompt_template.2
+    type: universalNode
+    position:
+      x: 1690
+      'y': 920
+    data:
+      label: 'Prompt Template'
+      config:
+        template: |-
+          ## {{ label }}
+
+          | Property | Value |
+          |----------|-------|
+          | **Entity Type** | {{ entity_type }} |
+          | **Bundle** | {{ bundle }} |
+          | **ID** | {{ id }} |
+          | **UUID** | {{ uuid }} |
+          | **Title** | {{ title }} |
+          | **Language** | {{ langcode }} |
+          | **Status** | {{ status ? 'Published' : 'Unpublished' }} |
+          | **Author ID** | {{ author_id }} |
+          | **Promoted** | {{ promoted ? 'Yes' : 'No' }} |
+          | **Sticky** | {{ sticky ? 'Yes' : 'No' }} |
+          | **Created** | {{ created }} |
+          | **Changed** | {{ changed }} |
+        nodeType: simple
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: prompt_template
+        name: 'Prompt Template'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+        description: 'Create prompts using templates with variable substitution'
+        category: prompts
+        icon: 'mdi:code-block-braces'
+        color: '#f59e0b'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:prompt_template'
+        inputs:
+          -
+            id: variables
+            name: Variables
+            type: input
+            dataType: json
+            required: false
+            description: 'Default variables for the template'
+            defaultValue: {  }
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: prompt
+            name: prompt
+            type: output
+            dataType: string
+            required: false
+            description: 'The generated prompt'
+          -
+            id: template
+            name: template
+            type: output
+            dataType: string
+            required: false
+            description: 'The original template'
+          -
+            id: variables
+            name: variables
+            type: output
+            dataType: json
+            required: false
+            description: 'The variables used'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          template: ''
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            template:
+              type: string
+              title: Template
+              description: 'The prompt template with variables in {{variable}} format'
+              default: ''
+              format: template
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: prompt_template.2
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 288
+      height: 103
+    selected: true
+    dragging: false
+edges:
+  -
+    id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity-prompt_template.1prompt_template.1-input-variables
+    source: echack_flowdrop_node_session_content_context.1
+    target: prompt_template.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: prompts
+      metadata:
+        edgeType: data
+        sourcePortDataType: json
+    sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity
+    targetHandle: prompt_template.1-input-variables
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__prompt_template.1prompt_template.1-output-prompt-confirmation.1confirmation.1-input-message
+    source: prompt_template.1
+    target: confirmation.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: human_in_loop
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: prompt_template.1-output-prompt
+    targetHandle: confirmation.1-input-message
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__confirmation.1confirmation.1-output-confirmed-boolean_gateway.1boolean_gateway.1-input-value
+    source: confirmation.1
+    target: boolean_gateway.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: logic
+      metadata:
+        edgeType: data
+        sourcePortDataType: boolean
+    sourceHandle: confirmation.1-output-confirmed
+    targetHandle: boolean_gateway.1-input-value
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__boolean_gateway.1boolean_gateway.1-output-True-prompt_template.2prompt_template.2-input-trigger
+    source: boolean_gateway.1
+    target: prompt_template.2
+    data:
+      targetNodeType: universalNode
+      targetCategory: prompts
+      metadata:
+        edgeType: trigger
+        sourcePortDataType: trigger
+    sourceHandle: boolean_gateway.1-output-True
+    targetHandle: prompt_template.2-input-trigger
+    style: 'stroke: var(--flowdrop-edge-trigger-color); stroke-width: var(--flowdrop-edge-trigger-width);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#111827'
+    class: flowdrop--edge--trigger
+  -
+    id: xy-edge__prompt_template.2prompt_template.2-output-prompt-chat_output.1chat_output.1-input-message
+    source: prompt_template.2
+    target: chat_output.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: prompt_template.2-output-prompt
+    targetHandle: chat_output.1-input-message
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity-prompt_template.2prompt_template.2-input-variables
+    source: echack_flowdrop_node_session_content_context.1
+    target: prompt_template.2
+    data:
+      targetNodeType: universalNode
+      targetCategory: prompts
+      metadata:
+        edgeType: data
+        sourcePortDataType: json
+    sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity
+    targetHandle: prompt_template.2-input-variables
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+metadata:
+  version: 1.0.0
+  createdAt: '2026-01-27T23:47:15.328Z'
+  updatedAt: '2026-01-28T00:15:36.106Z'
+created: 1769557216
+changed: 1769559336
+uid: 0
