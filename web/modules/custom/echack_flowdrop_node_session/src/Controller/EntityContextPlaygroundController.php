@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Drupal\echack_flowdrop_node_session\Controller;
 
-use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\echack_flowdrop_node_session\Service\NodeSessionService;
 use Drupal\flowdrop_playground\Service\PlaygroundService;
+use Drupal\flowdrop_ui_components\Service\FlowDropEndpointConfigService;
 use Drupal\flowdrop_workflow\Entity\FlowDropWorkflow;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,38 +29,46 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * URL format:
  * /admin/flowdrop/workflows/{workflow_id}/playground/entity?entity_type=node&entity_id=1&revision_id=5
  */
-class EntityContextPlaygroundController extends ControllerBase {
+class EntityContextPlaygroundController implements ContainerInjectionInterface {
+  use StringTranslationTrait;
 
   /**
-   * The FlowDrop endpoint config service.
+   * Constructs an EntityContextPlaygroundController.
    *
-   * @var \Drupal\flowdrop_ui_components\Service\FlowDropEndpointConfigService
+   * @param \Drupal\flowdrop_ui_components\Service\FlowDropEndpointConfigService $endpointConfigService
+   *   The FlowDrop endpoint config service.
+   * @param \Drupal\echack_flowdrop_node_session\Service\NodeSessionService $nodeSessionService
+   *   The node session service.
+   * @param \Drupal\flowdrop_playground\Service\PlaygroundService $playgroundService
+   *   The playground service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
+   *   The language manager.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory.
    */
-  protected $endpointConfigService;
-
-  /**
-   * The node session service.
-   *
-   * @var \Drupal\echack_flowdrop_node_session\Service\NodeSessionService
-   */
-  protected NodeSessionService $nodeSessionService;
-
-  /**
-   * The playground service.
-   *
-   * @var \Drupal\flowdrop_playground\Service\PlaygroundService
-   */
-  protected PlaygroundService $playgroundService;
+  public function __construct(
+    protected readonly FlowDropEndpointConfigService $endpointConfigService,
+    protected readonly NodeSessionService $nodeSessionService,
+    protected readonly PlaygroundService $playgroundService,
+    protected readonly EntityTypeManagerInterface $entityTypeManager,
+    protected readonly LanguageManagerInterface $languageManager,
+    protected readonly ConfigFactoryInterface $configFactory
+  ) {}
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): static {
-    $instance = new static();
-    $instance->endpointConfigService = $container->get("flowdrop_ui_components.endpoint_config");
-    $instance->nodeSessionService = $container->get("echack_flowdrop_node_session.service");
-    $instance->playgroundService = $container->get("flowdrop_playground.service");
-    return $instance;
+    return new static(
+      $container->get("flowdrop_ui_components.endpoint_config"),
+      $container->get("echack_flowdrop_node_session.service"),
+      $container->get("flowdrop_playground.service"),
+      $container->get("entity_type.manager"),
+      $container->get("language_manager"),
+      $container->get("config.factory")
+    );
   }
 
   /**
@@ -86,7 +99,7 @@ class EntityContextPlaygroundController extends ControllerBase {
    */
   public function playgroundPage(string $workflow_id, Request $request): array {
     // Load the workflow entity.
-    $flowdrop_workflow = $this->entityTypeManager()->getStorage("flowdrop_workflow")->load($workflow_id);
+    $flowdrop_workflow = $this->entityTypeManager->getStorage("flowdrop_workflow")->load($workflow_id);
     if (!$flowdrop_workflow instanceof FlowDropWorkflow) {
       throw new NotFoundHttpException("Workflow not found: {$workflow_id}");
     }
@@ -108,7 +121,7 @@ class EntityContextPlaygroundController extends ControllerBase {
 
     // Validate entity type exists.
     try {
-      $this->entityTypeManager()->getDefinition($entityType);
+      $this->entityTypeManager->getDefinition($entityType);
     }
     catch (\Exception $e) {
       throw new NotFoundHttpException("Invalid entity type: {$entityType}");
@@ -167,7 +180,7 @@ class EntityContextPlaygroundController extends ControllerBase {
     // Build the API base URL.
     $url_options = [
       "absolute" => TRUE,
-      "language" => $this->languageManager()->getCurrentLanguage(),
+      "language" => $this->languageManager->getCurrentLanguage(),
     ];
     $base_url = Url::fromRoute("<front>", [], $url_options)->toString() . "/api/flowdrop";
 
@@ -182,28 +195,57 @@ class EntityContextPlaygroundController extends ControllerBase {
       "flowdrop_workflow" => $flowdrop_workflow->id(),
     ])->toString();
 
-    // Format session data for the frontend.
-    $sessionData = $this->playgroundService->formatSessionForApi($session);
-    $sessionData["entity_context"] = $entityContext;
+    // Build a display name that includes both workflow and entity info.
+    $entityLabel = $entity->label() ?? "Entity {$entityId}";
+    $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityType);
+    $entityTypeSingularLabel = $entityTypeDefinition->getSingularLabel();
+    $displayName = sprintf(
+      "%s: %s (%s)",
+      $flowdrop_workflow->label(),
+      $entityLabel,
+      $entityTypeSingularLabel
+    );
+
+    // Check if workflow has a chat input node to determine UI configuration.
+    // Workflows without chat input should hide the text input and only show
+    // the Run button.
+    $has_chat_input = $this->playgroundService->hasChatInputNode($flowdrop_workflow);
+
+    // Determine if auto-run should be enabled.
+    // Only auto-run if: config is enabled AND workflow has no chat input.
+    $config = $this->configFactory->get("flowdrop_playground.settings");
+    $auto_run_enabled = $config->get("auto_run") ?? TRUE;
+    $auto_run = $auto_run_enabled && !$has_chat_input;
+
+    // Build component props.
+    $props = [
+      "workflow" => $workflow_data,
+      "endpoint_config" => $endpoint_config,
+      "container_id" => "flowdrop-playground-entity-" . $flowdrop_workflow->id(),
+      "mode" => "standalone",
+      "height" => "100vh",
+      "width" => "100vw",
+      "back_url" => $back_url,
+      "editor_url" => $editor_url,
+      "workflow_name" => $displayName,
+      // Pass the session UUID to auto-select the entity context session.
+      // The Playground component will load and highlight this session.
+      "initial_session_id" => $session->uuid(),
+      // Show chat input only if workflow has a chat input node.
+      "show_chat_input" => $has_chat_input,
+      // Always show run button.
+      "show_run_button" => TRUE,
+      // Auto-run if enabled and workflow has no chat input.
+      "auto_run" => $auto_run,
+    ];
 
     // Render using the SDC playground component in standalone mode.
-    // Pass the pre-created session so the playground opens with it active.
+    // The initial_session_id prop ensures the playground auto-selects the
+    // entity context session we created above.
     $build["content"] = [
       "#type" => "component",
       "#component" => "flowdrop_ui_components:playground",
-      "#props" => [
-        "workflow" => $workflow_data,
-        "endpoint_config" => $endpoint_config,
-        "container_id" => "flowdrop-playground-entity-" . $flowdrop_workflow->id(),
-        "mode" => "standalone",
-        "height" => "100vh",
-        "width" => "100vw",
-        "back_url" => $back_url,
-        "editor_url" => $editor_url,
-        "workflow_name" => $flowdrop_workflow->label(),
-        // Pass the pre-created session to auto-select it.
-        "initial_session" => $sessionData,
-      ],
+      "#props" => $props,
       "#attached" => [
         "library" => [
           "flowdrop_playground/playground",
@@ -234,7 +276,7 @@ class EntityContextPlaygroundController extends ControllerBase {
    */
   public function playgroundTitle(string $workflow_id, Request $request): string {
     // Load the workflow entity.
-    $flowdrop_workflow = $this->entityTypeManager()->getStorage("flowdrop_workflow")->load($workflow_id);
+    $flowdrop_workflow = $this->entityTypeManager->getStorage("flowdrop_workflow")->load($workflow_id);
     $workflowLabel = $flowdrop_workflow instanceof FlowDropWorkflow
       ? $flowdrop_workflow->label()
       : $workflow_id;

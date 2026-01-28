@@ -15,6 +15,55 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\flowdrop_playground\Entity\FlowDropPlaygroundMessageInterface;
 
 /**
+ * Implements hook_theme().
+ *
+ * Registers custom theme implementations for the entity context playground.
+ * These provide fullscreen HTML and minimal page templates to remove Drupal's
+ * default page chrome (toolbar, admin menu, etc.) for an immersive experience.
+ */
+function echack_flowdrop_node_session_theme(): array {
+  return [
+    "html__echack_flowdrop_entity_playground_fullscreen" => [
+      "render element" => "elements",
+      "base hook" => "html",
+      "template" => "html--echack-flowdrop-entity-playground-fullscreen",
+    ],
+    "page__echack_flowdrop_entity_playground" => [
+      "render element" => "elements",
+      "base hook" => "page",
+      "template" => "page--echack-flowdrop-entity-playground",
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_html_alter().
+ *
+ * Suggests a fullscreen HTML template for the entity context playground route.
+ * This removes Drupal's default page chrome (toolbar, admin menu, etc.)
+ * to provide an immersive fullscreen experience.
+ */
+function echack_flowdrop_node_session_theme_suggestions_html_alter(array &$suggestions, array $variables): void {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if ($route_name === "echack_flowdrop_node_session.playground.entity") {
+    $suggestions[] = "html__echack_flowdrop_entity_playground_fullscreen";
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_page_alter().
+ *
+ * Suggests a minimal page template for the entity context playground route.
+ * This renders only the content without local actions, breadcrumbs, etc.
+ */
+function echack_flowdrop_node_session_theme_suggestions_page_alter(array &$suggestions, array $variables): void {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if ($route_name === "echack_flowdrop_node_session.playground.entity") {
+    $suggestions[] = "page__echack_flowdrop_entity_playground";
+  }
+}
+
+/**
  * Implements hook_entity_presave().
  *
  * Injects entity context data into playground messages for sessions that have

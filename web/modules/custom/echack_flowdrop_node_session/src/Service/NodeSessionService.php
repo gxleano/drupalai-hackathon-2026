@@ -144,6 +144,14 @@ class NodeSessionService {
     // Create the session using the playground service.
     $session = $this->playgroundService->createSession($workflow, $sessionName, $metadata);
 
+    // WORKAROUND: The contrib PlaygroundService::createSession() passes metadata
+    // as an array to a string_long field during entity creation. Drupal's string
+    // field type doesn't properly JSON-encode arrays, resulting in the literal
+    // string "Array" being stored instead of valid JSON. Re-set the metadata
+    // using setMetadata() to ensure proper JSON encoding.
+    $session->setMetadata($metadata);
+    $session->save();
+
     $this->logger->info("Created entity-context session @session_id for workflow @workflow with @entity_type:@entity_id", [
       "@session_id" => $session->id(),
       "@workflow" => $workflow->id(),
@@ -330,9 +338,13 @@ class NodeSessionService {
 
     // Patterns to match EntityContext nodes.
     // The plugin ID may be namespaced with the provider module.
+    // Note: "content_context" is the node type ID used in the FlowDrop UI,
+    // which maps to the "entity_context" executor plugin.
     $patterns = [
       "entity_context",
       "entitycontext",
+      "content_context",
+      "contentcontext",
     ];
 
     foreach ($nodes as $node) {
