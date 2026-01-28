@@ -1,0 +1,38 @@
+uuid: 003c0d0a-cbab-4725-ba0c-bc5d51548aa2
+langcode: en
+status: true
+dependencies: {  }
+id: scheduled_validator__trigger_1
+label: 'Scheduled Validator (trigger.1)'
+description: ''
+workflow_id: scheduled_validator
+node_id: trigger.1
+event_type: cron.run
+conditions:
+  cron_schedule:
+    mode: simple
+    schedule_type: recurring
+    interval: every_minute
+    custom_interval: 3600
+    time_window_start: ''
+    time_window_end: ''
+    days_of_week: {  }
+    cron_expression: '0 * * * *'
+    max_executions: 0
+    timezone: ''
+orchestrator_settings:
+  type: synchronous_pipeline
+  priority: normal
+  timeout: 300
+  pipeline_mode: new
+  pipeline_id: ''
+  max_concurrent_jobs: 5
+  job_priority_strategy: dependency_order
+  retry:
+    enabled: false
+    max_attempts: 3
+    delay: 5
+    backoff: constant
+  retry_strategy: individual
+initial_data_mapping: {  }
+weight: 0

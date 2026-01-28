@@ -1,0 +1,54 @@
+uuid: ed16c0a1-d062-412d-a6b2-76d7a133cdd6
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: 9rQn2Ghh53nmsIuQ7xoNggNDNJAYlVye4EREuDjyLoo
+id: workflow_results_retriever
+label: 'Workflow Results Retriever'
+description: 'Retrieve results from an async workflow execution'
+category: processing
+icon: 'mdi:download-circle-outline'
+plugin_version: ''
+enabled: true
+parameters:
+  session_id:
+    configurable: false
+    connectable: true
+    required: true
+  wait_for_completion:
+    configurable: true
+    connectable: false
+    required: false
+    default: true
+  timeout:
+    configurable: true
+    connectable: false
+    required: false
+    default: 300
+  poll_interval_ms:
+    configurable: true
+    connectable: false
+    required: false
+    default: 2000
+outputs:
+  success:
+    exposed: true
+  status:
+    exposed: true
+  outputs:
+    exposed: true
+  error_message:
+    exposed: true
+  wait_time_ms:
+    exposed: true
+tags:
+  - processing
+  - workflow
+  - automation
+executor_plugin: 'echack_flowdrop_workflow_executor:workflow_results_retriever'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false

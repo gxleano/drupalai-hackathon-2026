@@ -1,0 +1,65 @@
+uuid: c6883972-ae78-49a8-bfe3-58af7c5cf418
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: LBABy2asXKDr6ks5pLQRMZcNf1B-P1hyHNNJ37_sJXA
+id: workflow_executor
+label: 'Workflow Executor'
+description: 'Execute another FlowDrop workflow with configurable execution mode'
+category: processing
+icon: 'mdi:play-circle-outline'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  execution_mode:
+    configurable: true
+    connectable: false
+    required: false
+    default: job
+  input_data:
+    configurable: false
+    connectable: true
+    required: false
+    default: {  }
+  poll_interval_ms:
+    configurable: true
+    connectable: false
+    required: false
+    default: 2000
+  timeout:
+    configurable: true
+    connectable: false
+    required: false
+    default: 300
+  workflow_id:
+    configurable: true
+    connectable: false
+    required: true
+outputs:
+  error_message:
+    exposed: true
+  execution_time_ms:
+    exposed: true
+  job_id:
+    exposed: true
+  outputs:
+    exposed: true
+  session_id:
+    exposed: true
+  status:
+    exposed: true
+  success:
+    exposed: true
+tags:
+  - processing
+  - workflow
+  - automation
+executor_plugin: 'echack_flowdrop_workflow_executor:workflow_executor'
+visual_type: default
+supported_visual_types:
+  - default
+  - simple
+  - square
+unified_input_exposed: false
+unified_output_exposed: false

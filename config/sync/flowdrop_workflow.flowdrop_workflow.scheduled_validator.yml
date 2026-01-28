@@ -1,0 +1,810 @@
+uuid: 808903ec-50ee-43db-82cf-009e75b135f9
+langcode: en
+status: true
+dependencies: {  }
+id: scheduled_validator
+label: 'Scheduled Validator'
+description: ''
+nodes:
+  -
+    id: trigger.1
+    type: universalNode
+    position:
+      x: 80
+      'y': 310
+    data:
+      label: Trigger
+      config:
+        nodeType: terminal
+      metadata:
+        id: trigger
+        name: Trigger
+        type: terminal
+        supportedTypes:
+          - default
+          - simple
+          - terminal
+        description: 'Start workflow on events (entity changes, user actions, form submissions, cron, etc.)'
+        category: inputs
+        icon: 'mdi:flash-outline'
+        color: '#10b981'
+        plugin_version: 2.2.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_trigger:trigger'
+        inputs:
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: data
+            name: 'Event Data'
+            type: output
+            dataType: json
+            required: false
+            description: 'Complete trigger data. Contains event_type, timestamp, and event-specific properties.'
+          -
+            id: user
+            name: 'User Data'
+            type: output
+            dataType: json
+            required: false
+            description: 'User entity data (user.* events only)'
+          -
+            id: form
+            name: Form
+            type: output
+            dataType: json
+            required: false
+            description: 'Form structure (form.* events only)'
+          -
+            id: form_values
+            name: 'Form Values'
+            type: output
+            dataType: json
+            required: false
+            description: 'Submitted form values (form.* events only)'
+          -
+            id: form_id
+            name: 'Form ID'
+            type: output
+            dataType: string
+            required: false
+            description: 'The form ID (form.* events only)'
+          -
+            id: form_state
+            name: 'Form State'
+            type: output
+            dataType: json
+            required: false
+            description: 'Form state (form.* events only)'
+          -
+            id: cron
+            name: 'Cron Data'
+            type: output
+            dataType: json
+            required: false
+            description: 'Cron execution info (cron.* events only)'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          type: terminal
+        configSchema:
+          type: object
+          properties:
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - terminal
+              default: terminal
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+        configEdit:
+          dynamicSchema:
+            url: /api/flowdrop/triggers/schema
+            method: GET
+            parameterMapping:
+              event_type: config.event_type
+            headers: {  }
+            cacheSchema: false
+            timeout: 10000
+          externalEditLink:
+            url: '/admin/flowdrop/triggers/configure?workflow={workflowId}&node={nodeId}'
+            label: 'Configure Trigger'
+            icon: 'mdi:flash-outline'
+            description: 'Open trigger configuration form in admin interface'
+            parameterMapping:
+              workflowId: workflowId
+              nodeId: id
+            openInNewTab: true
+          api:
+            create: /api/flowdrop/triggers
+            read: '/api/flowdrop/triggers/{trigger_config_id}'
+            update: '/api/flowdrop/triggers/{trigger_config_id}'
+            delete: '/api/flowdrop/triggers/{trigger_config_id}'
+            eventTypes: /api/flowdrop/triggers/event-types
+          preferDynamicSchema: false
+          showRefreshButton: true
+          loadingMessage: 'Loading trigger configuration...'
+          errorMessage: 'Failed to load trigger configuration'
+      nodeId: trigger.1
+    deletable: true
+    measured:
+      width: 140
+      height: 123
+    selected: false
+    dragging: false
+  -
+    id: echack_flowdrop_workflow_executor_content_query.1
+    type: universalNode
+    position:
+      x: 290
+      'y': 290
+    data:
+      label: 'Content Query'
+      config:
+        bundle: ''
+        limit: 100
+        offset: 0
+        published_only: true
+        changed_after: 0
+        sort_field: changed
+        sort_direction: DESC
+        load_entities: false
+        conditions: {  }
+        nodeType: simple
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: echack_flowdrop_workflow_executor_content_query
+        name: 'Content Query'
+        type: default
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Query Drupal content with configurable conditions'
+        category: data
+        icon: 'mdi:database-search-outline'
+        color: '#f97316'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'echack_flowdrop_workflow_executor:entity_query'
+        inputs:
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: success
+            name: success
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether the query was successful'
+          -
+            id: count
+            name: count
+            type: output
+            dataType: number
+            required: false
+            description: 'Number of entities returned'
+          -
+            id: entity_type
+            name: entity_type
+            type: output
+            dataType: string
+            required: false
+            description: 'The queried entity type'
+          -
+            id: bundle
+            name: bundle
+            type: output
+            dataType: string
+            required: false
+            description: 'The bundle filter applied'
+          -
+            id: results
+            name: results
+            type: output
+            dataType: array
+            required: false
+            description: 'Array of entity results (use with ForEach loop)'
+          -
+            id: ids
+            name: ids
+            type: output
+            dataType: array
+            required: false
+            description: 'Array of entity IDs'
+          -
+            id: entities
+            name: entities
+            type: output
+            dataType: array
+            required: false
+            description: 'Array of serialized entities (when load_entities is true)'
+          -
+            id: has_more
+            name: has_more
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether there are more results beyond the limit'
+          -
+            id: error_message
+            name: error_message
+            type: output
+            dataType: string
+            required: false
+            description: 'Error message if query failed'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          bundle: ''
+          limit: 100
+          offset: 0
+          published_only: true
+          changed_after: 0
+          sort_field: changed
+          sort_direction: DESC
+          load_entities: false
+          conditions: {  }
+          type: default
+        configSchema:
+          type: object
+          properties:
+            bundle:
+              type: string
+              title: 'Bundle/Content Type'
+              description: 'Filter by bundle (e.g., article, page). Leave empty for all bundles.'
+              default: ''
+            limit:
+              type: integer
+              title: Limit
+              description: 'Maximum number of entities to return'
+              default: 100
+              minimum: 1
+              maximum: 1000
+            offset:
+              type: integer
+              title: Offset
+              description: 'Number of entities to skip (for pagination)'
+              default: 0
+              minimum: 0
+            published_only:
+              type: boolean
+              title: 'Published Only'
+              description: 'Only return published entities'
+              default: true
+            changed_after:
+              type: integer
+              title: 'Changed After (timestamp)'
+              description: 'Only return entities changed after this Unix timestamp. Use 0 to disable.'
+              default: 0
+            sort_field:
+              type: string
+              title: 'Sort Field'
+              description: 'Field to sort by'
+              default: changed
+            sort_direction:
+              type: string
+              title: 'Sort Direction'
+              description: 'Sort direction'
+              enum:
+                - ASC
+                - DESC
+              default: DESC
+            load_entities:
+              type: boolean
+              title: 'Load Full Entities'
+              description: 'Load and serialize full entity data (slower but more data)'
+              default: false
+            conditions:
+              type: array
+              title: 'Additional Conditions'
+              description: 'Custom query conditions (field, value, operator)'
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  value:
+                    type: string
+                  operator:
+                    type: string
+                    default: '='
+              default: {  }
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: default
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: echack_flowdrop_workflow_executor_content_query.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 288
+      height: 103
+    selected: false
+    dragging: false
+  -
+    id: foreach.1
+    type: universalNode
+    position:
+      x: 730
+      'y': 190
+    data:
+      label: 'ForEach Loop'
+      config:
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: foreach
+        name: 'ForEach Loop'
+        type: default
+        supportedTypes:
+          - default
+        description: 'Iterates over an array, processing each item in sequence'
+        category: logic
+        icon: 'mdi:repeat'
+        color: '#a855f7'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_stategraph:foreach'
+        inputs:
+          -
+            id: items
+            name: items
+            type: input
+            dataType: array
+            required: false
+            description: 'The array to iterate over (required for initialization)'
+          -
+            id: loop_back
+            name: loop_back
+            type: input
+            dataType: string
+            required: false
+            description: 'Loopback trigger - connect loop body output here to continue iteration'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: current_item
+            name: current_item
+            type: output
+            dataType: mixed
+            required: false
+            description: 'The current item being processed'
+          -
+            id: current_index
+            name: current_index
+            type: output
+            dataType: number
+            required: false
+            description: 'Current position in the array (0-based)'
+          -
+            id: is_first
+            name: is_first
+            type: output
+            dataType: boolean
+            required: false
+            description: 'TRUE if this is the first item'
+          -
+            id: is_last
+            name: is_last
+            type: output
+            dataType: boolean
+            required: false
+            description: 'TRUE if this is the last item'
+          -
+            id: has_more
+            name: has_more
+            type: output
+            dataType: boolean
+            required: false
+            description: 'TRUE if more items remain after this one'
+          -
+            id: total_count
+            name: total_count
+            type: output
+            dataType: number
+            required: false
+            description: 'Total number of items in the array'
+          -
+            id: loop_active
+            name: loop_active
+            type: output
+            dataType: boolean
+            required: false
+            description: 'TRUE if loop is still processing, FALSE when complete'
+          -
+            id: collected_results
+            name: collected_results
+            type: output
+            dataType: array
+            required: false
+            description: 'All collected results (only populated on completion)'
+          -
+            id: state_update
+            name: state_update
+            type: output
+            dataType: json
+            required: false
+            description: 'State update to apply to graph state'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config: {  }
+        configSchema:
+          type: object
+          properties:
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: foreach.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 288
+      height: 330
+    selected: false
+    dragging: false
+  -
+    id: workflow_executor.1
+    type: universalNode
+    position:
+      x: 1290
+      'y': 180
+    data:
+      label: 'Workflow Executor'
+      config:
+        workflow_id: fact_check
+        execution_mode: job_fire_forget
+        timeout: 300
+        poll_interval_ms: 2000
+        nodeType: simple
+        instanceTitle: 'Fact Check'
+        instanceDescription: 'Checks facts based on a trained model specifically to do so.'
+      metadata:
+        id: workflow_executor
+        name: 'Workflow Executor'
+        type: default
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Execute another FlowDrop workflow with configurable execution mode'
+        category: processing
+        icon: 'mdi:play-circle-outline'
+        color: '#14b8a6'
+        plugin_version: 1.0.0
+        enabled: true
+        tags:
+          - processing
+          - workflow
+          - automation
+        executor_plugin: 'echack_flowdrop_workflow_executor:workflow_executor'
+        inputs:
+          -
+            id: input_data
+            name: 'Input Data'
+            type: input
+            dataType: json
+            required: false
+            description: 'Data to pass to the child workflow (available in workflow metadata)'
+            defaultValue: {  }
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: success
+            name: success
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether the workflow was executed/started successfully'
+          -
+            id: status
+            name: status
+            type: output
+            dataType: string
+            required: false
+            description: 'Execution status: completed, running, pending, failed, timeout'
+          -
+            id: session_id
+            name: session_id
+            type: output
+            dataType: string
+            required: false
+            description: 'The session ID of the executed workflow (for async result retrieval)'
+          -
+            id: job_id
+            name: job_id
+            type: output
+            dataType: string
+            required: false
+            description: 'The job ID if available'
+          -
+            id: outputs
+            name: outputs
+            type: output
+            dataType: json
+            required: false
+            description: 'Outputs from the executed workflow (when completed)'
+          -
+            id: error_message
+            name: error_message
+            type: output
+            dataType: string
+            required: false
+            description: 'Error message if execution failed'
+          -
+            id: execution_time_ms
+            name: execution_time_ms
+            type: output
+            dataType: number
+            required: false
+            description: 'Total execution time in milliseconds'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          execution_mode: job
+          timeout: 300
+          poll_interval_ms: 2000
+          type: default
+        configSchema:
+          type: object
+          properties:
+            workflow_id:
+              type: string
+              title: Workflow
+              description: 'Select the workflow to execute'
+              enum:
+                - accessibility
+                - content_health
+                - fact_check
+                - related_content
+                - scheduled_validator
+                - seo_metadata
+                - test_node_input
+                - token_burners_smoke_test
+              options:
+                -
+                  value: accessibility
+                  label: Accessibility
+                -
+                  value: content_health
+                  label: 'Content Health'
+                -
+                  value: fact_check
+                  label: 'Fact Check'
+                -
+                  value: related_content
+                  label: 'Related Content'
+                -
+                  value: scheduled_validator
+                  label: 'Scheduled Validator'
+                -
+                  value: seo_metadata
+                  label: 'SEO & Metadata'
+                -
+                  value: test_node_input
+                  label: test_node_input
+                -
+                  value: token_burners_smoke_test
+                  label: 'Token Burners Smoke Test'
+            execution_mode:
+              type: string
+              title: 'Execution Mode'
+              description: 'How to execute the workflow'
+              enum:
+                - job
+                - job_async
+                - job_fire_forget
+              options:
+                -
+                  value: job
+                  label: 'Job (wait for completion)'
+                -
+                  value: job_async
+                  label: 'Async (return session ID, get results later)'
+                -
+                  value: job_fire_forget
+                  label: 'Fire & Forget (no result tracking)'
+              default: job
+            timeout:
+              type: integer
+              title: 'Timeout (seconds)'
+              description: 'Maximum time to wait for completion (job mode only)'
+              default: 300
+              minimum: 1
+              maximum: 3600
+            poll_interval_ms:
+              type: integer
+              title: 'Poll Interval (ms)'
+              description: 'How often to check for completion (job mode only)'
+              default: 2000
+              minimum: 100
+              maximum: 30000
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: default
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required:
+            - workflow_id
+      nodeId: workflow_executor.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 288
+      height: 103
+    selected: true
+    dragging: true
+edges:
+  -
+    id: xy-edge__trigger.1trigger.1-output-trigger-echack_flowdrop_workflow_executor_content_query.1echack_flowdrop_workflow_executor_content_query.1-input-trigger
+    source: trigger.1
+    target: echack_flowdrop_workflow_executor_content_query.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: data
+      metadata:
+        edgeType: trigger
+        sourcePortDataType: trigger
+    sourceHandle: trigger.1-output-trigger
+    targetHandle: echack_flowdrop_workflow_executor_content_query.1-input-trigger
+    style: 'stroke: var(--flowdrop-edge-trigger-color); stroke-width: var(--flowdrop-edge-trigger-width);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#111827'
+    class: flowdrop--edge--trigger
+  -
+    id: xy-edge__echack_flowdrop_workflow_executor_content_query.1echack_flowdrop_workflow_executor_content_query.1-output-results-foreach.1foreach.1-input-items
+    source: echack_flowdrop_workflow_executor_content_query.1
+    target: foreach.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: logic
+      metadata:
+        edgeType: data
+        sourcePortDataType: array
+    sourceHandle: echack_flowdrop_workflow_executor_content_query.1-output-results
+    targetHandle: foreach.1-input-items
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__foreach.1foreach.1-output-current_item-workflow_executor.1workflow_executor.1-input-input_data
+    source: foreach.1
+    target: workflow_executor.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: mixed
+    sourceHandle: foreach.1-output-current_item
+    targetHandle: workflow_executor.1-input-input_data
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+metadata:
+  version: 1.0.0
+  createdAt: '2026-01-28T03:14:49.154Z'
+  updatedAt: '2026-01-28T03:33:17.030Z'
+created: 1769569550
+changed: 1769571197
+uid: 0
