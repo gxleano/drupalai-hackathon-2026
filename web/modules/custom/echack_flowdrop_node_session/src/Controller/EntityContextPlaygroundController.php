@@ -195,10 +195,6 @@ class EntityContextPlaygroundController implements ContainerInjectionInterface {
       "flowdrop_workflow" => $flowdrop_workflow->id(),
     ])->toString();
 
-    // Format session data for the frontend.
-    $sessionData = $this->playgroundService->formatSessionForApi($session);
-    $sessionData["entity_context"] = $entityContext;
-
     // Build a display name that includes both workflow and entity info.
     $entityLabel = $entity->label() ?? "Entity {$entityId}";
     $entityTypeDefinition = $this->entityTypeManager->getDefinition($entityType);
@@ -232,8 +228,9 @@ class EntityContextPlaygroundController implements ContainerInjectionInterface {
       "back_url" => $back_url,
       "editor_url" => $editor_url,
       "workflow_name" => $displayName,
-      // Pass the pre-created session to auto-select it.
-      "initial_session" => $sessionData,
+      // Pass the session UUID to auto-select the entity context session.
+      // The Playground component will load and highlight this session.
+      "initial_session_id" => $session->uuid(),
       // Show chat input only if workflow has a chat input node.
       "show_chat_input" => $has_chat_input,
       // Always show run button.
@@ -243,7 +240,8 @@ class EntityContextPlaygroundController implements ContainerInjectionInterface {
     ];
 
     // Render using the SDC playground component in standalone mode.
-    // Pass the pre-created session so the playground opens with it active.
+    // The initial_session_id prop ensures the playground auto-selects the
+    // entity context session we created above.
     $build["content"] = [
       "#type" => "component",
       "#component" => "flowdrop_ui_components:playground",

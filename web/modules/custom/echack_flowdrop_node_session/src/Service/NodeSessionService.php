@@ -338,9 +338,13 @@ class NodeSessionService {
 
     // Patterns to match EntityContext nodes.
     // The plugin ID may be namespaced with the provider module.
+    // Note: "content_context" is the node type ID used in the FlowDrop UI,
+    // which maps to the "entity_context" executor plugin.
     $patterns = [
       "entity_context",
       "entitycontext",
+      "content_context",
+      "contentcontext",
     ];
 
     foreach ($nodes as $node) {
