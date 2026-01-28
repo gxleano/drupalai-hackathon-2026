@@ -281,7 +281,7 @@ nodes:
 
           {"label":"Fact Check: [TITLE]","status":true,"description":"AI fact-check","field_flowdrop_workflow":"fact_check_fixer","field_content_revision":{"target_id":[NID],"target_revision_id":[VID]},"field_validation_status":"done","field_validation_result":"[ANALYSIS]"}
 
-          Extract [TITLE] from input title field, [NID] from input id field, [VID] from input vid field. Write your analysis in [ANALYSIS].
+          Extract [TITLE] from the title field, [NID] from the id field (top level), [VID] from fields.vid[0].value (the revision ID). Write your analysis in [ANALYSIS].
 
           OUTPUT ONLY THE JSON. START YOUR RESPONSE WITH { AND END WITH }
         instanceTitle: ''
