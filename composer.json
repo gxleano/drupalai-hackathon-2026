@@ -116,6 +116,9 @@
             },
             "drupal/canvas": {
                 "#3568950: Let the agent know that the tools were succesful": "https://git.drupalcode.org/project/canvas/-/merge_requests/493.patch"
+            },
+            "drupal/flowdrop": {
+                "Add revision support (create_revision and revision_log_message) to EntitySave plugin": "patches/flowdrop-entity-save-revision-support.patch"
             }
         }
     },
