@@ -198,7 +198,7 @@ nodes:
           You are an expert content editor specializing in European Commission content standards. Improve the provided article to meet all 10 EU Commission content standards.
 
           REQUIRED JSON STRUCTURE (use actual content, not placeholders):
-          {"title":"Improved title","field_body":[{"value":"<p>Complete improved HTML content</p>","summary":"Brief summary","format":"content_format"}],"field_metatags":"Improved meta description 150-160 chars","explanation":"Summary of changes"}
+          {"title":"Improved title","field_body":[{"value":"<p>Complete improved HTML content</p>","summary":"Brief summary","format":"content_format"}],"field_metatags":[{"value":"{\"title\":\"SEO title 50-60 chars\",\"description\":\"SEO description 150-160 chars\"}"}],"meta_title":"SEO title 50-60 chars","meta_description":"SEO description 150-160 chars","explanation":"Summary of changes"}
 
           CRITICAL FIELD REQUIREMENTS:
           - title: Clear, neutral, SEO-friendly title (50-60 characters)
@@ -206,7 +206,11 @@ nodes:
             * value: Full HTML content with proper structure, sources, citations
             * summary: One sentence summary
             * format: MUST be "content_format" (exactly this string)
-          - field_metatags: Meta description (150-160 characters, keyword-rich)
+          - field_metatags: REQUIRED array for Drupal (with nested JSON string)
+          - field_metatags[0].value: JSON string with title and description (use \" for inner quotes)
+          - meta_title: REQUIRED string (same as field_metatags title), 50-60 characters, SEO-focused
+          - meta_description: REQUIRED string (same as field_metatags description), 150-160 characters with keywords
+          - Note: meta_title and meta_description are duplicates for easy preview display
           - explanation: Brief summary of key improvements made
           - Use double quotes, escape inner quotes with \"
           - Compact format (no line breaks in JSON)
@@ -379,12 +383,14 @@ nodes:
 
           {
             "title": "Improved title that is clear, neutral, and SEO-friendly (50-60 chars)",
-            "body": "Complete improved body content with proper structure, sources, and plain language (full HTML)",
-            "field_metatags": "Improved meta description (150-160 chars, includes keywords)",
+            "field_body": [{"value": "<p>Complete improved body content with proper structure, sources, and plain language (full HTML)</p>", "summary": "One sentence summary", "format": "content_format"}],
+            "field_metatags": [{"value": "{\"title\": \"SEO title 50-60 chars\", \"description\": \"SEO description 150-160 chars\"}"}],
+            "meta_title": "SEO title 50-60 chars",
+            "meta_description": "SEO description 150-160 chars",
             "explanation": "Brief summary of key improvements made"
           }
 
-          Ensure the output is valid JSON that can be directly parsed.
+          Ensure the output is valid JSON that can be directly parsed. Use double quotes and escape inner quotes with \".
         nodeType: simple
         instanceTitle: ''
         instanceDescription: ''
@@ -1134,11 +1140,19 @@ nodes:
 
           ## Full content
 
-          <p>{{ field_body.0.value|raw }}</p>
+          {{ field_body.0.value|striptags }}
 
-          ## Metatags
+          ## Summary
 
-          {{ field_metatags }}
+          {{ field_body.0.summary }}
+
+          ---
+
+          ## 🔍 SEO Metadata
+          **Meta Title:** {{ meta_title }}
+          **Meta Description:** {{ meta_description }}
+
+          ---
 
           ## Explanation
 
