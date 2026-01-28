@@ -62,8 +62,8 @@ final class MainDashboard extends ControllerBase {
     // @todo Sections should be automatically generated based on configured flows.
     $statItems = [];
 
-    if ($flows_storage->load('fact_check') !== NULL) {
-      $count = $this->getValidationCount('fact_check');
+    if ($flows_storage->load('fact_check_fixer') !== NULL) {
+      $count = $this->getValidationCount('fact_check_fixer');
       // @todo Replace with fast check URL.
       $url = Url::fromRoute('<front>')->toString();
       $statItems["fast_check"] = [
