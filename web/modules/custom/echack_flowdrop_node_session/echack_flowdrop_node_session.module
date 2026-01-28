@@ -83,7 +83,7 @@ function echack_flowdrop_node_session_entity_operation(EntityInterface $entity):
   }
 
   // Default workflow for validation (can be made configurable).
-  $workflow_id = 'test_node_input';
+  $workflow_id = 'content_validation';
 
   // Build the URL to the entity playground.
   $url = \Drupal\Core\Url::fromRoute('echack_flowdrop_node_session.playground.entity', [
