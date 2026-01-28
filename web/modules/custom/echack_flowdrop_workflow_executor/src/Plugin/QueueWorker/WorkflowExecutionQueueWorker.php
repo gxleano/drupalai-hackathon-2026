@@ -21,6 +21,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * This allows the parent workflow to complete without waiting for child
  * workflows to finish.
  *
+ * @todo Follow up with FlowDrop maintainers about StatusTracker warnings.
+ *   When workflows execute via queue/cron, FlowDrop's StatusTracker logs
+ *   "Attempted to update status for unknown node" warnings because the
+ *   in-memory tracking doesn't have nodes registered from the original
+ *   request context. These warnings are harmless but noisy. Consider
+ *   proposing a fix upstream to either:
+ *   - Auto-register nodes on first status update
+ *   - Add a configuration option to disable status tracking for non-UI execution
+ *   - Reduce log level from warning to debug for this specific case
+ *   See: flowdrop_runtime/src/Service/RealTime/StatusTracker.php:115
+ *
  * @QueueWorker(
  *   id = "workflow_executor_queue",
  *   title = @Translation("Workflow Executor Queue"),
