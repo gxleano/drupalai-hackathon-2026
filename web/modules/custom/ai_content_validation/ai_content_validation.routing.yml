@@ -20,3 +20,11 @@ ai_content_validation.ai_node_validations:
     _controller: '\Drupal\ai_content_validation\Controller\AiNodeValidationsController::revisionValidations'
   requirements:
     _permission: 'administer ai_content_validation_item'
+
+ai_content_validation.main_dashboard:
+  path: '/admin/ai-content-validation/main-dashboard'
+  defaults:
+    _title: 'Main Dashboard'
+    _controller: '\Drupal\ai_content_validation\Controller\MainDashboard'
+  requirements:
+    _permission: 'administer site configuration'
