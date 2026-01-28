@@ -5,6 +5,7 @@ module:
   ai_agents: 0
   ai_agents_explorer: 0
   ai_api_explorer: 0
+  ai_content_validation: 0
   ai_provider_amazeeio: 0
   announcements_feed: 0
   automated_cron: 0
@@ -45,6 +46,7 @@ module:
   echack_flowdrop_node_session: 0
   echack_flowdrop_workflow_executor: 0
   editor: 0
+  entity_reference_revisions: 0
   field: 0
   field_ui: 0
   file: 0

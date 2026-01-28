@@ -1,0 +1,22 @@
+entity.ai_content_validation_item.settings:
+  path: 'admin/structure/ai-content-validation-item'
+  defaults:
+    _form: '\Drupal\ai_content_validation\Form\AiValidationsSettingsForm'
+    _title: 'Ai validations'
+  requirements:
+    _permission: 'administer ai_content_validation_item'
+ai_content_validation.settings:
+  path: '/admin/config/system/ai_content_validation/settings'
+  defaults:
+    _title: 'Settings'
+    _form: 'Drupal\ai_content_validation\Form\SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'
+
+ai_content_validation.ai_node_validations:
+  path: '/ai_content_validation/node/{node}/revision/{node_revision}/validations'
+  defaults:
+    _title: 'Ai Node Validations'
+    _controller: '\Drupal\ai_content_validation\Controller\AiNodeValidationsController::revisionValidations'
+  requirements:
+    _permission: 'administer ai_content_validation_item'

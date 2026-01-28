@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.ai_content_validation_item.field_validation_status
+  module:
+    - ai_content_validation
+    - options
+id: ai_content_validation_item.ai_content_validation_item.field_validation_status
+field_name: field_validation_status
+entity_type: ai_content_validation_item
+bundle: ai_content_validation_item
+label: 'Validation status'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

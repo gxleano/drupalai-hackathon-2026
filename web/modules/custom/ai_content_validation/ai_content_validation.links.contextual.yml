@@ -1,0 +1,10 @@
+entity.ai_content_validation_item.edit_form:
+  route_name: entity.ai_content_validation_item.edit_form
+  group: ai_content_validation_item
+  title: 'Edit'
+
+entity.ai_content_validation_item.delete_form:
+  route_name: entity.ai_content_validation_item.delete_form
+  group: ai_content_validation_item
+  title: 'Delete'
+  weight: 10
