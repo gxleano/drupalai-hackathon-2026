@@ -69,33 +69,35 @@ final class AiValidationsListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   protected function getDefaultOperations(EntityInterface $entity): array {
+    $operations = parent::getDefaultOperations($entity);
 
     $workflow = $entity->get('field_flowdrop_workflow')->getValue();
     $flowdrop_id = $workflow[0]['target_id'] ?? '';
 
     $revision = $entity->get('field_content_revision')->getValue();
+    $target_id = $revision[0]['target_id'] ?? NULL;
+    $target_revision_id = $revision[0]['target_revision_id'] ?? NULL;
 
+    // Only add Process operation if workflow ID and revision data are available.
+    if ($flowdrop_id !== '' && $target_id !== NULL) {
+      $url = Url::fromRoute('echack_flowdrop_node_session.playground.entity', [
+        'workflow_id' => $flowdrop_id,
+      ], [
+        'query' => [
+          'entity_type' => 'node',
+          'entity_id' => $target_id,
+          'revision_id' => $target_revision_id,
+        ],
+      ]);
 
-    $url = Url::fromRoute('echack_flowdrop_node_session.playground.entity', [
-      'workflow_id' => $flowdrop_id,
-    ], [
-      'query' => [
-        'entity_type' => 'node',
-        'entity_id' => $revision[0]['target_id'],
-        'revision_id' =>  $revision[0]['target_revision_id'],
-      ],
-    ]);
+      $operations['process'] = [
+        'title' => $this->t('Process'),
+        'weight' => 20,
+        'url' => $url,
+      ];
+    }
 
-    $operations = parent::getDefaultOperations($entity);
-    $operations['process'] = [
-      'title' => $this->t('Process'),
-      'weight' => 20,
-      'url' => $url,
-    ];
     return $operations;
-
-
-
   }
 
 }

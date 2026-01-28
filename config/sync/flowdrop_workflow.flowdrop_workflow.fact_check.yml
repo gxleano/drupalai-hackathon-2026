@@ -277,11 +277,11 @@ nodes:
 
           It is CRITICALLY important that the output is JSON and pure json
 
-          Generate a fact-checking validation JSON from the input content:
+          Generate a fact-checking validation JSON from the input content. IMPORTANT: Extract these values from the input data: title (use the "title" field), nid (use the "id" field as an INTEGER), vid (look inside "fields" then "vid" then first array element then "value" - this is the revision ID as an INTEGER).
 
-          {"label":"Fact Check: [TITLE]","status":true,"description":"AI fact-check","field_flowdrop_workflow":"fact_check_fixer","field_content_revision":{"target_id":[NID],"target_revision_id":[VID]},"field_validation_status":"done","field_validation_result":"[ANALYSIS]"}
+          Example output format: {"label":"Fact Check: Article Title Here","status":true,"description":"AI fact-check","field_flowdrop_workflow":"fact_check_fixer","field_content_revision":{"target_id":123,"target_revision_id":456},"field_validation_status":"done","field_validation_result":"Your analysis here"}
 
-          Extract [TITLE] from the title field, [NID] from the id field (top level), [VID] from fields.vid[0].value (the revision ID). Write your analysis in [ANALYSIS].
+          CRITICAL: target_id and target_revision_id MUST be integers (not arrays, not null). If you cannot find the id, use 0.
 
           OUTPUT ONLY THE JSON. START YOUR RESPONSE WITH { AND END WITH }
         instanceTitle: ''
