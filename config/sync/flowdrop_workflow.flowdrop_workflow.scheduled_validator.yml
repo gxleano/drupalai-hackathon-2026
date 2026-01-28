@@ -389,8 +389,8 @@ nodes:
     data:
       label: 'ForEach Loop'
       config:
-        instanceTitle: ''
-        instanceDescription: ''
+        instanceTitle: 'Process all items'
+        instanceDescription: 'Go through each content on the site and do validations on them.'
       metadata:
         id: foreach
         name: 'ForEach Loop'
@@ -741,7 +741,7 @@ nodes:
     measured:
       width: 288
       height: 103
-    selected: true
+    selected: false
     dragging: true
 edges:
   -
@@ -804,7 +804,7 @@ edges:
 metadata:
   version: 1.0.0
   createdAt: '2026-01-28T03:14:49.154Z'
-  updatedAt: '2026-01-28T03:33:17.030Z'
+  updatedAt: '2026-01-28T10:40:26.111Z'
 created: 1769569550
-changed: 1769596652
+changed: 1769596826
 uid: 0
