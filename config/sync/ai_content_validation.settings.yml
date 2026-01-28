@@ -1,0 +1,12 @@
+flows:
+  - accessibility
+  - content_health
+  - content_validation_fixer
+  - fact_check_fixer
+  - seo_metadata
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
