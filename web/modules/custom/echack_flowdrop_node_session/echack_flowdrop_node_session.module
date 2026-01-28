@@ -64,6 +64,47 @@ function echack_flowdrop_node_session_theme_suggestions_page_alter(array &$sugge
 }
 
 /**
+ * Implements hook_entity_operation().
+ *
+ * Adds a "Validate" operation to nodes in the content list that links
+ * to the FlowDrop entity playground with entity context.
+ */
+function echack_flowdrop_node_session_entity_operation(EntityInterface $entity): array {
+  $operations = [];
+
+  // Only add validate operation for nodes.
+  if ($entity->getEntityTypeId() !== 'node') {
+    return $operations;
+  }
+
+  // Check if user has permission to create playground sessions.
+  if (!\Drupal::currentUser()->hasPermission('create flowdrop_playground_session')) {
+    return $operations;
+  }
+
+  // Default workflow for validation (can be made configurable).
+  $workflow_id = 'test_node_input';
+
+  // Build the URL to the entity playground.
+  $url = \Drupal\Core\Url::fromRoute('echack_flowdrop_node_session.playground.entity', [
+    'workflow_id' => $workflow_id,
+  ], [
+    'query' => [
+      'entity_type' => 'node',
+      'entity_id' => $entity->id(),
+    ],
+  ]);
+
+  $operations['validate'] = [
+    'title' => t('Validate'),
+    'url' => $url,
+    'weight' => 50,
+  ];
+
+  return $operations;
+}
+
+/**
  * Implements hook_entity_presave().
  *
  * Injects entity context data into playground messages for sessions that have
