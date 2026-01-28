@@ -14,7 +14,7 @@ ai_content_validation.settings:
     _permission: 'administer site configuration'
 
 ai_content_validation.ai_node_validations:
-  path: '/ai_content_validation/node/{node}/revision/{node_revision}/validations'
+  path: '/node/{node}/revisions/{node_revision}/validations'
   defaults:
     _title: 'Ai Node Validations'
     _controller: '\Drupal\ai_content_validation\Controller\AiNodeValidationsController::revisionValidations'
