@@ -329,7 +329,34 @@ nodes:
         model: mistral-medium-latest
         temperature: 0
         maxTokens: 2000
-        systemPrompt: 'You are a JSON generator. Output ONLY valid JSON. No text, no markdown, no explanation.  you must not use codeblock. DON''t use "```json\n" at all.  It is CRITICALLY important that the output is JSON and pure json  You are an expert content quality validator specializing in European Commission content standards.Your task is to evaluate articles using these 10 guidelines inspired by European Commission content standards:1. **Accuracy & Evidence**: Are all claims factual, verifiable, and supported by reliable sources (e.g. EU institutions, official statistics, peer-reviewed research)?2. **Clarity & Plain Language**: Is the writing clear, accessible, and free of unnecessary jargon?3. **Neutrality & Objectivity**: Is the tone balanced, non-promotional, and free from opinion or bias?4. **Source Transparency**: Are data, quotes, and references properly attributed to credible sources?5. **Legal & Policy Consistency**: Are references to EU law, policies, and institutions accurate and up to date?6. **Audience Relevance**: Does the article clearly match its intended audience and purpose?7. **Structure & Coherence**: Is the article logically organized with good flow and clear sections?8. **Completeness & Context**: Does it provide enough background and depth to understand the topic?9. **Inclusivity & Language Ethics**: Does it use inclusive, non-discriminatory, and gender-neutral language?10. **Practical Value**: Does it help readers understand real-world implications or next steps?**For each guideline:**• Score from 1 (poor) to 5 (excellent)• Briefly explain your rating• Suggest concrete improvements**Then provide:**• An overall quality score (1–100)• A short summary of strengths• A prioritized list of fixes**Always output in this exact markdown format:**## Content Validation Report: [Article Title]| Guideline | Score | Rating & Suggestions ||-----------|-------|---------------------|| **1. Accuracy & Evidence** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **2. Clarity & Plain Language** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **3. Neutrality & Objectivity** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **4. Source Transparency** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **5. Legal & Policy Consistency** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **6. Audience Relevance** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **7. Structure & Coherence** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **8. Completeness & Context** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **9. Inclusivity & Language Ethics** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **10. Practical Value** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] |---### Overall Quality Score: [X]/100### Strengths:[2-3 bullet points highlighting what the article does well]### Priority Fixes:1. [Most critical issue to address]2. [Second most important fix]3. [Third most important fix]  Generate a validation JSON from the input content. IMPORTANT: Extract these values from the input data: title (use the "title" field), nid (use the "id" field as an INTEGER), vid (look inside "fields" then "vid" then first array element then "value" - this is the revision ID as an INTEGER).  Example output format: {"label":"Fact Check: Article Title Here","status":true,"description":"AI fact-check","field_flowdrop_workflow":"content_validation_fixer","field_content_revision":{"target_id":123,"target_revision_id":456},"field_validation_status":"done","field_validation_result":"Your analysis here"}  CRITICAL: target_id and target_revision_id MUST be integers (not arrays, not null). If you cannot find the id, use 0.  OUTPUT ONLY THE JSON. START YOUR RESPONSE WITH { AND END WITH }'
+        systemPrompt: |-
+          You are a JSON generator. Output ONLY valid JSON. No text, no markdown, no explanation.
+
+          you must not use codeblock. DON't use "```json\n" at all.
+
+          It is CRITICALLY important that the output is JSON and pure json
+
+          You are an expert content quality validator. Evaluate articles using these 10 EU-inspired guidelines:
+          1. Accuracy & Evidence
+          2. Clarity & Plain Language
+          3. Neutrality & Objectivity
+          4. Source Transparency
+          5. Legal & Policy Consistency
+          6. Audience Relevance
+          7. Structure & Coherence
+          8. Completeness & Context
+          9. Inclusivity & Language Ethics
+          10. Practical Value
+
+          Score each guideline 1-5 and calculate an overall quality score (1-100).
+
+          Generate a content validation JSON from the input content. IMPORTANT: Extract these values from the input data: title (use the "title" field), nid (use the "id" field as an INTEGER), vid (look inside "fields" then "vid" then first array element then "value" - this is the revision ID as an INTEGER).
+
+          Example output format: {"label":"Content Validation: Article Title Here","status":true,"description":"AI content validation","field_flowdrop_workflow":"content_validation_fixer","field_content_revision":{"target_id":123,"target_revision_id":456},"field_validation_status":"done","field_validation_result":"Your detailed analysis with scores and suggestions here"}
+
+          CRITICAL: target_id and target_revision_id MUST be integers (not arrays, not null). If you cannot find the id, use 0.
+
+          OUTPUT ONLY THE JSON. START YOUR RESPONSE WITH { AND END WITH }
         nodeType: default
         instanceTitle: 'Content Validator AI'
         instanceDescription: ''
@@ -439,136 +466,6 @@ nodes:
     measured:
       width: 288
       height: 440
-    selected: true
-    dragging: false
-  -
-    id: chat_output.1
-    type: universalNode
-    position:
-      x: 2730
-      'y': 560
-    data:
-      label: 'Chat Output'
-      config:
-        format: markdown
-        showTimestamp: false
-        nodeType: simple
-        instanceTitle: 'Validation Report'
-        instanceDescription: ''
-      metadata:
-        id: chat_output
-        name: 'Chat Output'
-        type: simple
-        supportedTypes:
-          - default
-          - simple
-          - square
-        description: 'Output chat messages in various formats'
-        category: processing
-        icon: 'mdi:chat-alert-outline'
-        color: '#14b8a6'
-        plugin_version: 1.0.0
-        enabled: true
-        tags: {  }
-        executor_plugin: 'flowdrop_node_processor:chat_output'
-        inputs:
-          -
-            id: message
-            name: Message
-            type: input
-            dataType: string
-            required: false
-            description: 'Default chat message'
-            defaultValue: ''
-          -
-            id: trigger
-            name: Trigger
-            type: input
-            dataType: trigger
-            required: false
-            description: ''
-        outputs:
-          -
-            id: message
-            name: message
-            type: output
-            dataType: string
-            required: false
-            description: 'The chat message content'
-          -
-            id: format
-            name: format
-            type: output
-            dataType: string
-            required: false
-            description: 'The message format (text, markdown, html)'
-          -
-            id: timestamp
-            name: timestamp
-            type: output
-            dataType: number
-            required: false
-            description: 'The message timestamp (if showTimestamp is enabled)'
-          -
-            id: metadata
-            name: metadata
-            type: output
-            dataType: json
-            required: false
-            description: 'Additional metadata for message linking'
-          -
-            id: trigger
-            name: Trigger
-            type: output
-            dataType: trigger
-            required: false
-            description: 'Emitted when this node completes execution'
-        config:
-          format: markdown
-          showTimestamp: false
-          type: simple
-        configSchema:
-          type: object
-          properties:
-            format:
-              type: string
-              title: Format
-              description: 'Message format (text, markdown, html)'
-              default: markdown
-            showTimestamp:
-              type: boolean
-              title: 'Show Timestamp'
-              description: 'Whether to include timestamp'
-              default: false
-            nodeType:
-              type: string
-              title: 'Visual Type'
-              description: 'Select the visual appearance for this node instance.'
-              enum:
-                - default
-                - simple
-                - square
-              default: simple
-            instanceTitle:
-              type: string
-              title: Title
-              description: 'Override the default node title for this instance.'
-              x-display-order: -2
-            instanceDescription:
-              type: string
-              title: Description
-              description: 'Override the default description for this instance.'
-              format: multiline
-              x-display-order: -1
-          required: {  }
-      nodeId: chat_output.1
-      extensions:
-        ui:
-          hideUnconnectedHandles: true
-    deletable: true
-    measured:
-      width: 288
-      height: 88
     selected: false
     dragging: false
   -
@@ -800,25 +697,6 @@ edges:
       color: '#9ca3af'
     class: flowdrop--edge--data
   -
-    id: xy-edge__flowdrop_ai_provider_chat_model.1flowdrop_ai_provider_chat_model.1-output-response-chat_output.1chat_output.1-input-message
-    source: flowdrop_ai_provider_chat_model.1
-    target: chat_output.1
-    data:
-      targetNodeType: universalNode
-      targetCategory: processing
-      metadata:
-        edgeType: data
-        sourcePortDataType: string
-    sourceHandle: flowdrop_ai_provider_chat_model.1-output-response
-    targetHandle: chat_output.1-input-message
-    style: 'stroke: var(--flowdrop-edge-data-color);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#9ca3af'
-    class: flowdrop--edge--data
-  -
     id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity-prompt_template.2prompt_template.2-input-variables
     source: echack_flowdrop_node_session_content_context.1
     target: prompt_template.2
@@ -878,7 +756,7 @@ edges:
 metadata:
   version: 1.0.0
   createdAt: '2026-01-28T09:01:32.652Z'
-  updatedAt: '2026-01-28T12:59:44.435Z'
+  updatedAt: '2026-01-28T13:29:37.971Z'
 created: 1769590598
-changed: 1769605184
+changed: 1769606978
 uid: 0
