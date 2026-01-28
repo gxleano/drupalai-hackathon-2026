@@ -32,19 +32,31 @@ final class AiValidationsListBuilder extends EntityListBuilder {
   public function buildRow(EntityInterface $entity): array {
     /** @var \Drupal\ai_content_validation\AiValidationsInterface $entity */
     $row['id'] = $entity->id();
+
+    // Get the workflow label with null safety.
     $workflow = $entity->get('field_flowdrop_workflow')->getValue();
     $flowdrop_id = $workflow[0]['target_id'] ?? '';
-    $workflow_label = "";
+    $workflow_label = '';
     if ($flowdrop_id) {
       $flowdrop = \Drupal::entityTypeManager()->getStorage('flowdrop_workflow')?->load($flowdrop_id);
-      $workflow_label = $flowdrop->label();
+      // Only get label if the workflow entity exists.
+      $workflow_label = $flowdrop?->label() ?? '';
     }
     $row['workflow'] = $workflow_label;
-    $row['label'] = $entity->toLink();
-    $row['validation_status'] = $entity->get('field_validation_status')->value;
+
+    // Get entity label with fallback to prevent null link text.
+    $entityLabel = $entity->label();
+    $linkText = is_string($entityLabel) && $entityLabel !== '' ? $entityLabel : $this->t('(No label) #@id', ['@id' => $entity->id()]);
+    $row['label'] = $entity->toLink($linkText);
+
+    $row['validation_status'] = $entity->get('field_validation_status')->value ?? '';
+
+    // Check if the owner entity exists before accessing its methods.
+    $ownerEntity = $entity->get('uid')->entity;
+    $isAuthenticated = $ownerEntity instanceof \Drupal\user\UserInterface && $ownerEntity->isAuthenticated();
     $username_options = [
       'label' => 'hidden',
-      'settings' => ['link' => $entity->get('uid')->entity->isAuthenticated()],
+      'settings' => ['link' => $isAuthenticated],
     ];
     $row['uid']['data'] = $entity->get('uid')->view($username_options);
     $row['created']['data'] = $entity->get('created')->view(['label' => 'hidden']);

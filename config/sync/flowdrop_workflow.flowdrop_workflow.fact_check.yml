@@ -5,9 +5,685 @@ dependencies: {  }
 id: fact_check
 label: 'Fact Check'
 description: ''
-nodes: {  }
-edges: {  }
-metadata: {  }
+nodes:
+  -
+    id: echack_flowdrop_node_session_content_context.1
+    type: universalNode
+    position:
+      x: 20
+      'y': 320
+    data:
+      label: 'Content Context'
+      config:
+        is_default_revision: true
+        nodeType: default
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: echack_flowdrop_node_session_content_context
+        name: 'Content Context'
+        type: default
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Load a Drupal node as context for the workflow. Supports specific revision loading.'
+        category: data
+        icon: 'mdi:page-layout-body'
+        color: '#f97316'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'echack_flowdrop_node_session:entity_context'
+        inputs:
+          -
+            id: entity_type
+            name: 'Entity Type'
+            type: input
+            dataType: string
+            required: false
+            description: 'The entity type to load (e.g., node, taxonomy_term, user)'
+            defaultValue: node
+          -
+            id: entity_id
+            name: 'Entity ID'
+            type: input
+            dataType: string
+            required: false
+            description: 'The ID of the entity to load'
+            defaultValue: ''
+          -
+            id: bundle
+            name: Bundle
+            type: input
+            dataType: string
+            required: false
+            description: 'The entity bundle/content type (optional, used for validation)'
+            defaultValue: ''
+          -
+            id: revision_id
+            name: 'Revision ID'
+            type: input
+            dataType: string
+            required: false
+            description: 'Optional revision ID to load a specific version of the entity. If empty, loads the current/default revision.'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: entity
+            name: Entity
+            type: output
+            dataType: json
+            required: false
+            description: 'Full serialized entity data including fields'
+          -
+            id: entity_type
+            name: entity_type
+            type: output
+            dataType: string
+            required: false
+            description: 'The entity type ID'
+          -
+            id: entity_id
+            name: entity_id
+            type: output
+            dataType: string
+            required: false
+            description: 'The entity ID'
+          -
+            id: bundle
+            name: bundle
+            type: output
+            dataType: string
+            required: false
+            description: 'The entity bundle/content type'
+          -
+            id: revision_id
+            name: revision_id
+            type: output
+            dataType: string
+            required: false
+            description: 'The revision ID (if a specific revision was loaded)'
+          -
+            id: is_default_revision
+            name: is_default_revision
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether this is the default/current revision'
+          -
+            id: loaded_from
+            name: loaded_from
+            type: output
+            dataType: string
+            required: false
+            description: "How the entity was loaded: 'session_context' (pre-injected) or 'parameters' (loaded on demand)"
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          is_default_revision: true
+          type: default
+        configSchema:
+          type: object
+          properties:
+            is_default_revision:
+              type: boolean
+              title: 'Is Default Revision'
+              description: 'Whether the loaded entity is the default revision (injected via session context)'
+              default: true
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: default
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: echack_flowdrop_node_session_content_context.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 288
+      height: 1115
+    selected: false
+    dragging: false
+  -
+    id: json_to_data.1
+    type: universalNode
+    position:
+      x: 1790
+      'y': 780
+    data:
+      label: 'JSON to Data'
+      config: {  }
+      metadata:
+        id: json_to_data
+        name: 'JSON to Data'
+        type: default
+        supportedTypes:
+          - default
+        description: 'Convert JSON string to structured data (array/object)'
+        category: data
+        icon: 'mdi:code-json'
+        color: '#f97316'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:json_to_data'
+        inputs:
+          -
+            id: json
+            name: 'JSON String'
+            type: input
+            dataType: string
+            required: false
+            description: 'The JSON string to decode into structured data'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: data
+            name: data
+            type: output
+            dataType: mixed
+            required: false
+            description: 'The decoded structured data (array/object)'
+          -
+            id: success
+            name: success
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether the conversion was successful'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config: {  }
+        configSchema:
+          type: object
+          properties:
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: json_to_data.1
+    deletable: true
+    measured:
+      width: 288
+      height: 515
+    selected: false
+    dragging: false
+  -
+    id: flowdrop_ai_provider_chat_model.1
+    type: universalNode
+    position:
+      x: 1280
+      'y': 520
+    data:
+      label: 'Chat Model (Drupal AI)'
+      config:
+        model: mistral-large-latest
+        temperature: 0
+        maxTokens: 1000
+        systemPrompt: |-
+          You are a JSON generator. Output ONLY valid JSON. No text, no markdown, no explanation.
+
+          you must not use codeblock. DON't use "```json\n" at all.
+
+          It is CRITICALLY important that the output is JSON and pure json
+
+          Generate a fact-checking validation JSON from the input content:
+
+          {"label":"Fact Check: [TITLE]","status":true,"description":"AI fact-check","field_flowdrop_workflow":"fact_check_fixer","field_content_revision":{"target_id":[NID],"target_revision_id":[VID]},"field_validation_status":"done","field_validation_result":"[ANALYSIS]"}
+
+          Extract [TITLE] from input title field, [NID] from input id field, [VID] from input vid field. Write your analysis in [ANALYSIS].
+
+          OUTPUT ONLY THE JSON. START YOUR RESPONSE WITH { AND END WITH }
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: flowdrop_ai_provider_chat_model
+        name: 'Chat Model (Drupal AI)'
+        type: default
+        supportedTypes:
+          - default
+        description: 'AI chat model for conversation and text generation'
+        category: ai
+        icon: 'mdi:robot'
+        color: '#a855f7'
+        plugin_version: 1.0.0
+        enabled: true
+        tags:
+          - model
+          - ai
+        executor_plugin: 'flowdrop_ai_provider:chat_model'
+        inputs:
+          -
+            id: message
+            name: Message
+            type: input
+            dataType: string
+            required: false
+            description: 'Message to send to AI model'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: response
+            name: response
+            type: output
+            dataType: string
+            required: false
+            description: 'The AI model response'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          model: mistral-large-latest
+          temperature: 0.7
+          maxTokens: 1000
+          systemPrompt: ''
+        configSchema:
+          type: object
+          properties:
+            model:
+              type: string
+              title: Model
+              description: 'AI model to use for chat'
+              default: mistral-large-latest
+              enum:
+                - chat
+                - claude-4-5-sonnet
+                - claude-4-5-opus
+                - mistral-large-latest
+                - mistral-medium-latest
+              options:
+                -
+                  value: chat
+                  label: 'chat (amazeeio)'
+                -
+                  value: claude-4-5-sonnet
+                  label: 'claude-4-5-sonnet (amazeeio)'
+                -
+                  value: claude-4-5-opus
+                  label: 'claude-4-5-opus (amazeeio)'
+                -
+                  value: mistral-large-latest
+                  label: 'mistral-large-latest (amazeeio)'
+                -
+                  value: mistral-medium-latest
+                  label: 'mistral-medium-latest (amazeeio)'
+            temperature:
+              type: number
+              title: Temperature
+              description: 'Model temperature (0.0 to 2.0)'
+              default: 0.7
+              minimum: 0
+              maximum: 2
+              step: '0.01'
+              format: range
+            maxTokens:
+              type: integer
+              title: 'Max Tokens'
+              description: 'Maximum tokens to generate'
+              default: 1000
+              minimum: 1
+              maximum: 4000
+            systemPrompt:
+              type: string
+              title: 'System Prompt'
+              description: 'System prompt to set the AI behavior and context'
+              default: ''
+              format: multiline
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: flowdrop_ai_provider_chat_model.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 288
+      height: 440
+    selected: true
+    dragging: true
+  -
+    id: data_to_json.1
+    type: universalNode
+    position:
+      x: 800
+      'y': 610
+    data:
+      label: 'Data to JSON'
+      config: {  }
+      metadata:
+        id: data_to_json
+        name: 'Data to JSON'
+        type: default
+        supportedTypes:
+          - default
+        description: 'Convert structured data (array/object) to JSON string'
+        category: data
+        icon: 'mdi:code-json'
+        color: '#f97316'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:data_to_json'
+        inputs:
+          -
+            id: data
+            name: Data
+            type: input
+            dataType: mixed
+            required: false
+            description: 'The data to convert to JSON'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: json
+            name: json
+            type: output
+            dataType: string
+            required: false
+            description: 'The JSON string representation'
+          -
+            id: success
+            name: success
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether the conversion was successful'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config: {  }
+        configSchema:
+          type: object
+          properties:
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: data_to_json.1
+    deletable: true
+    measured:
+      width: 288
+      height: 515
+    selected: false
+  -
+    id: flowdrop_node_processor_validation_save.1
+    type: universalNode
+    position:
+      x: 2450
+      'y': 660
+    data:
+      label: 'Save Validation'
+      config:
+        entity_type: ai_content_validation_item
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: flowdrop_node_processor_validation_save
+        name: 'Save Validation'
+        type: default
+        supportedTypes:
+          - default
+        description: 'Create validation entry'
+        category: processing
+        icon: 'mdi:alert-circle-check-outline'
+        color: '#14b8a6'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:entity_save'
+        inputs:
+          -
+            id: values
+            name: 'Field Values'
+            type: input
+            dataType: json
+            required: false
+            description: 'The field values to set on the entity as key-value pairs'
+            defaultValue: {  }
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: entity_id
+            name: entity_id
+            type: output
+            dataType: string
+            required: false
+            description: 'The ID of the saved entity'
+          -
+            id: entity_type
+            name: entity_type
+            type: output
+            dataType: string
+            required: false
+            description: 'The entity type'
+          -
+            id: is_new
+            name: is_new
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether a new entity was created (true) or existing was updated (false)'
+          -
+            id: entity
+            name: entity
+            type: output
+            dataType: json
+            required: false
+            description: 'Full serialized entity data in the same format as Entity Trigger output'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          entity_type: ai_content_validation_item
+        configSchema:
+          type: object
+          properties:
+            entity_type:
+              type: string
+              title: 'Entity Type'
+              description: 'The entity type to create/update (e.g., node, user, taxonomy_term)'
+              default: node
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: flowdrop_node_processor_validation_save.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 288
+      height: 665
+    selected: false
+    dragging: false
+edges:
+  -
+    id: xy-edge__flowdrop_ai_provider_chat_model.1flowdrop_ai_provider_chat_model.1-output-response-json_to_data.1json_to_data.1-input-json
+    source: flowdrop_ai_provider_chat_model.1
+    target: json_to_data.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: data
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: flowdrop_ai_provider_chat_model.1-output-response
+    targetHandle: json_to_data.1-input-json
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity-data_to_json.1data_to_json.1-input-data
+    source: echack_flowdrop_node_session_content_context.1
+    target: data_to_json.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: data
+      metadata:
+        edgeType: data
+        sourcePortDataType: json
+    sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity
+    targetHandle: data_to_json.1-input-data
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__data_to_json.1data_to_json.1-output-json-flowdrop_ai_provider_chat_model.1flowdrop_ai_provider_chat_model.1-input-message
+    source: data_to_json.1
+    target: flowdrop_ai_provider_chat_model.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: ai
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: data_to_json.1-output-json
+    targetHandle: flowdrop_ai_provider_chat_model.1-input-message
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__json_to_data.1json_to_data.1-output-data-flowdrop_node_processor_validation_save.1flowdrop_node_processor_validation_save.1-input-values
+    source: json_to_data.1
+    target: flowdrop_node_processor_validation_save.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: mixed
+    sourceHandle: json_to_data.1-output-data
+    targetHandle: flowdrop_node_processor_validation_save.1-input-values
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+metadata:
+  version: 1.0.0
+  createdAt: '2026-01-28T10:27:56.460Z'
+  updatedAt: '2026-01-28T11:18:30.285Z'
 created: 1769523938
-changed: 1769585118
+changed: 1769599110
 uid: 0

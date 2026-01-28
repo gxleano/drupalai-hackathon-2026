@@ -1,0 +1,63 @@
+uuid: 3ce7115e-7f85-4a25-ae2a-7fef173fc94a
+langcode: en
+status: true
+dependencies: {  }
+id: flowdrop_node_processor_validation_save
+label: 'Save Validation'
+description: 'Create validation entry'
+category: processing
+icon: 'mdi:alert-circle-check-outline'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  allowed_fields:
+    configurable: false
+    connectable: false
+    required: false
+    default: {  }
+  bundle:
+    configurable: false
+    connectable: false
+    required: false
+  entity_id:
+    configurable: false
+    connectable: false
+    required: false
+  entity_type:
+    configurable: true
+    connectable: false
+    required: false
+    default: ai_content_validation_item
+  values:
+    configurable: false
+    connectable: true
+    required: false
+    default: {  }
+outputs:
+  bundle:
+    exposed: false
+  changed:
+    exposed: false
+  created:
+    exposed: false
+  entity:
+    exposed: true
+  entity_id:
+    exposed: true
+  entity_type:
+    exposed: true
+  is_new:
+    exposed: true
+  label:
+    exposed: false
+  skipped_fields:
+    exposed: false
+  uuid:
+    exposed: false
+tags: {  }
+executor_plugin: 'flowdrop_node_processor:entity_save'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
