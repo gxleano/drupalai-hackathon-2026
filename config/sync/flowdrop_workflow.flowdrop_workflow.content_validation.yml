@@ -327,62 +327,9 @@ nodes:
       label: 'Chat Model (Drupal AI)'
       config:
         model: mistral-medium-latest
-        temperature: 0.3
+        temperature: 0
         maxTokens: 2000
-        systemPrompt: |
-          You are an expert content quality validator specializing in European Commission content standards.
-
-          Your task is to evaluate articles using these 10 guidelines inspired by European Commission content standards:
-
-          1. **Accuracy & Evidence**: Are all claims factual, verifiable, and supported by reliable sources (e.g. EU institutions, official statistics, peer-reviewed research)?
-          2. **Clarity & Plain Language**: Is the writing clear, accessible, and free of unnecessary jargon?
-          3. **Neutrality & Objectivity**: Is the tone balanced, non-promotional, and free from opinion or bias?
-          4. **Source Transparency**: Are data, quotes, and references properly attributed to credible sources?
-          5. **Legal & Policy Consistency**: Are references to EU law, policies, and institutions accurate and up to date?
-          6. **Audience Relevance**: Does the article clearly match its intended audience and purpose?
-          7. **Structure & Coherence**: Is the article logically organized with good flow and clear sections?
-          8. **Completeness & Context**: Does it provide enough background and depth to understand the topic?
-          9. **Inclusivity & Language Ethics**: Does it use inclusive, non-discriminatory, and gender-neutral language?
-          10. **Practical Value**: Does it help readers understand real-world implications or next steps?
-
-          **For each guideline:**
-          • Score from 1 (poor) to 5 (excellent)
-          • Briefly explain your rating
-          • Suggest concrete improvements
-
-          **Then provide:**
-          • An overall quality score (1–100)
-          • A short summary of strengths
-          • A prioritized list of fixes
-
-          **Always output in this exact markdown format:**
-
-          ## Content Validation Report: [Article Title]
-
-          | Guideline | Score | Rating & Suggestions |
-          |-----------|-------|---------------------|
-          | **1. Accuracy & Evidence** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] |
-          | **2. Clarity & Plain Language** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] |
-          | **3. Neutrality & Objectivity** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] |
-          | **4. Source Transparency** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] |
-          | **5. Legal & Policy Consistency** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] |
-          | **6. Audience Relevance** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] |
-          | **7. Structure & Coherence** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] |
-          | **8. Completeness & Context** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] |
-          | **9. Inclusivity & Language Ethics** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] |
-          | **10. Practical Value** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] |
-
-          ---
-
-          ### Overall Quality Score: [X]/100
-
-          ### Strengths:
-          [2-3 bullet points highlighting what the article does well]
-
-          ### Priority Fixes:
-          1. [Most critical issue to address]
-          2. [Second most important fix]
-          3. [Third most important fix]
+        systemPrompt: 'You are a JSON generator. Output ONLY valid JSON. No text, no markdown, no explanation.  you must not use codeblock. DON''t use "```json\n" at all.  It is CRITICALLY important that the output is JSON and pure json  You are an expert content quality validator specializing in European Commission content standards.Your task is to evaluate articles using these 10 guidelines inspired by European Commission content standards:1. **Accuracy & Evidence**: Are all claims factual, verifiable, and supported by reliable sources (e.g. EU institutions, official statistics, peer-reviewed research)?2. **Clarity & Plain Language**: Is the writing clear, accessible, and free of unnecessary jargon?3. **Neutrality & Objectivity**: Is the tone balanced, non-promotional, and free from opinion or bias?4. **Source Transparency**: Are data, quotes, and references properly attributed to credible sources?5. **Legal & Policy Consistency**: Are references to EU law, policies, and institutions accurate and up to date?6. **Audience Relevance**: Does the article clearly match its intended audience and purpose?7. **Structure & Coherence**: Is the article logically organized with good flow and clear sections?8. **Completeness & Context**: Does it provide enough background and depth to understand the topic?9. **Inclusivity & Language Ethics**: Does it use inclusive, non-discriminatory, and gender-neutral language?10. **Practical Value**: Does it help readers understand real-world implications or next steps?**For each guideline:**• Score from 1 (poor) to 5 (excellent)• Briefly explain your rating• Suggest concrete improvements**Then provide:**• An overall quality score (1–100)• A short summary of strengths• A prioritized list of fixes**Always output in this exact markdown format:**## Content Validation Report: [Article Title]| Guideline | Score | Rating & Suggestions ||-----------|-------|---------------------|| **1. Accuracy & Evidence** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **2. Clarity & Plain Language** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **3. Neutrality & Objectivity** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **4. Source Transparency** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **5. Legal & Policy Consistency** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **6. Audience Relevance** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **7. Structure & Coherence** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **8. Completeness & Context** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **9. Inclusivity & Language Ethics** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] || **10. Practical Value** | [1-5]/5 | [Brief explanation + concrete improvement suggestion] |---### Overall Quality Score: [X]/100### Strengths:[2-3 bullet points highlighting what the article does well]### Priority Fixes:1. [Most critical issue to address]2. [Second most important fix]3. [Third most important fix]  Generate a validation JSON from the input content:  {"label":"Fact Check: [TITLE]","status":true,"description":"AI fact-check","field_flowdrop_workflow":"content_validation_fixer","field_content_revision":{"target_id":[NID],"target_revision_id":[VID]},"field_validation_status":"done","field_validation_result":"[ANALYSIS]"}  Extract [TITLE] from input title field, [NID] from input id field, [VID] from input vid field. Write your analysis in [ANALYSIS].  OUTPUT ONLY THE JSON. START YOUR RESPONSE WITH { AND END WITH }'
         nodeType: default
         instanceTitle: 'Content Validator AI'
         instanceDescription: ''
@@ -624,6 +571,214 @@ nodes:
       height: 88
     selected: false
     dragging: false
+  -
+    id: json_to_data.1
+    type: universalNode
+    position:
+      x: 2740
+      'y': 700
+    data:
+      label: 'JSON to Data'
+      config: {  }
+      metadata:
+        id: json_to_data
+        name: 'JSON to Data'
+        type: default
+        supportedTypes:
+          - default
+        description: 'Convert JSON string to structured data (array/object)'
+        category: data
+        icon: 'mdi:code-json'
+        color: '#f97316'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:json_to_data'
+        inputs:
+          -
+            id: json
+            name: 'JSON String'
+            type: input
+            dataType: string
+            required: false
+            description: 'The JSON string to decode into structured data'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: data
+            name: data
+            type: output
+            dataType: mixed
+            required: false
+            description: 'The decoded structured data (array/object)'
+          -
+            id: success
+            name: success
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether the conversion was successful'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config: {  }
+        configSchema:
+          type: object
+          properties:
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: json_to_data.1
+    deletable: true
+    measured:
+      width: 288
+      height: 515
+    selected: false
+    dragging: false
+  -
+    id: flowdrop_node_processor_validation_save.1
+    type: universalNode
+    position:
+      x: 3250
+      'y': 500
+    data:
+      label: 'Save Validation'
+      config:
+        entity_type: ai_content_validation_item
+        instanceTitle: ''
+        instanceDescription: ''
+      metadata:
+        id: flowdrop_node_processor_validation_save
+        name: 'Save Validation'
+        type: default
+        supportedTypes:
+          - default
+        description: 'Create validation entry'
+        category: processing
+        icon: 'mdi:alert-circle-check-outline'
+        color: '#14b8a6'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:entity_save'
+        inputs:
+          -
+            id: values
+            name: 'Field Values'
+            type: input
+            dataType: json
+            required: false
+            description: 'The field values to set on the entity as key-value pairs'
+            defaultValue: {  }
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: entity_id
+            name: entity_id
+            type: output
+            dataType: string
+            required: false
+            description: 'The ID of the saved entity'
+          -
+            id: entity_type
+            name: entity_type
+            type: output
+            dataType: string
+            required: false
+            description: 'The entity type'
+          -
+            id: is_new
+            name: is_new
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether a new entity was created (true) or existing was updated (false)'
+          -
+            id: revision_created
+            name: revision_created
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether a new revision was created on save'
+          -
+            id: revision_id
+            name: revision_id
+            type: output
+            dataType: string
+            required: false
+            description: 'The revision ID of the saved entity (if revisionable)'
+          -
+            id: entity
+            name: entity
+            type: output
+            dataType: json
+            required: false
+            description: 'Full serialized entity data in the same format as Entity Trigger output'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          entity_type: ai_content_validation_item
+        configSchema:
+          type: object
+          properties:
+            entity_type:
+              type: string
+              title: 'Entity Type'
+              description: 'The entity type to create/update (e.g., node, user, taxonomy_term)'
+              default: node
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: flowdrop_node_processor_validation_save.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 288
+      height: 815
+    selected: false
+    dragging: true
 edges:
   -
     id: xy-edge__prompt_template.2prompt_template.2-output-prompt-flowdrop_ai_provider_chat_model.1flowdrop_ai_provider_chat_model.1-input-message
@@ -682,10 +837,48 @@ edges:
       height: 16
       color: '#9ca3af'
     class: flowdrop--edge--data
+  -
+    id: xy-edge__json_to_data.1json_to_data.1-output-data-flowdrop_node_processor_validation_save.1flowdrop_node_processor_validation_save.1-input-values
+    source: json_to_data.1
+    target: flowdrop_node_processor_validation_save.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: mixed
+    sourceHandle: json_to_data.1-output-data
+    targetHandle: flowdrop_node_processor_validation_save.1-input-values
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__flowdrop_ai_provider_chat_model.1flowdrop_ai_provider_chat_model.1-output-response-json_to_data.1json_to_data.1-input-json
+    source: flowdrop_ai_provider_chat_model.1
+    target: json_to_data.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: data
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: flowdrop_ai_provider_chat_model.1-output-response
+    targetHandle: json_to_data.1-input-json
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
 metadata:
   version: 1.0.0
   createdAt: '2026-01-28T09:01:32.652Z'
-  updatedAt: '2026-01-28T10:40:16.868Z'
+  updatedAt: '2026-01-28T12:59:44.435Z'
 created: 1769590598
-changed: 1769597750
+changed: 1769605184
 uid: 0

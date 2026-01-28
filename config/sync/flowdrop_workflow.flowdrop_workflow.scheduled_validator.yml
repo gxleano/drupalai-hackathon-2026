@@ -743,6 +743,237 @@ nodes:
       height: 103
     selected: false
     dragging: true
+  -
+    id: workflow_executor.2
+    type: universalNode
+    position:
+      x: 1300
+      'y': 340
+    data:
+      label: 'Workflow Executor'
+      config:
+        workflow_id: content_validation
+        execution_mode: job_fire_forget
+        timeout: 300
+        poll_interval_ms: 2000
+        nodeType: simple
+        instanceTitle: 'Content Validation'
+        instanceDescription: 'Fixes content issues, SEO and Metatag'
+      metadata:
+        id: workflow_executor
+        name: 'Workflow Executor'
+        type: default
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Execute another FlowDrop workflow with configurable execution mode'
+        category: processing
+        icon: 'mdi:play-circle-outline'
+        color: '#14b8a6'
+        plugin_version: 1.0.0
+        enabled: true
+        tags:
+          - processing
+          - workflow
+          - automation
+        executor_plugin: 'echack_flowdrop_workflow_executor:workflow_executor'
+        inputs:
+          -
+            id: input_data
+            name: 'Input Data'
+            type: input
+            dataType: json
+            required: false
+            description: 'Data to pass to the child workflow (available in workflow metadata)'
+            defaultValue: {  }
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: success
+            name: success
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether the workflow was executed/started successfully'
+          -
+            id: status
+            name: status
+            type: output
+            dataType: string
+            required: false
+            description: 'Execution status: completed, running, pending, failed, timeout'
+          -
+            id: session_id
+            name: session_id
+            type: output
+            dataType: string
+            required: false
+            description: 'The session ID of the executed workflow (for async result retrieval)'
+          -
+            id: job_id
+            name: job_id
+            type: output
+            dataType: string
+            required: false
+            description: 'The job ID if available'
+          -
+            id: outputs
+            name: outputs
+            type: output
+            dataType: json
+            required: false
+            description: 'Outputs from the executed workflow (when completed)'
+          -
+            id: error_message
+            name: error_message
+            type: output
+            dataType: string
+            required: false
+            description: 'Error message if execution failed'
+          -
+            id: execution_time_ms
+            name: execution_time_ms
+            type: output
+            dataType: number
+            required: false
+            description: 'Total execution time in milliseconds'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          execution_mode: job
+          timeout: 300
+          poll_interval_ms: 2000
+          type: default
+        configSchema:
+          type: object
+          properties:
+            workflow_id:
+              type: string
+              title: Workflow
+              description: 'Select the workflow to execute'
+              enum:
+                - accessibility
+                - content_health
+                - content_validation
+                - content_validation_fixer
+                - fact_check
+                - fact_check_fixer
+                - related_content
+                - scheduled_validator
+                - seo_metadata
+                - test_node_input
+                - token_burners_smoke_test
+              options:
+                -
+                  value: accessibility
+                  label: Accessibility
+                -
+                  value: content_health
+                  label: 'Content Health'
+                -
+                  value: content_validation
+                  label: 'Content Validation'
+                -
+                  value: content_validation_fixer
+                  label: 'Content Validation Fixer'
+                -
+                  value: fact_check
+                  label: 'Fact Check'
+                -
+                  value: fact_check_fixer
+                  label: 'Fact Check Fixer'
+                -
+                  value: related_content
+                  label: 'Related Content'
+                -
+                  value: scheduled_validator
+                  label: 'Scheduled Validator'
+                -
+                  value: seo_metadata
+                  label: 'SEO & Metadata'
+                -
+                  value: test_node_input
+                  label: test_node_input
+                -
+                  value: token_burners_smoke_test
+                  label: 'Token Burners Smoke Test'
+            execution_mode:
+              type: string
+              title: 'Execution Mode'
+              description: 'How to execute the workflow'
+              enum:
+                - job
+                - job_async
+                - job_fire_forget
+              options:
+                -
+                  value: job
+                  label: 'Job (wait for completion)'
+                -
+                  value: job_async
+                  label: 'Async (return session ID, get results later)'
+                -
+                  value: job_fire_forget
+                  label: 'Fire & Forget (no result tracking)'
+              default: job
+            timeout:
+              type: integer
+              title: 'Timeout (seconds)'
+              description: 'Maximum time to wait for completion (job mode only)'
+              default: 300
+              minimum: 1
+              maximum: 3600
+            poll_interval_ms:
+              type: integer
+              title: 'Poll Interval (ms)'
+              description: 'How often to check for completion (job mode only)'
+              default: 2000
+              minimum: 100
+              maximum: 30000
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: default
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required:
+            - workflow_id
+      nodeId: workflow_executor.2
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 288
+      height: 88
+    selected: true
+    dragging: true
 edges:
   -
     id: xy-edge__trigger.1trigger.1-output-trigger-echack_flowdrop_workflow_executor_content_query.1echack_flowdrop_workflow_executor_content_query.1-input-trigger
@@ -801,10 +1032,29 @@ edges:
       height: 16
       color: '#9ca3af'
     class: flowdrop--edge--data
+  -
+    id: xy-edge__foreach.1foreach.1-output-current_item-workflow_executor.2workflow_executor.2-input-input_data
+    source: foreach.1
+    target: workflow_executor.2
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: mixed
+    sourceHandle: foreach.1-output-current_item
+    targetHandle: workflow_executor.2-input-input_data
+    style: 'stroke: var(--flowdrop-edge-data-color);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#9ca3af'
+    class: flowdrop--edge--data
 metadata:
   version: 1.0.0
   createdAt: '2026-01-28T03:14:49.154Z'
-  updatedAt: '2026-01-28T10:40:26.111Z'
+  updatedAt: '2026-01-28T12:55:44.756Z'
 created: 1769569550
-changed: 1769596826
+changed: 1769604944
 uid: 0
