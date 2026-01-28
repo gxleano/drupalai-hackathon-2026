@@ -58,20 +58,18 @@ final class SettingsForm extends ConfigFormBase {
       '#options' => $options,
       '#title' => $this->t('Which flows do you want to enable?'),
       '#empty' => $this->t('No flows available.'),
-      '#default_value' => $flows,
+      '#default_value' => $this->config('ai_content_validation.settings')->get('flows'),
     ];
 
     return parent::buildForm($form, $form_state);
   }
 
-
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
-    $values = $form_state->getValue('flows');
     $this->config('ai_content_validation.settings')
-      ->set('flows', array_keys($form_state->getValue('flows')))
+      ->set('flows', array_values($form_state->getValue('flows')))
       ->save();
     parent::submitForm($form, $form_state);
   }
