@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_content_validation\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Url;
 
 /**
@@ -18,6 +19,15 @@ final class MainDashboard extends ControllerBase {
   public function __invoke(): array {
      $build = [
       "#type" => "container",
+      "#cache" => [
+        "contexts" => ["user.permissions"],
+        "tags" => [
+          "ai_content_validation_item_list",
+          "flowdrop_workflow_list",
+          "config:ai_content_validation.settings",
+        ],
+        "max-age" => Cache::PERMANENT,
+      ],
       "#attributes" => [
         "class" => ["fd-fullscreen-layout"],
       ],
@@ -57,72 +67,24 @@ final class MainDashboard extends ControllerBase {
     ];
 
     $flows_storage = $this->entityTypeManager()->getStorage('flowdrop_workflow');
+    $enabled_flows = $this->config('ai_content_validation.settings')->get('flows') ?? [];
+    $flows = $flows_storage->loadMultiple($enabled_flows);
 
     // Collect stat card items for the grid.
-    // @todo Sections should be automatically generated based on configured flows.
     $statItems = [];
 
-    if ($flows_storage->load('fact_check_fixer') !== NULL) {
-      $count = $this->getValidationCount('fact_check_fixer');
-      // @todo Replace with fast check URL.
-      $url = '/admin/content/item';
-      $statItems["fast_check"] = [
+    foreach ($flows as $flow) {
+      $flow_id = $flow->id();
+      $count = $this->getValidationCount($flow_id);
+      $url = Url::fromRoute('entity.ai_content_validation_item.collection', [], [
+        'query' => ['flow' => $flow_id],
+      ])->toString();
+      $statItems[$flow_id] = [
         "#type" => "component",
         "#component" => "flowdrop_ui_components:stat-card",
         "#props" => [
           "value" => (string) $count,
-          "label" => (string) $this->t("Fast checking"),
-          "variant" => "default",
-          "url" => $url,
-          "icon" => $this->getAccessibilityIcon(),
-        ],
-      ];
-    }
-
-    if ($flows_storage->load('accessibility') !== NULL) {
-      $count = $this->getValidationCount('accessibility');
-      // @todo Replace with accessibility URL.
-      $url = Url::fromRoute('<front>')->toString();
-      $statItems["accessibility"] = [
-        "#type" => "component",
-        "#component" => "flowdrop_ui_components:stat-card",
-        "#props" => [
-          "value" => (string) $count,
-          "label" => (string) $this->t("Accessibility"),
-          "variant" => "default",
-          "url" => $url,
-          "icon" => $this->getAccessibilityIcon(),
-        ],
-      ];
-    }
-
-    if ($flows_storage->load('seo_metadata') !== NULL) {
-      $count = $this->getValidationCount('seo_metadata');
-      // @todo Replace with SEO URL.
-      $url = Url::fromRoute('<front>')->toString();
-      $statItems["seo_metadata"] = [
-        "#type" => "component",
-        "#component" => "flowdrop_ui_components:stat-card",
-        "#props" => [
-          "value" => (string) $count,
-          "label" => (string) $this->t("SEO"),
-          "variant" => "default",
-          "url" => $url,
-          "icon" => $this->getAccessibilityIcon(),
-        ],
-      ];
-    }
-
-    if ($flows_storage->load('content_health') !== NULL) {
-      $count = $this->getValidationCount('content_health');
-      // @todo Replace with content health URL.
-      $url = Url::fromRoute('<front>')->toString();
-      $statItems["content_health"] = [
-        "#type" => "component",
-        "#component" => "flowdrop_ui_components:stat-card",
-        "#props" => [
-          "value" => (string) $count,
-          "label" => (string) $this->t("Content health"),
+          "label" => (string) $flow->label(),
           "variant" => "default",
           "url" => $url,
           "icon" => $this->getAccessibilityIcon(),
@@ -139,7 +101,7 @@ final class MainDashboard extends ControllerBase {
         "stagger" => TRUE,
       ],
       "#slots" => [
-        "default" => $statItems,
+        "default" => $statItems ?? [],
       ],
     ];
 

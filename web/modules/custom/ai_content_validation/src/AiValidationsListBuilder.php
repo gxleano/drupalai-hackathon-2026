@@ -7,6 +7,7 @@ namespace Drupal\ai_content_validation;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Url;
+use Drupal\Core\Entity\Query\QueryInterface;
 
 /**
  * Provides a list controller for the ai validations entity type.
@@ -98,6 +99,18 @@ final class AiValidationsListBuilder extends EntityListBuilder {
     }
 
     return $operations;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEntityListQuery(): QueryInterface {
+    $query = parent::getEntityListQuery();
+    $flow = \Drupal::request()->query->get('flow');
+    if (!empty($flow)) {
+      $query->condition('field_flowdrop_workflow.target_id', $flow);
+    }
+    return $query;
   }
 
 }
