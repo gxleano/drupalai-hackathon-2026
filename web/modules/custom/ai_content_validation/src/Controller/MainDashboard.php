@@ -65,7 +65,7 @@ final class MainDashboard extends ControllerBase {
     if ($flows_storage->load('fact_check_fixer') !== NULL) {
       $count = $this->getValidationCount('fact_check_fixer');
       // @todo Replace with fast check URL.
-      $url = Url::fromRoute('<front>')->toString();
+      $url = '/admin/content/item';
       $statItems["fast_check"] = [
         "#type" => "component",
         "#component" => "flowdrop_ui_components:stat-card",
