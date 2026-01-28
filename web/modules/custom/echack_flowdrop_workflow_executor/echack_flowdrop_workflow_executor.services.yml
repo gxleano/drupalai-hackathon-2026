@@ -1,0 +1,11 @@
+services:
+  # Main service for executing workflows programmatically.
+  echack_flowdrop_workflow_executor.service:
+    class: Drupal\echack_flowdrop_workflow_executor\Service\WorkflowExecutionService
+    arguments:
+      - "@entity_type.manager"
+      - "@flowdrop_playground.service"
+      - "@flowdrop.entity_serializer"
+      - "@state"
+      - "@queue"
+      - "@logger.factory"

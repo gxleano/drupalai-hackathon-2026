@@ -1,5 +1,0 @@
-ai_content_validation.settings:
-  title: Settings
-  parent: system.admin_config_system
-  route_name: ai_content_validation.settings
-  weight: 10

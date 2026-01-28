@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.ai_content_validation_item.field_validation_result
+  module:
+    - ai_content_validation
+id: ai_content_validation_item.ai_content_validation_item.field_validation_result
+field_name: field_validation_result
+entity_type: ai_content_validation_item
+bundle: ai_content_validation_item
+label: 'Validation result'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.ai_content_validation_item.field_flowdrop_workflow
+  module:
+    - ai_content_validation
+id: ai_content_validation_item.ai_content_validation_item.field_flowdrop_workflow
+field_name: field_flowdrop_workflow
+entity_type: ai_content_validation_item
+bundle: ai_content_validation_item
+label: 'Flowdrop workflow'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:flowdrop_workflow'
+  handler_settings:
+    target_bundles: null
+    auto_create: false
+field_type: entity_reference

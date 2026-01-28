@@ -1,0 +1,5 @@
+ai_content_validation_item.add_form:
+  title: 'Add ai validations'
+  route_name: entity.ai_content_validation_item.add_form
+  appears_on:
+    - entity.ai_content_validation_item.collection
