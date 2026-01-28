@@ -1,0 +1,89 @@
+uuid: 4ed9d5a1-6606-46b7-a3a9-93a3c8768a14
+langcode: en
+status: true
+dependencies: {  }
+id: echack_flowdrop_workflow_executor_content_query
+label: 'Content Query'
+description: 'Query Drupal content with configurable conditions'
+category: data
+icon: 'mdi:database-search-outline'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  bundle:
+    configurable: true
+    connectable: false
+    required: false
+  changed_after:
+    configurable: true
+    connectable: false
+    required: false
+    default: 0
+  conditions:
+    configurable: true
+    connectable: false
+    required: false
+    default: {  }
+  entity_type:
+    configurable: false
+    connectable: false
+    required: false
+    default: node
+  limit:
+    configurable: true
+    connectable: false
+    required: false
+    default: 100
+  load_entities:
+    configurable: true
+    connectable: false
+    required: false
+    default: false
+  offset:
+    configurable: true
+    connectable: false
+    required: false
+    default: 0
+  published_only:
+    configurable: true
+    connectable: false
+    required: false
+    default: true
+  sort_direction:
+    configurable: true
+    connectable: false
+    required: false
+    default: DESC
+  sort_field:
+    configurable: true
+    connectable: false
+    required: false
+    default: changed
+outputs:
+  bundle:
+    exposed: true
+  count:
+    exposed: true
+  entities:
+    exposed: true
+  entity_type:
+    exposed: true
+  error_message:
+    exposed: true
+  has_more:
+    exposed: true
+  ids:
+    exposed: true
+  results:
+    exposed: true
+  success:
+    exposed: true
+tags: {  }
+executor_plugin: 'echack_flowdrop_workflow_executor:entity_query'
+visual_type: default
+supported_visual_types:
+  - default
+  - simple
+  - square
+unified_input_exposed: false
+unified_output_exposed: false

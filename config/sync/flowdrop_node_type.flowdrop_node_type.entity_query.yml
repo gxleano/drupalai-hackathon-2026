@@ -1,0 +1,93 @@
+uuid: 05ad8887-25f8-4c1f-a038-559fd2d249f5
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: RdhyTpqHZ49eSX97DaQia8ueDU3y4Qu5mEj1psFVBuc
+id: entity_query
+label: 'Entity Query'
+description: 'Query Drupal entities (nodes, terms, users, etc.) with configurable conditions'
+category: data
+icon: 'mdi:database-search'
+plugin_version: ''
+enabled: true
+parameters:
+  entity_type:
+    configurable: true
+    connectable: false
+    required: true
+    default: node
+  bundle:
+    configurable: true
+    connectable: true
+    required: false
+    default: ''
+  limit:
+    configurable: true
+    connectable: false
+    required: false
+    default: 100
+  offset:
+    configurable: true
+    connectable: true
+    required: false
+    default: 0
+  published_only:
+    configurable: true
+    connectable: false
+    required: false
+    default: true
+  changed_after:
+    configurable: true
+    connectable: true
+    required: false
+    default: 0
+  sort_field:
+    configurable: true
+    connectable: false
+    required: false
+    default: changed
+  sort_direction:
+    configurable: true
+    connectable: false
+    required: false
+    default: DESC
+  load_entities:
+    configurable: true
+    connectable: false
+    required: false
+    default: false
+  conditions:
+    configurable: true
+    connectable: true
+    required: false
+    default: {  }
+outputs:
+  success:
+    exposed: true
+  count:
+    exposed: true
+  entity_type:
+    exposed: true
+  bundle:
+    exposed: true
+  results:
+    exposed: true
+  ids:
+    exposed: true
+  entities:
+    exposed: true
+  has_more:
+    exposed: true
+  error_message:
+    exposed: true
+tags:
+  - data
+  - query
+  - entity
+executor_plugin: 'echack_flowdrop_workflow_executor:entity_query'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
