@@ -1,8 +1,0 @@
-name: 'FlowDrop Node Session'
-type: module
-description: 'Provides entity context support for FlowDrop playground sessions, allowing workflows to be initialized with a Drupal entity (node, term, etc.) as context.'
-package: Custom
-core_version_requirement: ^11
-dependencies:
-  - flowdrop:flowdrop
-  - flowdrop:flowdrop_playground

@@ -1,8 +1,0 @@
-name: 'echack_flowdrop_agents'
-type: module
-description: 'This module is integrating AI Agents with Flowdrop core plugins'
-package: FlowDrop
-core_version_requirement: ^10 || ^11
-dependencies:
-  - flowdrop:flowdrop
-  - ai_agents:ai_agents
