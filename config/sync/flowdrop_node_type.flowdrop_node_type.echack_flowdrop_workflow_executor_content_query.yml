@@ -79,7 +79,7 @@ outputs:
   success:
     exposed: true
 tags: {  }
-executor_plugin: 'echack_flowdrop_workflow_executor:entity_query'
+executor_plugin: 'flowdrop_workflow_executor:entity_query'
 visual_type: default
 supported_visual_types:
   - default

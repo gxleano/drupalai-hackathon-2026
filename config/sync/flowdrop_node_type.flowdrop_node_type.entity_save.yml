@@ -30,6 +30,15 @@ parameters:
     connectable: false
     required: false
     default: node
+  new_revision:
+    configurable: false
+    connectable: false
+    required: false
+    default: true
+  revision_log_message:
+    configurable: true
+    connectable: true
+    required: false
   values:
     configurable: false
     connectable: true
@@ -52,6 +61,8 @@ outputs:
     exposed: false
   label:
     exposed: false
+  revision_id:
+    exposed: true
   skipped_fields:
     exposed: false
   uuid:

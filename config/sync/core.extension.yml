@@ -42,9 +42,6 @@ module:
   eca_render: 0
   eca_ui: 0
   eca_user: 0
-  echack_flowdrop_agents: 0
-  echack_flowdrop_node_session: 0
-  echack_flowdrop_workflow_executor: 0
   editor: 0
   entity_reference_revisions: 0
   field: 0
@@ -52,21 +49,26 @@ module:
   file: 0
   filter: 0
   flowdrop: 0
+  flowdrop_agents: 0
   flowdrop_ai_provider: 0
   flowdrop_interrupt: 0
   flowdrop_job: 0
   flowdrop_node_category: 0
   flowdrop_node_processor: 0
+  flowdrop_node_session: 0
   flowdrop_node_type: 0
+  flowdrop_orchestration: 0
   flowdrop_pipeline: 0
   flowdrop_playground: 0
   flowdrop_runtime: 0
+  flowdrop_session: 0
   flowdrop_stategraph: 0
   flowdrop_trigger: 0
   flowdrop_ui: 0
   flowdrop_ui_agents: 0
   flowdrop_ui_components: 0
   flowdrop_workflow: 0
+  flowdrop_workflow_executor: 0
   focal_point: 0
   friendlycaptcha: 0
   gin_login: 0

@@ -10,13 +10,13 @@ nodes:
     id: echack_flowdrop_node_session_content_context.1
     type: universalNode
     position:
-      x: 1940
-      'y': -10
+      x: 1780
+      'y': -140
     data:
       label: 'Content Context'
       config:
         is_default_revision: true
-        nodeType: square
+        nodeType: default
         instanceTitle: ''
         instanceDescription: ''
       metadata:
@@ -170,15 +170,15 @@ nodes:
           hideUnconnectedHandles: true
     deletable: true
     measured:
-      width: 80
-      height: 80
+      width: 290
+      height: 203
     selected: false
-    dragging: false
+    dragging: true
   -
     id: flowdrop_ai_provider_chat_model.2
     type: universalNode
     position:
-      x: 2730
+      x: 2740
       'y': -320
     data:
       label: 'Chat Model (Drupal AI)'
@@ -194,8 +194,9 @@ nodes:
           3. Do NOT wrap your response in ```json or ```
           4. Output the JSON directly as plain text
 
+
           TASK:
-          You are an expert content editor specializing in European Commission content standards. Improve the provided article to meet all 10 EU Commission content standards.
+          You are an expert content editor specializing in European Commission content standards. Improve the provided article to meet all 10 EU Commission content standards. If they content looks professional, then no need to reword it as it could be coming from a professional editor.
 
           REQUIRED JSON STRUCTURE (use actual content, not placeholders):
           {"title":"Improved title","field_body":[{"value":"<p>Complete improved HTML content</p>","summary":"Brief summary","format":"content_format"}],"field_metatags":[{"value":"{\"title\":\"SEO title 50-60 chars\",\"description\":\"SEO description 150-160 chars\"}"}],"meta_title":"SEO title 50-60 chars","meta_description":"SEO description 150-160 chars","explanation":"Summary of changes"}
@@ -352,15 +353,15 @@ nodes:
           hideUnconnectedHandles: false
     deletable: true
     measured:
-      width: 288
-      height: 440
-    selected: true
-    dragging: false
+      width: 290
+      height: 410
+    selected: false
+    dragging: true
   -
     id: prompt_template.3
     type: universalNode
     position:
-      x: 2420
+      x: 2240
       'y': -80
     data:
       label: 'Prompt Template'
@@ -492,15 +493,15 @@ nodes:
           hideUnconnectedHandles: false
     deletable: true
     measured:
-      width: 288
-      height: 103
-    selected: false
-    dragging: false
+      width: 290
+      height: 106
+    selected: true
+    dragging: true
   -
     id: confirmation.1
     type: universalNode
     position:
-      x: 4220
+      x: 4320
       'y': 60
     data:
       label: Confirmation
@@ -662,8 +663,8 @@ nodes:
       nodeId: confirmation.1
     deletable: true
     measured:
-      width: 288
-      height: 665
+      width: 290
+      height: 647
     selected: false
     dragging: false
   -
@@ -751,148 +752,16 @@ nodes:
           hideUnconnectedHandles: false
     deletable: true
     measured:
-      width: 288
-      height: 515
+      width: 290
+      height: 489
     selected: false
     dragging: true
-  -
-    id: entity_save.1
-    type: universalNode
-    position:
-      x: 5270
-      'y': 180
-    data:
-      label: 'Entity Save'
-      config:
-        entity_type: node
-        bundle: article
-        allowed_fields:
-          - title
-          - field_body
-          - field_metatags
-        nodeType: default
-        instanceTitle: ''
-        instanceDescription: ''
-      metadata:
-        id: entity_save
-        name: 'Entity Save'
-        type: default
-        supportedTypes:
-          - default
-          - simple
-          - square
-        description: 'Create or update Drupal entities'
-        category: processing
-        icon: 'mdi:content-save'
-        color: '#14b8a6'
-        plugin_version: 1.0.0
-        enabled: true
-        tags: {  }
-        executor_plugin: 'flowdrop_node_processor:entity_save'
-        inputs:
-          -
-            id: entity_id
-            name: 'Entity ID'
-            type: input
-            dataType: string
-            required: false
-            description: 'The ID of an existing entity to update (leave empty to create new)'
-            defaultValue: ''
-          -
-            id: values
-            name: 'Field Values'
-            type: input
-            dataType: json
-            required: false
-            description: 'The field values to set on the entity as key-value pairs'
-            defaultValue: {  }
-          -
-            id: trigger
-            name: Trigger
-            type: input
-            dataType: trigger
-            required: false
-            description: ''
-        outputs:
-          -
-            id: entity
-            name: entity
-            type: output
-            dataType: json
-            required: false
-            description: 'Full serialized entity data in the same format as Entity Trigger output'
-          -
-            id: trigger
-            name: Trigger
-            type: output
-            dataType: trigger
-            required: false
-            description: 'Emitted when this node completes execution'
-        config:
-          entity_type: node
-          bundle: article
-          allowed_fields:
-            - title
-            - field_body
-            - field_metatags
-          type: default
-        configSchema:
-          type: object
-          properties:
-            entity_type:
-              type: string
-              title: 'Entity Type'
-              description: 'The entity type to create/update (e.g., node, user, taxonomy_term)'
-              default: node
-            bundle:
-              type: string
-              title: Bundle
-              description: 'The bundle/content type for the entity (required for new entities with bundles)'
-              default: ''
-            allowed_fields:
-              type: array
-              title: 'Allowed Fields'
-              description: 'List of field names that are allowed to be updated. Leave empty to allow all fields.'
-              default: {  }
-              items:
-                type: string
-            nodeType:
-              type: string
-              title: 'Visual Type'
-              description: 'Select the visual appearance for this node instance.'
-              enum:
-                - default
-                - simple
-                - square
-              default: default
-            instanceTitle:
-              type: string
-              title: Title
-              description: 'Override the default node title for this instance.'
-              x-display-order: -2
-            instanceDescription:
-              type: string
-              title: Description
-              description: 'Override the default description for this instance.'
-              format: multiline
-              x-display-order: -1
-          required: {  }
-      nodeId: entity_save.1
-      extensions:
-        ui:
-          hideUnconnectedHandles: false
-    deletable: true
-    measured:
-      width: 288
-      height: 515
-    selected: false
-    dragging: false
   -
     id: chat_output.2
     type: universalNode
     position:
-      x: 3680
-      'y': 580
+      x: 3920
+      'y': 540
     data:
       label: 'Chat Output'
       config:
@@ -1013,15 +882,15 @@ nodes:
           hideUnconnectedHandles: false
     deletable: true
     measured:
-      width: 288
-      height: 88
+      width: 290
+      height: 91
     selected: false
     dragging: false
   -
     id: boolean_gateway.1
     type: universalNode
     position:
-      x: 4770
+      x: 4780
       'y': 440
     data:
       label: 'Boolean Gateway'
@@ -1121,16 +990,16 @@ nodes:
           hideUnconnectedHandles: false
     deletable: true
     measured:
-      width: 288
-      height: 360
+      width: 290
+      height: 330
     selected: false
     dragging: false
   -
     id: prompt_template.4
     type: universalNode
     position:
-      x: 3490
-      'y': 80
+      x: 3520
+      'y': 440
     data:
       label: 'Prompt Template'
       config:
@@ -1140,17 +1009,20 @@ nodes:
 
           ## Full content
 
-          {{ field_body.0.value|striptags }}
+          {{ field_body.0.value|raw }}
 
           ## Summary
 
-          {{ field_body.0.summary }}
+          {{ field_body.0.summary|raw }}
 
           ---
 
           ## 🔍 SEO Metadata
-          **Meta Title:** {{ meta_title }}
-          **Meta Description:** {{ meta_description }}
+
+          | **Fiel** | Value |
+          | --- | --- |
+          |**Meta Title:** | {{ meta_title }} |
+          |**Meta Description:** | {{ meta_description }} |
 
           ---
 
@@ -1258,10 +1130,10 @@ nodes:
           hideUnconnectedHandles: false
     deletable: true
     measured:
-      width: 288
-      height: 103
+      width: 290
+      height: 106
     selected: false
-    dragging: true
+    dragging: false
   -
     id: json_to_data.2
     type: universalNode
@@ -1342,10 +1214,398 @@ nodes:
       nodeId: json_to_data.2
     deletable: true
     measured:
-      width: 288
-      height: 515
+      width: 290
+      height: 489
     selected: false
     dragging: false
+  -
+    id: entity_save.2
+    type: universalNode
+    position:
+      x: 5720
+      'y': 20
+    data:
+      label: 'Entity Save'
+      config:
+        entity_type: node
+        bundle: article
+        allowed_fields:
+          - title
+          - field_body
+          - field_metatags
+          - id
+        revision_log_message: ''
+        nodeType: default
+      metadata:
+        id: entity_save
+        name: 'Entity Save'
+        type: default
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Create or update Drupal entities'
+        category: processing
+        icon: 'mdi:content-save'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:entity_save'
+        inputs:
+          -
+            id: entity_id
+            name: 'Entity ID'
+            type: input
+            dataType: string
+            required: false
+            description: 'The ID of an existing entity to update (leave empty to create new)'
+            defaultValue: ''
+          -
+            id: values
+            name: 'Field Values'
+            type: input
+            dataType: json
+            required: false
+            description: 'The field values to set on the entity as key-value pairs'
+            defaultValue: {  }
+          -
+            id: revision_log_message
+            name: 'Revision Log Message'
+            type: input
+            dataType: string
+            required: false
+            description: 'Log message for the new revision (only used when new_revision is enabled)'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: revision_id
+            name: revision_id
+            type: output
+            dataType: string
+            required: false
+            description: 'The revision ID of the saved entity (if revisionable)'
+          -
+            id: entity
+            name: entity
+            type: output
+            dataType: json
+            required: false
+            description: 'Full serialized entity data in the same format as Entity Trigger output'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          entity_type: node
+          bundle: ''
+          allowed_fields: {  }
+          revision_log_message: ''
+          type: default
+        configSchema:
+          type: object
+          properties:
+            entity_type:
+              type: string
+              title: 'Entity Type'
+              description: 'The entity type to create/update (e.g., node, user, taxonomy_term)'
+              default: node
+            bundle:
+              type: string
+              title: Bundle
+              description: 'The bundle/content type for the entity (required for new entities with bundles)'
+              default: ''
+            allowed_fields:
+              type: array
+              title: 'Allowed Fields'
+              description: 'List of field names that are allowed to be updated. Leave empty to allow all fields.'
+              default: {  }
+              items:
+                type: string
+            revision_log_message:
+              type: string
+              title: 'Revision Log Message'
+              description: 'Log message for the new revision (only used when new_revision is enabled)'
+              default: ''
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: default
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: entity_save.2
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 290
+      height: 380
+    selected: false
+    dragging: false
+  -
+    id: prompt_template.5
+    type: universalNode
+    position:
+      x: 5180
+      'y': 840
+    data:
+      label: 'Prompt Template'
+      config:
+        template: 'AI Generated Content : {{ explanation }}'
+        nodeType: simple
+        instanceTitle: 'Revision Log message'
+      metadata:
+        id: prompt_template
+        name: 'Prompt Template'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+        description: 'Create prompts using templates with variable substitution'
+        category: prompts
+        icon: 'mdi:code-block-braces'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:prompt_template'
+        inputs:
+          -
+            id: variables
+            name: Variables
+            type: input
+            dataType: json
+            required: false
+            description: 'Default variables for the template'
+            defaultValue: {  }
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: prompt
+            name: prompt
+            type: output
+            dataType: string
+            required: false
+            description: 'The generated prompt'
+          -
+            id: template
+            name: template
+            type: output
+            dataType: string
+            required: false
+            description: 'The original template'
+          -
+            id: variables
+            name: variables
+            type: output
+            dataType: json
+            required: false
+            description: 'The variables used'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          template: ''
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            template:
+              type: string
+              title: Template
+              description: 'The prompt template with variables in {{variable}} format'
+              default: ''
+              format: template
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: prompt_template.5
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 290
+      height: 106
+    selected: false
+    dragging: true
+  -
+    id: data_extractor.1
+    type: universalNode
+    position:
+      x: 2240
+      'y': 100
+    data:
+      label: 'Data Extractor'
+      config:
+        path: '[id]'
+        default: null
+        extract_all: false
+      metadata:
+        id: data_extractor
+        name: 'Data Extractor'
+        type: default
+        supportedTypes:
+          - default
+        description: 'Extract data from JSON using JSONPath or property path notation.'
+        category: data
+        icon: 'mdi:database-arrow-down-outline'
+        plugin_version: 2.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:data_extractor'
+        inputs:
+          -
+            id: data
+            name: 'Input Data'
+            type: input
+            dataType: mixed
+            required: false
+            description: 'Input data to extract from (array, object, or JSON string)'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: data
+            name: data
+            type: output
+            dataType: mixed
+            required: false
+            description: 'The extracted data (single value or array depending on extract_all)'
+          -
+            id: path
+            name: path
+            type: output
+            dataType: string
+            required: false
+            description: 'The path expression that was used'
+          -
+            id: success
+            name: success
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether the extraction found any matches'
+          -
+            id: is_jsonpath
+            name: is_jsonpath
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether a JSONPath expression was used (vs property path)'
+          -
+            id: match_count
+            name: match_count
+            type: output
+            dataType: number
+            required: false
+            description: 'Number of values matched by the path'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          path: ''
+          extract_all: false
+        configSchema:
+          type: object
+          properties:
+            path:
+              type: string
+              title: 'Path Expression'
+              description: 'JSONPath expression (starting with $) or property path. Examples: $.users[*].name, $.items[?(@.active)], user.email'
+              default: ''
+            default:
+              type: mixed
+              title: 'Default Value'
+              description: "Value to return if path doesn't match anything"
+              default: null
+            extract_all:
+              type: boolean
+              title: 'Extract All Matches'
+              description: 'When true, returns all matching values as an array. When false, returns only the first match.'
+              default: false
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: data_extractor.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 290
+      height: 292
+    selected: false
+    dragging: true
 edges:
   -
     id: xy-edge__prompt_template.3prompt_template.3-output-prompt-flowdrop_ai_provider_chat_model.2flowdrop_ai_provider_chat_model.2-input-message
@@ -1359,12 +1619,12 @@ edges:
         sourcePortDataType: string
     sourceHandle: prompt_template.3-output-prompt
     targetHandle: flowdrop_ai_provider_chat_model.2-input-message
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
     selected: false
   -
@@ -1379,12 +1639,12 @@ edges:
         sourcePortDataType: json
     sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity
     targetHandle: prompt_template.3-input-variables
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
     selected: false
   -
@@ -1399,12 +1659,12 @@ edges:
         sourcePortDataType: trigger
     sourceHandle: chat_output.2-output-trigger
     targetHandle: confirmation.1-input-trigger
-    style: 'stroke: var(--flowdrop-edge-trigger-color); stroke-width: var(--flowdrop-edge-trigger-width);'
+    style: 'stroke: var(--fd-edge-trigger); stroke-width: var(--fd-edge-trigger-width);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#111827'
+      color: '#18181c'
     class: flowdrop--edge--trigger
     selected: false
   -
@@ -1419,33 +1679,13 @@ edges:
         sourcePortDataType: boolean
     sourceHandle: confirmation.1-output-confirmed
     targetHandle: boolean_gateway.1-input-value
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
-    selected: false
-  -
-    id: xy-edge__boolean_gateway.1boolean_gateway.1-output-True-entity_save.1entity_save.1-input-trigger
-    source: boolean_gateway.1
-    target: entity_save.1
-    data:
-      targetNodeType: universalNode
-      targetCategory: processing
-      metadata:
-        edgeType: trigger
-        sourcePortDataType: trigger
-    sourceHandle: boolean_gateway.1-output-True
-    targetHandle: entity_save.1-input-trigger
-    style: 'stroke: var(--flowdrop-edge-trigger-color); stroke-width: var(--flowdrop-edge-trigger-width);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#111827'
-    class: flowdrop--edge--trigger
     selected: false
   -
     id: xy-edge__flowdrop_ai_provider_chat_model.2flowdrop_ai_provider_chat_model.2-output-response-json_to_data.1json_to_data.1-input-json
@@ -1459,52 +1699,12 @@ edges:
         sourcePortDataType: string
     sourceHandle: flowdrop_ai_provider_chat_model.2-output-response
     targetHandle: json_to_data.1-input-json
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
-    class: flowdrop--edge--data
-    selected: false
-  -
-    id: xy-edge__json_to_data.1json_to_data.1-output-data-entity_save.1entity_save.1-input-values
-    source: json_to_data.1
-    target: entity_save.1
-    data:
-      targetNodeType: universalNode
-      targetCategory: processing
-      metadata:
-        edgeType: data
-        sourcePortDataType: mixed
-    sourceHandle: json_to_data.1-output-data
-    targetHandle: entity_save.1-input-values
-    style: 'stroke: var(--flowdrop-edge-data-color);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#9ca3af'
-    class: flowdrop--edge--data
-    selected: false
-  -
-    id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity_id-entity_save.1entity_save.1-input-entity_id
-    source: echack_flowdrop_node_session_content_context.1
-    target: entity_save.1
-    data:
-      targetNodeType: universalNode
-      targetCategory: processing
-      metadata:
-        edgeType: data
-        sourcePortDataType: string
-    sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity_id
-    targetHandle: entity_save.1-input-entity_id
-    style: 'stroke: var(--flowdrop-edge-data-color);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
     selected: false
   -
@@ -1519,12 +1719,12 @@ edges:
         sourcePortDataType: string
     sourceHandle: flowdrop_ai_provider_chat_model.2-output-response
     targetHandle: json_to_data.2-input-json
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
     selected: false
   -
@@ -1539,12 +1739,12 @@ edges:
         sourcePortDataType: mixed
     sourceHandle: json_to_data.2-output-data
     targetHandle: prompt_template.4-input-variables
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
     selected: false
   -
@@ -1559,17 +1759,138 @@ edges:
         sourcePortDataType: string
     sourceHandle: prompt_template.4-output-prompt
     targetHandle: chat_output.2-input-message
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__json_to_data.1json_to_data.1-output-data-entity_save.2entity_save.2-input-values
+    source: json_to_data.1
+    target: entity_save.2
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: mixed
+    sourceHandle: json_to_data.1-output-data
+    targetHandle: entity_save.2-input-values
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__prompt_template.5prompt_template.5-output-prompt-entity_save.2entity_save.2-input-revision_log_message
+    source: prompt_template.5
+    target: entity_save.2
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: prompt_template.5-output-prompt
+    targetHandle: entity_save.2-input-revision_log_message
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__json_to_data.2json_to_data.2-output-data-prompt_template.5prompt_template.5-input-variables
+    source: json_to_data.2
+    target: prompt_template.5
+    data:
+      targetNodeType: universalNode
+      targetCategory: prompts
+      metadata:
+        edgeType: data
+        sourcePortDataType: mixed
+    sourceHandle: json_to_data.2-output-data
+    targetHandle: prompt_template.5-input-variables
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__boolean_gateway.1boolean_gateway.1-output-True-entity_save.2entity_save.2-input-trigger
+    source: boolean_gateway.1
+    target: entity_save.2
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: trigger
+        sourcePortDataType: trigger
+    sourceHandle: boolean_gateway.1-output-True
+    targetHandle: entity_save.2-input-trigger
+    style: 'stroke: var(--fd-edge-trigger); stroke-width: var(--fd-edge-trigger-width);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#18181c'
+    class: flowdrop--edge--trigger
+    selected: false
+  -
+    id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity-data_extractor.1data_extractor.1-input-data
+    source: echack_flowdrop_node_session_content_context.1
+    target: data_extractor.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: data
+      metadata:
+        edgeType: data
+        sourcePortDataType: json
+    sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity
+    targetHandle: data_extractor.1-input-data
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__data_extractor.1data_extractor.1-output-data-entity_save.2entity_save.2-input-entity_id
+    source: data_extractor.1
+    target: entity_save.2
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: mixed
+    sourceHandle: data_extractor.1-output-data
+    targetHandle: entity_save.2-input-entity_id
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+    selected: false
 metadata:
   version: 1.0.0
   createdAt: '2026-01-28T09:01:32.652Z'
-  updatedAt: '2026-01-28T12:04:44.838Z'
+  updatedAt: '2026-02-07T18:33:05.396Z'
 created: 1769600262
-changed: 1769601885
+changed: 1770489185
 uid: 0

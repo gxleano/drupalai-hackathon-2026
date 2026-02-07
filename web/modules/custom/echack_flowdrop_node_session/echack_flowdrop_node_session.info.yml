@@ -1,0 +1,4 @@
+name: echack_flowdrop_node_session
+description: Kept for clean uninstall. Use flowdrop_node_session
+type: module
+core_version_requirement: ^11.2

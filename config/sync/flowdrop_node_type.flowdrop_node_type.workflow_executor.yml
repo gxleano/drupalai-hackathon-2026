@@ -55,7 +55,7 @@ tags:
   - processing
   - workflow
   - automation
-executor_plugin: 'echack_flowdrop_workflow_executor:workflow_executor'
+executor_plugin: 'flowdrop_workflow_executor:workflow_executor'
 visual_type: default
 supported_visual_types:
   - default

@@ -52,7 +52,7 @@ outputs:
   revision_id:
     exposed: true
 tags: {  }
-executor_plugin: 'echack_flowdrop_node_session:entity_context'
+executor_plugin: 'flowdrop_node_processor:entity_context'
 visual_type: default
 supported_visual_types:
   - default

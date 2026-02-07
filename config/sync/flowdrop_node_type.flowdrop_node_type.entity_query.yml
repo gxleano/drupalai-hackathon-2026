@@ -85,7 +85,7 @@ tags:
   - data
   - query
   - entity
-executor_plugin: 'echack_flowdrop_workflow_executor:entity_query'
+executor_plugin: 'flowdrop_node_processor:entity_query'
 visual_type: default
 supported_visual_types:
   - default

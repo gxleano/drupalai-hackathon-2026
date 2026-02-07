@@ -1,0 +1,4 @@
+name: echack_flowdrop_workflow_executor
+description: Kept for clean uninstall. Use flowdrop_workflow_executor from drupal/flowdrop
+type: module
+core_version_requirement: ^11.2

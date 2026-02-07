@@ -1,0 +1,4 @@
+name: echack_flowdrop_agents
+description: Kept for clean uninstall. Use flowdrop_agents
+type: module
+core_version_requirement: ^11.2

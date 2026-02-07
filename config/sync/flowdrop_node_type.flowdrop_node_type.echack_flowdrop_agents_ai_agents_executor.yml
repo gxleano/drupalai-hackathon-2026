@@ -66,7 +66,7 @@ tags:
   - agents
   - ai
   - automation
-executor_plugin: 'echack_flowdrop_agents:ai_agents_executor'
+executor_plugin: 'flowdrop_agents:ai_agents_executor'
 visual_type: default
 supported_visual_types:
   - default
