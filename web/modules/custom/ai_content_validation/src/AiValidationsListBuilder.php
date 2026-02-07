@@ -81,7 +81,7 @@ final class AiValidationsListBuilder extends EntityListBuilder {
 
     // Only add Process operation if workflow ID and revision data are available.
     if ($flowdrop_id !== '' && $target_id !== NULL) {
-      $url = Url::fromRoute('echack_flowdrop_node_session.playground.entity', [
+      $url = Url::fromRoute('flowdrop_node_session.playground.entity', [
         'workflow_id' => $flowdrop_id,
       ], [
         'query' => [

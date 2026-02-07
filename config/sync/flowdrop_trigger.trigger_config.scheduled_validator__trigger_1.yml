@@ -21,18 +21,15 @@ conditions:
     max_executions: 0
     timezone: ''
 orchestrator_settings:
-  type: synchronous_pipeline
+  type: 'flowdrop_stategraph:stategraph'
   priority: normal
   timeout: 300
-  pipeline_mode: new
-  pipeline_id: ''
-  max_concurrent_jobs: 5
-  job_priority_strategy: dependency_order
-  retry:
-    enabled: false
-    max_attempts: 3
-    delay: 5
-    backoff: constant
-  retry_strategy: individual
+  stategraph:
+    checkpointer_type: memory
+    max_iterations: 100
+    create_checkpoints: true
+    debug_mode: false
+    thread_id: null
+    resume_from_checkpoint: null
 initial_data_mapping: {  }
 weight: 0

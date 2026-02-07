@@ -10,8 +10,8 @@ nodes:
     id: trigger.1
     type: universalNode
     position:
-      x: 80
-      'y': 310
+      x: -80
+      'y': 300
     data:
       label: Trigger
       config:
@@ -152,10 +152,13 @@ nodes:
           loadingMessage: 'Loading trigger configuration...'
           errorMessage: 'Failed to load trigger configuration'
       nodeId: trigger.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
     deletable: true
     measured:
       width: 140
-      height: 123
+      height: 131
     selected: false
     dragging: false
   -
@@ -194,7 +197,7 @@ nodes:
         plugin_version: 1.0.0
         enabled: true
         tags: {  }
-        executor_plugin: 'echack_flowdrop_workflow_executor:entity_query'
+        executor_plugin: 'flowdrop_node_processor:entity_query'
         inputs:
           -
             id: trigger
@@ -376,16 +379,16 @@ nodes:
           hideUnconnectedHandles: true
     deletable: true
     measured:
-      width: 288
-      height: 103
+      width: 290
+      height: 106
     selected: false
     dragging: false
   -
     id: foreach.1
     type: universalNode
     position:
-      x: 730
-      'y': 190
+      x: 740
+      'y': 200
     data:
       label: 'ForEach Loop'
       config:
@@ -520,15 +523,15 @@ nodes:
           hideUnconnectedHandles: true
     deletable: true
     measured:
-      width: 288
-      height: 330
+      width: 290
+      height: 371
     selected: false
-    dragging: false
+    dragging: true
   -
     id: workflow_executor.1
     type: universalNode
     position:
-      x: 1290
+      x: 1300
       'y': 180
     data:
       label: 'Workflow Executor'
@@ -736,11 +739,11 @@ nodes:
       nodeId: workflow_executor.1
       extensions:
         ui:
-          hideUnconnectedHandles: true
+          hideUnconnectedHandles: false
     deletable: true
     measured:
-      width: 288
-      height: 103
+      width: 290
+      height: 106
     selected: false
     dragging: true
   -
@@ -970,9 +973,9 @@ nodes:
           hideUnconnectedHandles: false
     deletable: true
     measured:
-      width: 288
-      height: 88
-    selected: true
+      width: 290
+      height: 91
+    selected: false
     dragging: true
 edges:
   -
@@ -987,13 +990,14 @@ edges:
         sourcePortDataType: trigger
     sourceHandle: trigger.1-output-trigger
     targetHandle: echack_flowdrop_workflow_executor_content_query.1-input-trigger
-    style: 'stroke: var(--flowdrop-edge-trigger-color); stroke-width: var(--flowdrop-edge-trigger-width);'
+    style: 'stroke: var(--fd-edge-trigger); stroke-width: var(--fd-edge-trigger-width);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#111827'
+      color: '#18181c'
     class: flowdrop--edge--trigger
+    selected: false
   -
     id: xy-edge__echack_flowdrop_workflow_executor_content_query.1echack_flowdrop_workflow_executor_content_query.1-output-results-foreach.1foreach.1-input-items
     source: echack_flowdrop_workflow_executor_content_query.1
@@ -1006,13 +1010,14 @@ edges:
         sourcePortDataType: array
     sourceHandle: echack_flowdrop_workflow_executor_content_query.1-output-results
     targetHandle: foreach.1-input-items
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
+    selected: false
   -
     id: xy-edge__foreach.1foreach.1-output-current_item-workflow_executor.1workflow_executor.1-input-input_data
     source: foreach.1
@@ -1025,13 +1030,14 @@ edges:
         sourcePortDataType: mixed
     sourceHandle: foreach.1-output-current_item
     targetHandle: workflow_executor.1-input-input_data
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
+    selected: false
   -
     id: xy-edge__foreach.1foreach.1-output-current_item-workflow_executor.2workflow_executor.2-input-input_data
     source: foreach.1
@@ -1044,17 +1050,58 @@ edges:
         sourcePortDataType: mixed
     sourceHandle: foreach.1-output-current_item
     targetHandle: workflow_executor.2-input-input_data
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__workflow_executor.1workflow_executor.1-output-trigger-workflow_executor.2workflow_executor.2-input-trigger
+    source: workflow_executor.1
+    target: workflow_executor.2
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: trigger
+        sourcePortDataType: trigger
+    sourceHandle: workflow_executor.1-output-trigger
+    targetHandle: workflow_executor.2-input-trigger
+    style: 'stroke: var(--fd-edge-trigger); stroke-width: var(--fd-edge-trigger-width);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#18181c'
+    class: flowdrop--edge--trigger
+    selected: false
+  -
+    id: xy-edge__workflow_executor.2workflow_executor.2-output-success-foreach.1foreach.1-input-loop_back
+    source: workflow_executor.2
+    target: foreach.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: logic
+      metadata:
+        edgeType: loopback
+        sourcePortDataType: boolean
+    sourceHandle: workflow_executor.2-output-success
+    targetHandle: foreach.1-input-loop_back
+    style: 'stroke: var(--fd-edge-loopback); stroke-dasharray: var(--fd-edge-loopback-dasharray); stroke-width: var(--fd-edge-loopback-width); opacity: var(--fd-edge-loopback-opacity);'
+    markerEnd:
+      type: arrowclosed
+      width: 14
+      height: 14
+      color: '#71717b'
+    class: flowdrop--edge--loopback
+    selected: false
 metadata:
   version: 1.0.0
   createdAt: '2026-01-28T03:14:49.154Z'
-  updatedAt: '2026-01-28T12:55:44.756Z'
+  updatedAt: '2026-02-07T19:23:02.299Z'
 created: 1769569550
-changed: 1770480294
+changed: 1770492182
 uid: 0
