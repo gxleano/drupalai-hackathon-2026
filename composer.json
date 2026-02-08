@@ -41,7 +41,7 @@
         "drupal/flowdrop": "1.x-dev",
         "drupal/flowdrop_agents": "^1.0@dev",
         "drupal/flowdrop_ai_provider": "^0.1.0",
-        "drupal/flowdrop_node_session": "^1.0@dev",
+        "drupal/flowdrop_node_session": "1.x-dev",
         "drupal/flowdrop_ui": "1.0.x-dev",
         "drupal/flowdrop_ui_agents": "^0.1",
         "drupal/mercury": "@beta",

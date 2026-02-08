@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "58aef364ff1208feb2e5af66d19a3477",
+    "content-hash": "5bb698f25d16770f318d6595fa9e97f3",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -5480,16 +5480,60 @@
             }
         },
         {
+            "name": "drupal/flowdrop_node_processor",
+            "version": "0.6.0",
+            "require": {
+                "drupal/core": "^11",
+                "drupal/flowdrop": "*",
+                "drupal/flowdrop_node_type": "*"
+            },
+            "type": "metapackage",
+            "extra": {
+                "drupal": {
+                    "version": "0.6.0",
+                    "datestamp": "1770301026",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Project has not opted into security advisory coverage!"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "d34dman",
+                    "homepage": "https://www.drupal.org/user/751698"
+                },
+                {
+                    "name": "muschpusch",
+                    "homepage": "https://www.drupal.org/user/257634"
+                },
+                {
+                    "name": "stmh",
+                    "homepage": "https://www.drupal.org/user/35538"
+                }
+            ],
+            "description": "FlowDrop Node Processesors",
+            "homepage": "https://www.drupal.org/project/flowdrop",
+            "support": {
+                "source": "https://git.drupalcode.org/project/flowdrop"
+            }
+        },
+        {
             "name": "drupal/flowdrop_node_session",
             "version": "dev-1.x",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/flowdrop_node_session.git",
-                "reference": "13a77da895cbe6754ef3874d66b4be661c020b07"
+                "reference": "2a820d1654abb1716a71b127264ab81d526a30f0"
             },
             "require": {
                 "drupal/core": "^11.2",
                 "drupal/flowdrop": "*",
+                "drupal/flowdrop_node_processor": "*",
                 "drupal/flowdrop_playground": "*",
                 "drupal/flowdrop_session": "*",
                 "drupal/flowdrop_ui_components": "*",
@@ -5502,7 +5546,7 @@
                 },
                 "drupal": {
                     "version": "1.x-dev",
-                    "datestamp": "1770556225",
+                    "datestamp": "1770563593",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"

@@ -34,7 +34,7 @@ nodes:
         plugin_version: 1.0.0
         enabled: true
         tags: {  }
-        executor_plugin: 'echack_flowdrop_node_session:entity_context'
+        executor_plugin: 'flowdrop_node_processor:entity_context'
         inputs:
           -
             id: entity_type
@@ -2542,7 +2542,7 @@ nodes:
         template: |-
           # NOTICE
 
-          Automatic Tagging assistance has been disabled temporarily because of adverse performance. 
+          Automatic Tagging assistance has been disabled temporarily because of adverse performance.
 
           > This is just an example message.
         nodeType: simple
