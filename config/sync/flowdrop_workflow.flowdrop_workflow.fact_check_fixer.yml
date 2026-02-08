@@ -5,9 +5,269 @@ dependencies: {  }
 id: fact_check_fixer
 label: 'Fact Check Fixer'
 description: ''
-nodes: {  }
-edges: {  }
-metadata: {  }
+nodes:
+  -
+    id: chat_output.1
+    type: universalNode
+    position:
+      x: 380
+      'y': 380
+    data:
+      label: 'Chat Output'
+      config:
+        format: text
+        showTimestamp: false
+        nodeType: simple
+      metadata:
+        id: chat_output
+        name: 'Chat Output'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Output chat messages in various formats'
+        category: processing
+        icon: 'mdi:chat-alert-outline'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:chat_output'
+        inputs:
+          -
+            id: message
+            name: Message
+            type: input
+            dataType: string
+            required: false
+            description: 'Default chat message'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: message
+            name: message
+            type: output
+            dataType: string
+            required: false
+            description: 'The chat message content'
+          -
+            id: format
+            name: format
+            type: output
+            dataType: string
+            required: false
+            description: 'The message format (text, markdown, html)'
+          -
+            id: timestamp
+            name: timestamp
+            type: output
+            dataType: number
+            required: false
+            description: 'The message timestamp (if showTimestamp is enabled)'
+          -
+            id: metadata
+            name: metadata
+            type: output
+            dataType: json
+            required: false
+            description: 'Additional metadata for message linking'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          format: text
+          showTimestamp: false
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            format:
+              type: string
+              title: Format
+              description: 'Message format (text, markdown, html)'
+              default: text
+            showTimestamp:
+              type: boolean
+              title: 'Show Timestamp'
+              description: 'Whether to include timestamp'
+              default: false
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: chat_output.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 290
+      height: 91
+    selected: false
+    dragging: false
+  -
+    id: prompt_template.1
+    type: universalNode
+    position:
+      x: 20
+      'y': 360
+    data:
+      label: 'Prompt Template'
+      config:
+        template: 'Work in progress'
+        nodeType: simple
+      metadata:
+        id: prompt_template
+        name: 'Prompt Template'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+        description: 'Create prompts using templates with variable substitution'
+        category: prompts
+        icon: 'mdi:code-block-braces'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:prompt_template'
+        inputs:
+          -
+            id: variables
+            name: Variables
+            type: input
+            dataType: json
+            required: false
+            description: 'Default variables for the template'
+            defaultValue: {  }
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: prompt
+            name: prompt
+            type: output
+            dataType: string
+            required: false
+            description: 'The generated prompt'
+          -
+            id: template
+            name: template
+            type: output
+            dataType: string
+            required: false
+            description: 'The original template'
+          -
+            id: variables
+            name: variables
+            type: output
+            dataType: json
+            required: false
+            description: 'The variables used'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          template: ''
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            template:
+              type: string
+              title: Template
+              description: 'The prompt template with variables in {{variable}} format'
+              default: ''
+              format: template
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: prompt_template.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 290
+      height: 106
+    selected: false
+edges:
+  -
+    id: xy-edge__prompt_template.1prompt_template.1-output-prompt-chat_output.1chat_output.1-input-message
+    source: prompt_template.1
+    target: chat_output.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: prompt_template.1-output-prompt
+    targetHandle: chat_output.1-input-message
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+metadata:
+  version: 1.0.0
+  createdAt: '2026-02-08T12:46:49.065Z'
+  updatedAt: '2026-02-08T12:46:49.065Z'
 created: 1769599122
-changed: 1770480294
+changed: 1770554809
 uid: 0
