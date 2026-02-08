@@ -10,13 +10,13 @@ nodes:
     id: echack_flowdrop_node_session_content_context.1
     type: universalNode
     position:
-      x: 20
-      'y': 320
+      x: 340
+      'y': 540
     data:
       label: 'Content Context'
       config:
         is_default_revision: true
-        nodeType: default
+        nodeType: simple
         instanceTitle: ''
         instanceDescription: ''
       metadata:
@@ -167,11 +167,11 @@ nodes:
       nodeId: echack_flowdrop_node_session_content_context.1
       extensions:
         ui:
-          hideUnconnectedHandles: false
+          hideUnconnectedHandles: true
     deletable: true
     measured:
-      width: 288
-      height: 1115
+      width: 290
+      height: 106
     selected: false
     dragging: false
   -
@@ -254,8 +254,8 @@ nodes:
       nodeId: json_to_data.1
     deletable: true
     measured:
-      width: 288
-      height: 515
+      width: 290
+      height: 489
     selected: false
     dragging: false
   -
@@ -407,16 +407,16 @@ nodes:
           hideUnconnectedHandles: false
     deletable: true
     measured:
-      width: 288
-      height: 440
-    selected: true
+      width: 290
+      height: 410
+    selected: false
     dragging: true
   -
     id: data_to_json.1
     type: universalNode
     position:
-      x: 800
-      'y': 610
+      x: 780
+      'y': 280
     data:
       label: 'Data to JSON'
       config: {  }
@@ -490,15 +490,16 @@ nodes:
       nodeId: data_to_json.1
     deletable: true
     measured:
-      width: 288
-      height: 515
+      width: 290
+      height: 489
     selected: false
+    dragging: false
   -
     id: flowdrop_node_processor_validation_save.1
     type: universalNode
     position:
-      x: 2450
-      'y': 660
+      x: 2320
+      'y': 620
     data:
       label: 'Save Validation'
       config:
@@ -599,8 +600,200 @@ nodes:
           hideUnconnectedHandles: false
     deletable: true
     measured:
-      width: 288
-      height: 665
+      width: 290
+      height: 627
+    selected: false
+    dragging: false
+  -
+    id: note.1
+    type: universalNode
+    position:
+      x: 1740
+      'y': 380
+    data:
+      label: Note
+      config:
+        content: |-
+          # Creates Duplicate Validation Result
+
+          This workflow creates new validation result even if there is already an existing one. This creates a lot of noise and needs to be improved.
+        noteType: warning
+      metadata:
+        id: note
+        name: Note
+        type: note
+        supportedTypes:
+          - note
+        description: 'Add notes and comments'
+        category: helpers
+        icon: 'mdi:note-text-outline'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:note'
+        inputs:
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          content: "# Workflow Notes\r\n\r\nAdd your documentation here using **Markdown** formatting.\r\n\r\n## Features\r\n- Supports **bold** and *italic* text\r\n- Create lists and code blocks\r\n- Add links and more!"
+          noteType: info
+        configSchema:
+          type: object
+          properties:
+            content:
+              type: string
+              title: 'Note Content'
+              description: 'Documentation or comment text (supports Markdown)'
+              format: markdown
+              default: |-
+                # Workflow Notes
+
+                Add your documentation here using **Markdown** formatting.
+
+                ## Features
+                - Supports **bold** and *italic* text
+                - Create lists and code blocks
+                - Add links and more!
+            noteType:
+              type: string
+              title: 'Note Type'
+              description: 'Visual style and color of the note'
+              default: info
+              enum:
+                - info
+                - warning
+                - success
+                - error
+                - note
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: note.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 500
+      height: 259
+    selected: false
+    dragging: false
+  -
+    id: note.2
+    type: universalNode
+    position:
+      x: 260
+      'y': 0
+    data:
+      label: Note
+      config:
+        content: |
+          # Fact Check
+
+          This workflow leverages a custom model available to do "fact checking" on content within European Commission websites.
+        noteType: info
+      metadata:
+        id: note
+        name: Note
+        type: note
+        supportedTypes:
+          - note
+        description: 'Add notes and comments'
+        category: helpers
+        icon: 'mdi:note-text-outline'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:note'
+        inputs:
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          content: "# Workflow Notes\r\n\r\nAdd your documentation here using **Markdown** formatting.\r\n\r\n## Features\r\n- Supports **bold** and *italic* text\r\n- Create lists and code blocks\r\n- Add links and more!"
+          noteType: info
+        configSchema:
+          type: object
+          properties:
+            content:
+              type: string
+              title: 'Note Content'
+              description: 'Documentation or comment text (supports Markdown)'
+              format: markdown
+              default: |-
+                # Workflow Notes
+
+                Add your documentation here using **Markdown** formatting.
+
+                ## Features
+                - Supports **bold** and *italic* text
+                - Create lists and code blocks
+                - Add links and more!
+            noteType:
+              type: string
+              title: 'Note Type'
+              description: 'Visual style and color of the note'
+              default: info
+              enum:
+                - info
+                - warning
+                - success
+                - error
+                - note
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: note.2
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 500
+      height: 235
     selected: false
     dragging: false
 edges:
@@ -616,12 +809,12 @@ edges:
         sourcePortDataType: string
     sourceHandle: flowdrop_ai_provider_chat_model.1-output-response
     targetHandle: json_to_data.1-input-json
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
   -
     id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity-data_to_json.1data_to_json.1-input-data
@@ -635,12 +828,12 @@ edges:
         sourcePortDataType: json
     sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity
     targetHandle: data_to_json.1-input-data
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
   -
     id: xy-edge__data_to_json.1data_to_json.1-output-json-flowdrop_ai_provider_chat_model.1flowdrop_ai_provider_chat_model.1-input-message
@@ -654,12 +847,12 @@ edges:
         sourcePortDataType: string
     sourceHandle: data_to_json.1-output-json
     targetHandle: flowdrop_ai_provider_chat_model.1-input-message
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
   -
     id: xy-edge__json_to_data.1json_to_data.1-output-data-flowdrop_node_processor_validation_save.1flowdrop_node_processor_validation_save.1-input-values
@@ -673,17 +866,17 @@ edges:
         sourcePortDataType: mixed
     sourceHandle: json_to_data.1-output-data
     targetHandle: flowdrop_node_processor_validation_save.1-input-values
-    style: 'stroke: var(--flowdrop-edge-data-color);'
+    style: 'stroke: var(--fd-edge-data);'
     markerEnd:
       type: arrowclosed
       width: 16
       height: 16
-      color: '#9ca3af'
+      color: '#a3a3ad'
     class: flowdrop--edge--data
 metadata:
   version: 1.0.0
   createdAt: '2026-01-28T10:27:56.460Z'
-  updatedAt: '2026-01-28T11:18:30.285Z'
+  updatedAt: '2026-02-08T12:19:43.086Z'
 created: 1769523938
-changed: 1770480294
+changed: 1770553183
 uid: 0
