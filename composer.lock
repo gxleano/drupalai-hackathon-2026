@@ -5485,7 +5485,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/flowdrop_node_session.git",
-                "reference": "af50eac3d6cf593ce64f31adacca2e0949a67677"
+                "reference": "13a77da895cbe6754ef3874d66b4be661c020b07"
             },
             "require": {
                 "drupal/core": "^11.2",
@@ -5502,7 +5502,7 @@
                 },
                 "drupal": {
                     "version": "1.x-dev",
-                    "datestamp": "1770477961",
+                    "datestamp": "1770556225",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
