@@ -10,8 +10,8 @@ nodes:
     id: echack_flowdrop_node_session_content_context.1
     type: universalNode
     position:
-      x: 1780
-      'y': -140
+      x: 0
+      'y': -120
     data:
       label: 'Content Context'
       config:
@@ -173,7 +173,7 @@ nodes:
       width: 290
       height: 203
     selected: false
-    dragging: true
+    dragging: false
   -
     id: flowdrop_ai_provider_chat_model.2
     type: universalNode
@@ -495,7 +495,7 @@ nodes:
     measured:
       width: 290
       height: 106
-    selected: true
+    selected: false
     dragging: true
   -
     id: confirmation.1
@@ -671,8 +671,8 @@ nodes:
     id: json_to_data.1
     type: universalNode
     position:
-      x: 4180
-      'y': -640
+      x: 4000
+      'y': -460
     data:
       label: 'JSON to Data'
       config:
@@ -749,11 +749,11 @@ nodes:
       nodeId: json_to_data.1
       extensions:
         ui:
-          hideUnconnectedHandles: false
+          hideUnconnectedHandles: true
     deletable: true
     measured:
       width: 290
-      height: 489
+      height: 292
     selected: false
     dragging: true
   -
@@ -1606,6 +1606,1047 @@ nodes:
       height: 292
     selected: false
     dragging: true
+  -
+    id: choice_input.1
+    type: universalNode
+    position:
+      x: 940
+      'y': 120
+    data:
+      label: 'Choice Input'
+      config:
+        message: ''
+        options:
+          -
+            value: validate
+            label: 'Run Validation'
+            description: ''
+          -
+            value: improve
+            label: 'Improve Article'
+            description: ''
+        multiple: false
+        min_selections: 1
+        nodeType: default
+        instanceTitle: 'Ask User what they want to do'
+        instanceDescription: 'Validate, or Improve?'
+      metadata:
+        id: choice_input
+        name: 'Choice Input'
+        type: default
+        supportedTypes:
+          - default
+          - simple
+        description: 'Pauses workflow for user to select from options'
+        category: human_in_loop
+        icon: 'mdi:format-list-bulleted-type'
+        plugin_version: 1.0.0
+        enabled: true
+        tags:
+          - human-in-loop
+          - interrupt
+          - choice
+          - selection
+        executor_plugin: 'flowdrop_interrupt:choice_input'
+        inputs:
+          -
+            id: message
+            name: 'Prompt Message'
+            type: input
+            dataType: string
+            required: false
+            description: 'The message to display to the user'
+            defaultValue: 'Please select an option'
+          -
+            id: options
+            name: Options
+            type: input
+            dataType: array
+            required: false
+            description: 'The options for the user to choose from'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: selected
+            name: selected
+            type: output
+            dataType: mixed
+            required: false
+            description: 'The selected value(s) - string for single, array for multiple'
+          -
+            id: selection_count
+            name: selection_count
+            type: output
+            dataType: number
+            required: false
+            description: 'Number of options selected'
+          -
+            id: response_time
+            name: response_time
+            type: output
+            dataType: number
+            required: false
+            description: 'Unix timestamp when the user responded'
+          -
+            id: user_id
+            name: user_id
+            type: output
+            dataType: number
+            required: false
+            description: 'ID of the user who responded (null if anonymous)'
+          -
+            id: interrupt_id
+            name: interrupt_id
+            type: output
+            dataType: string
+            required: false
+            description: 'UUID of the interrupt that was resolved'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          message: 'Please select an option'
+          multiple: false
+          min_selections: 1
+          type: default
+        configSchema:
+          type: object
+          properties:
+            message:
+              type: string
+              title: 'Prompt Message'
+              description: 'The message to display to the user'
+              default: 'Please select an option'
+              format: multiline
+            options:
+              type: array
+              title: Options
+              description: 'The options for the user to choose from'
+              items:
+                type: object
+                properties:
+                  value:
+                    type: string
+                    title: Value
+                    description: 'The value returned when selected'
+                  label:
+                    type: string
+                    title: Label
+                    description: 'The display label for the option'
+                  description:
+                    type: string
+                    title: Description
+                    description: 'Optional description for the option'
+                required:
+                  - value
+                  - label
+            multiple:
+              type: boolean
+              title: 'Allow Multiple'
+              description: 'Allow selecting multiple options'
+              default: false
+            min_selections:
+              type: integer
+              title: 'Minimum Selections'
+              description: 'Minimum number of selections required'
+              default: 1
+              minimum: 0
+            max_selections:
+              type: integer
+              title: 'Maximum Selections'
+              description: 'Maximum number of selections allowed (leave empty for no limit)'
+              minimum: 1
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+              default: default
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: choice_input.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 290
+      height: 272
+    selected: false
+    dragging: false
+  -
+    id: prompt_template.6
+    type: universalNode
+    position:
+      x: 500
+      'y': 120
+    data:
+      label: 'Prompt Template'
+      config:
+        template: 'You have selected "{{ title }} ({{ id }})". What do you want to do?'
+        nodeType: simple
+      metadata:
+        id: prompt_template
+        name: 'Prompt Template'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+        description: 'Create prompts using templates with variable substitution'
+        category: prompts
+        icon: 'mdi:code-block-braces'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:prompt_template'
+        inputs:
+          -
+            id: variables
+            name: Variables
+            type: input
+            dataType: json
+            required: false
+            description: 'Default variables for the template'
+            defaultValue: {  }
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: prompt
+            name: prompt
+            type: output
+            dataType: string
+            required: false
+            description: 'The generated prompt'
+          -
+            id: template
+            name: template
+            type: output
+            dataType: string
+            required: false
+            description: 'The original template'
+          -
+            id: variables
+            name: variables
+            type: output
+            dataType: json
+            required: false
+            description: 'The variables used'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          template: ''
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            template:
+              type: string
+              title: Template
+              description: 'The prompt template with variables in {{variable}} format'
+              default: ''
+              format: template
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: prompt_template.6
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 290
+      height: 106
+    selected: false
+    dragging: false
+  -
+    id: switch_gateway.1
+    type: universalNode
+    position:
+      x: 1360
+      'y': 220
+    data:
+      label: 'Switch Gateway'
+      config:
+        default_branch: default
+        branches:
+          -
+            name: Default
+            value: default
+          -
+            name: improve
+            value: improve
+          -
+            name: validate
+            value: validate
+      metadata:
+        id: switch_gateway
+        name: 'Switch Gateway'
+        type: gateway
+        supportedTypes:
+          - gateway
+        description: 'A selection control flow mechanism that changes execution control based on the value of an expression.'
+        category: logic
+        icon: 'mdi:source-fork'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:switch_gateway'
+        inputs:
+          -
+            id: expression
+            name: Expression
+            type: input
+            dataType: string
+            required: false
+            description: 'The value to be evaluated'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          default_branch: default
+          branches:
+            -
+              name: Default
+              value: default
+        configSchema:
+          type: object
+          properties:
+            default_branch:
+              type: string
+              title: 'Default Branch'
+              description: 'The value of the default branch'
+              default: default
+            branches:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: 'The name of the branch'
+                  value:
+                    type: string
+                    description: 'The value of the branch'
+              default:
+                -
+                  name: Default
+                  value: default
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: switch_gateway.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 290
+      height: 389
+    selected: false
+    dragging: false
+  -
+    id: flowdrop_ai_provider_chat_model.3
+    type: universalNode
+    position:
+      x: 2480
+      'y': 640
+    data:
+      label: 'Chat Model (Drupal AI)'
+      config:
+        model: mistral-large-latest
+        temperature: 0.7
+        maxTokens: 1000
+        systemPrompt: |
+          TASK:
+          You are an expert content validator specializing in European Commission content standards. Analyze the provided article to meet all 10 EU Commission content standards.
+
+          Display your analysis in a tabular format for the critical requirements noted below.
+
+          CRITICAL FIELD REQUIREMENTS:
+          - title: Clear, neutral, SEO-friendly title (50-60 characters)
+          - field_body: ARRAY with one object containing:
+            * value: Full HTML content with proper structure, sources, citations
+            * summary: One sentence summary
+          - field_metatags: REQUIRED array for Drupal (with nested JSON string)
+          - field_metatags[0].value: JSON string with title and description (use \" for inner quotes)
+          - meta_title: REQUIRED string (same as field_metatags title), 50-60 characters, SEO-focused
+          - meta_description: REQUIRED string (same as field_metatags description), 150-160 characters with keywords
+          - Note: meta_title and meta_description are duplicates for easy preview display
+          - Use double quotes, escape inner quotes with \"
+          - Compact format (no line breaks in JSON)
+
+          CONTENT IMPROVEMENTS SUGGESTIONS TO MAKE:
+          1. Add proper citations and sources (official EU sources)
+          2. Simplify language and remove jargon
+          3. Remove promotional or biased language
+          4. Add proper source attributions
+          5. Verify legal/policy consistency with EU treaties
+          6. Improve structure and coherence
+          7. Add context and completeness
+          8. Use inclusive, gender-neutral language
+          9. Add practical value and next steps for readers
+          10. Optimize for SEO
+
+          EXAMPLE OUTPUT:
+          | Category | Status | Explanation | Suggestion |
+          | --- | --- | --- | --- |
+          |title | ❌| Title too long| Commission adopts a first-ever EU Visa Strategy |
+          |field_body | ✅ | Good | |
+          |meta_title|❌| Missing |Commission adopts a first-ever EU Visa Strategy |
+      metadata:
+        id: flowdrop_ai_provider_chat_model
+        name: 'Chat Model (Drupal AI)'
+        type: default
+        supportedTypes:
+          - default
+        description: 'AI chat model for conversation and text generation'
+        category: ai
+        icon: 'mdi:robot'
+        plugin_version: 1.0.0
+        enabled: true
+        tags:
+          - model
+          - ai
+        executor_plugin: 'flowdrop_ai_provider:chat_model'
+        inputs:
+          -
+            id: message
+            name: Message
+            type: input
+            dataType: string
+            required: false
+            description: 'Message to send to AI model'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: response
+            name: response
+            type: output
+            dataType: string
+            required: false
+            description: 'The AI model response'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          model: mistral-large-latest
+          temperature: 0.7
+          maxTokens: 1000
+          systemPrompt: ''
+        configSchema:
+          type: object
+          properties:
+            model:
+              type: string
+              title: Model
+              description: 'AI model to use for chat'
+              default: mistral-large-latest
+              enum:
+                - chat
+                - claude-4-5-sonnet
+                - claude-4-5-opus
+                - gpt-4.1
+                - mistral-small-latest
+                - mistral-medium-latest
+                - mistral-large-latest
+              options:
+                -
+                  value: chat
+                  label: 'chat (amazeeio)'
+                -
+                  value: claude-4-5-sonnet
+                  label: 'claude-4-5-sonnet (amazeeio)'
+                -
+                  value: claude-4-5-opus
+                  label: 'claude-4-5-opus (amazeeio)'
+                -
+                  value: gpt-4.1
+                  label: 'gpt-4.1 (amazeeio)'
+                -
+                  value: mistral-small-latest
+                  label: 'mistral-small-latest (amazeeio)'
+                -
+                  value: mistral-medium-latest
+                  label: 'mistral-medium-latest (amazeeio)'
+                -
+                  value: mistral-large-latest
+                  label: 'mistral-large-latest (amazeeio)'
+            temperature:
+              type: number
+              title: Temperature
+              description: 'Model temperature (0.0 to 2.0)'
+              default: 0.7
+              minimum: 0
+              maximum: 2
+              step: '0.01'
+              format: range
+            maxTokens:
+              type: integer
+              title: 'Max Tokens'
+              description: 'Maximum tokens to generate'
+              default: 1000
+              minimum: 1
+              maximum: 4000
+            systemPrompt:
+              type: string
+              title: 'System Prompt'
+              description: 'System prompt to set the AI behavior and context'
+              default: ''
+              format: multiline
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: flowdrop_ai_provider_chat_model.3
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 290
+      height: 410
+    selected: false
+  -
+    id: chat_output.3
+    type: universalNode
+    position:
+      x: 2980
+      'y': 820
+    data:
+      label: 'Chat Output'
+      config:
+        format: text
+        showTimestamp: false
+        nodeType: simple
+      metadata:
+        id: chat_output
+        name: 'Chat Output'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Output chat messages in various formats'
+        category: processing
+        icon: 'mdi:chat-alert-outline'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:chat_output'
+        inputs:
+          -
+            id: message
+            name: Message
+            type: input
+            dataType: string
+            required: false
+            description: 'Default chat message'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: message
+            name: message
+            type: output
+            dataType: string
+            required: false
+            description: 'The chat message content'
+          -
+            id: format
+            name: format
+            type: output
+            dataType: string
+            required: false
+            description: 'The message format (text, markdown, html)'
+          -
+            id: timestamp
+            name: timestamp
+            type: output
+            dataType: number
+            required: false
+            description: 'The message timestamp (if showTimestamp is enabled)'
+          -
+            id: metadata
+            name: metadata
+            type: output
+            dataType: json
+            required: false
+            description: 'Additional metadata for message linking'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          format: text
+          showTimestamp: false
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            format:
+              type: string
+              title: Format
+              description: 'Message format (text, markdown, html)'
+              default: text
+            showTimestamp:
+              type: boolean
+              title: 'Show Timestamp'
+              description: 'Whether to include timestamp'
+              default: false
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: chat_output.3
+    deletable: true
+    measured:
+      width: 290
+      height: 91
+    selected: false
+    dragging: false
+  -
+    id: data_to_json.1
+    type: universalNode
+    position:
+      x: 1980
+      'y': 580
+    data:
+      label: 'Data to JSON'
+      config:
+        instanceTitle: 'Original Article'
+      metadata:
+        id: data_to_json
+        name: 'Data to JSON'
+        type: default
+        supportedTypes:
+          - default
+        description: 'Convert structured data (array/object) to JSON string'
+        category: data
+        icon: 'mdi:code-json'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:data_to_json'
+        inputs:
+          -
+            id: data
+            name: Data
+            type: input
+            dataType: mixed
+            required: false
+            description: 'The data to convert to JSON'
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: json
+            name: json
+            type: output
+            dataType: string
+            required: false
+            description: 'The JSON string representation'
+          -
+            id: success
+            name: success
+            type: output
+            dataType: boolean
+            required: false
+            description: 'Whether the conversion was successful'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config: {  }
+        configSchema:
+          type: object
+          properties:
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: data_to_json.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
+    deletable: true
+    measured:
+      width: 290
+      height: 489
+    selected: false
+    dragging: true
+  -
+    id: chat_output.4
+    type: universalNode
+    position:
+      x: 1860
+      'y': 60
+    data:
+      label: 'Chat Output'
+      config:
+        format: text
+        showTimestamp: false
+        nodeType: simple
+      metadata:
+        id: chat_output
+        name: 'Chat Output'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+          - square
+        description: 'Output chat messages in various formats'
+        category: processing
+        icon: 'mdi:chat-alert-outline'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:chat_output'
+        inputs:
+          -
+            id: message
+            name: Message
+            type: input
+            dataType: string
+            required: false
+            description: 'Default chat message'
+            defaultValue: ''
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: message
+            name: message
+            type: output
+            dataType: string
+            required: false
+            description: 'The chat message content'
+          -
+            id: format
+            name: format
+            type: output
+            dataType: string
+            required: false
+            description: 'The message format (text, markdown, html)'
+          -
+            id: timestamp
+            name: timestamp
+            type: output
+            dataType: number
+            required: false
+            description: 'The message timestamp (if showTimestamp is enabled)'
+          -
+            id: metadata
+            name: metadata
+            type: output
+            dataType: json
+            required: false
+            description: 'Additional metadata for message linking'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          format: text
+          showTimestamp: false
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            format:
+              type: string
+              title: Format
+              description: 'Message format (text, markdown, html)'
+              default: text
+            showTimestamp:
+              type: boolean
+              title: 'Show Timestamp'
+              description: 'Whether to include timestamp'
+              default: false
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+                - square
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: chat_output.4
+    deletable: true
+    measured:
+      width: 290
+      height: 91
+    selected: false
+    dragging: false
+  -
+    id: prompt_template.7
+    type: universalNode
+    position:
+      x: 1360
+      'y': 0
+    data:
+      label: 'Prompt Template'
+      config:
+        template: |-
+          # NOTICE
+
+          Automatic Tagging assistance has been disabled temporarily because of adverse performance. 
+
+          > This is just an example message.
+        nodeType: simple
+      metadata:
+        id: prompt_template
+        name: 'Prompt Template'
+        type: simple
+        supportedTypes:
+          - default
+          - simple
+        description: 'Create prompts using templates with variable substitution'
+        category: prompts
+        icon: 'mdi:code-block-braces'
+        plugin_version: 1.0.0
+        enabled: true
+        tags: {  }
+        executor_plugin: 'flowdrop_node_processor:prompt_template'
+        inputs:
+          -
+            id: variables
+            name: Variables
+            type: input
+            dataType: json
+            required: false
+            description: 'Default variables for the template'
+            defaultValue: {  }
+          -
+            id: trigger
+            name: Trigger
+            type: input
+            dataType: trigger
+            required: false
+            description: ''
+        outputs:
+          -
+            id: prompt
+            name: prompt
+            type: output
+            dataType: string
+            required: false
+            description: 'The generated prompt'
+          -
+            id: template
+            name: template
+            type: output
+            dataType: string
+            required: false
+            description: 'The original template'
+          -
+            id: variables
+            name: variables
+            type: output
+            dataType: json
+            required: false
+            description: 'The variables used'
+          -
+            id: trigger
+            name: Trigger
+            type: output
+            dataType: trigger
+            required: false
+            description: 'Emitted when this node completes execution'
+        config:
+          template: ''
+          type: simple
+        configSchema:
+          type: object
+          properties:
+            template:
+              type: string
+              title: Template
+              description: 'The prompt template with variables in {{variable}} format'
+              default: ''
+              format: template
+            nodeType:
+              type: string
+              title: 'Visual Type'
+              description: 'Select the visual appearance for this node instance.'
+              enum:
+                - default
+                - simple
+              default: simple
+            instanceTitle:
+              type: string
+              title: Title
+              description: 'Override the default node title for this instance.'
+              x-display-order: -2
+            instanceDescription:
+              type: string
+              title: Description
+              description: 'Override the default description for this instance.'
+              format: multiline
+              x-display-order: -1
+          required: {  }
+      nodeId: prompt_template.7
+      extensions:
+        ui:
+          hideUnconnectedHandles: true
+    deletable: true
+    measured:
+      width: 290
+      height: 106
+    selected: true
+    dragging: false
 edges:
   -
     id: xy-edge__prompt_template.3prompt_template.3-output-prompt-flowdrop_ai_provider_chat_model.2flowdrop_ai_provider_chat_model.2-input-message
@@ -1887,10 +2928,209 @@ edges:
       color: '#a3a3ad'
     class: flowdrop--edge--data
     selected: false
+  -
+    id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity-prompt_template.6prompt_template.6-input-variables
+    source: echack_flowdrop_node_session_content_context.1
+    target: prompt_template.6
+    data:
+      targetNodeType: universalNode
+      targetCategory: prompts
+      metadata:
+        edgeType: data
+        sourcePortDataType: json
+    sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity
+    targetHandle: prompt_template.6-input-variables
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__prompt_template.6prompt_template.6-output-prompt-choice_input.1choice_input.1-input-message
+    source: prompt_template.6
+    target: choice_input.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: human_in_loop
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: prompt_template.6-output-prompt
+    targetHandle: choice_input.1-input-message
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__choice_input.1choice_input.1-output-selected-switch_gateway.1switch_gateway.1-input-expression
+    source: choice_input.1
+    target: switch_gateway.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: logic
+      metadata:
+        edgeType: data
+        sourcePortDataType: mixed
+    sourceHandle: choice_input.1-output-selected
+    targetHandle: switch_gateway.1-input-expression
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__flowdrop_ai_provider_chat_model.3flowdrop_ai_provider_chat_model.3-output-response-chat_output.3chat_output.3-input-message
+    source: flowdrop_ai_provider_chat_model.3
+    target: chat_output.3
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: flowdrop_ai_provider_chat_model.3-output-response
+    targetHandle: chat_output.3-input-message
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity-data_to_json.1data_to_json.1-input-data
+    source: echack_flowdrop_node_session_content_context.1
+    target: data_to_json.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: data
+      metadata:
+        edgeType: data
+        sourcePortDataType: json
+    sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity
+    targetHandle: data_to_json.1-input-data
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__data_to_json.1data_to_json.1-output-json-flowdrop_ai_provider_chat_model.3flowdrop_ai_provider_chat_model.3-input-message
+    source: data_to_json.1
+    target: flowdrop_ai_provider_chat_model.3
+    data:
+      targetNodeType: universalNode
+      targetCategory: ai
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: data_to_json.1-output-json
+    targetHandle: flowdrop_ai_provider_chat_model.3-input-message
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__switch_gateway.1switch_gateway.1-output-validate-flowdrop_ai_provider_chat_model.3flowdrop_ai_provider_chat_model.3-input-trigger
+    source: switch_gateway.1
+    target: flowdrop_ai_provider_chat_model.3
+    data:
+      targetNodeType: universalNode
+      targetCategory: ai
+      metadata:
+        edgeType: trigger
+        sourcePortDataType: trigger
+    sourceHandle: switch_gateway.1-output-validate
+    targetHandle: flowdrop_ai_provider_chat_model.3-input-trigger
+    style: 'stroke: var(--fd-edge-trigger); stroke-width: var(--fd-edge-trigger-width);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#18181c'
+    class: flowdrop--edge--trigger
+    selected: false
+  -
+    id: xy-edge__switch_gateway.1switch_gateway.1-output-improve-chat_output.4chat_output.4-input-trigger
+    source: switch_gateway.1
+    target: chat_output.4
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: trigger
+        sourcePortDataType: trigger
+    sourceHandle: switch_gateway.1-output-improve
+    targetHandle: chat_output.4-input-trigger
+    style: 'stroke: var(--fd-edge-trigger); stroke-width: var(--fd-edge-trigger-width);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#18181c'
+    class: flowdrop--edge--trigger
+    selected: false
+  -
+    id: xy-edge__prompt_template.7prompt_template.7-output-prompt-chat_output.4chat_output.4-input-message
+    source: prompt_template.7
+    target: chat_output.4
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: prompt_template.7-output-prompt
+    targetHandle: chat_output.4-input-message
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#a3a3ad'
+    class: flowdrop--edge--data
+    selected: false
+  -
+    id: xy-edge__chat_output.4chat_output.4-output-trigger-prompt_template.3prompt_template.3-input-trigger
+    source: chat_output.4
+    target: prompt_template.3
+    data:
+      targetNodeType: universalNode
+      targetCategory: prompts
+      metadata:
+        edgeType: trigger
+        sourcePortDataType: trigger
+    sourceHandle: chat_output.4-output-trigger
+    targetHandle: prompt_template.3-input-trigger
+    style: 'stroke: var(--fd-edge-trigger); stroke-width: var(--fd-edge-trigger-width);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: '#18181c'
+    class: flowdrop--edge--trigger
 metadata:
   version: 1.0.0
   createdAt: '2026-01-28T09:01:32.652Z'
-  updatedAt: '2026-02-07T18:33:05.396Z'
+  updatedAt: '2026-02-08T12:53:29.279Z'
 created: 1769600262
-changed: 1770489185
+changed: 1770555209
 uid: 0
