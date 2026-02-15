@@ -2913,17 +2913,17 @@
         },
         {
             "name": "drupal/captcha",
-            "version": "2.0.9",
+            "version": "2.0.10",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/captcha.git",
-                "reference": "2.0.9"
+                "reference": "2.0.10"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/captcha-2.0.9.zip",
-                "reference": "2.0.9",
-                "shasum": "15b2ba18fab75ea88bfa8f75fb1be09f7cd52cbb"
+                "url": "https://ftp.drupal.org/files/projects/captcha-2.0.10.zip",
+                "reference": "2.0.10",
+                "shasum": "f1052ffe99ec2f8246f7da75e467b281fc2d804a"
             },
             "require": {
                 "drupal/core": "^9.5 || ^10 || ^11"
@@ -2931,8 +2931,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "2.0.9",
-                    "datestamp": "1753701287",
+                    "version": "2.0.10",
+                    "datestamp": "1770647534",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -4488,17 +4488,17 @@
         },
         {
             "name": "drupal/drupical",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/drupical.git",
-                "reference": "1.0.1"
+                "reference": "1.0.2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/drupical-1.0.1.zip",
-                "reference": "1.0.1",
-                "shasum": "db8ecbb0c6f6ffc7a13c544173db237ef4eb0f90"
+                "url": "https://ftp.drupal.org/files/projects/drupical-1.0.2.zip",
+                "reference": "1.0.2",
+                "shasum": "4f66ce1716c554ee8568ada25de9400619c32944"
             },
             "require": {
                 "drupal/core": "^10 || ^11"
@@ -4506,8 +4506,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.0.1",
-                    "datestamp": "1767948903",
+                    "version": "1.0.2",
+                    "datestamp": "1770633727",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -5198,7 +5198,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/flowdrop.git",
-                "reference": "9a334f5edc258bbccf987c3e549ff35c9c95a3ec"
+                "reference": "ce2bfec45e9c3cd2c62f7364e4e9cc8be12bb841"
             },
             "require": {
                 "d34dman/vanilla-icon-picker": "^1.4",
@@ -5214,7 +5214,6 @@
                 "drupal/ai_provider_openai": "^1.2",
                 "drupal/coffee": "^2.0",
                 "drupal/flowdrop_ai_provider": "dev-1.0.x",
-                "drupal/flowdrop_interrupt": "*",
                 "drupal/flowdrop_job": "*",
                 "drupal/flowdrop_node_category": "*",
                 "drupal/flowdrop_node_type": "*",
@@ -5238,8 +5237,8 @@
                     "dev-1.x": "1.x-dev"
                 },
                 "drupal": {
-                    "version": "1.0.0-alpha2+4-dev",
-                    "datestamp": "1770561541",
+                    "version": "1.0.0-alpha2+11-dev",
+                    "datestamp": "1771097225",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
@@ -5259,6 +5258,10 @@
                 {
                     "name": "d34dman",
                     "homepage": "https://www.drupal.org/user/751698"
+                },
+                {
+                    "name": "gxleano",
+                    "homepage": "https://www.drupal.org/user/3591999"
                 },
                 {
                     "name": "muschpusch",
@@ -5528,7 +5531,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/flowdrop_node_session.git",
-                "reference": "2a820d1654abb1716a71b127264ab81d526a30f0"
+                "reference": "33e0b9df9624f260cb4f9ccfbeead538d2c4883c"
             },
             "require": {
                 "drupal/core": "^11.2",
@@ -5545,8 +5548,8 @@
                     "dev-1.x": "1.x-dev"
                 },
                 "drupal": {
-                    "version": "1.x-dev",
-                    "datestamp": "1770563593",
+                    "version": "1.0.0-alpha1+1-dev",
+                    "datestamp": "1770984983",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
@@ -8661,17 +8664,17 @@
         },
         {
             "name": "drupal/ui_icons",
-            "version": "1.1.0",
+            "version": "1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/ui_icons.git",
-                "reference": "1.1.0"
+                "reference": "1.1.1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/ui_icons-1.1.0.zip",
-                "reference": "1.1.0",
-                "shasum": "3cbab3c60383e7dcda066b73c61652ad47769246"
+                "url": "https://ftp.drupal.org/files/projects/ui_icons-1.1.1.zip",
+                "reference": "1.1.1",
+                "shasum": "1903b66c4aba10f12bf6a26e0759e64283ec68ae"
             },
             "require": {
                 "drupal/core": "^11"
@@ -8690,8 +8693,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.1.0",
-                    "datestamp": "1768734480",
+                    "version": "1.1.1",
+                    "datestamp": "1770828787",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"

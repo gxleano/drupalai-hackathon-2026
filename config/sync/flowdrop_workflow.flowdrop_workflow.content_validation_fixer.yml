@@ -178,8 +178,8 @@ nodes:
     id: flowdrop_ai_provider_chat_model.2
     type: universalNode
     position:
-      x: 2740
-      'y': -320
+      x: 2660
+      'y': -340
     data:
       label: 'Chat Model (Drupal AI)'
       config:
@@ -356,7 +356,7 @@ nodes:
       width: 290
       height: 410
     selected: false
-    dragging: true
+    dragging: false
   -
     id: prompt_template.3
     type: universalNode
@@ -661,6 +661,9 @@ nodes:
               x-display-order: -1
           required: {  }
       nodeId: confirmation.1
+      extensions:
+        ui:
+          hideUnconnectedHandles: false
     deletable: true
     measured:
       width: 290
@@ -890,8 +893,8 @@ nodes:
     id: boolean_gateway.1
     type: universalNode
     position:
-      x: 4780
-      'y': 440
+      x: 4760
+      'y': 200
     data:
       label: 'Boolean Gateway'
       config:
@@ -992,8 +995,8 @@ nodes:
     measured:
       width: 290
       height: 330
-    selected: false
-    dragging: false
+    selected: true
+    dragging: true
   -
     id: prompt_template.4
     type: universalNode
@@ -1222,8 +1225,8 @@ nodes:
     id: entity_save.2
     type: universalNode
     position:
-      x: 5720
-      'y': 20
+      x: 5660
+      'y': -160
     data:
       label: 'Entity Save'
       config:
@@ -1371,8 +1374,8 @@ nodes:
     id: prompt_template.5
     type: universalNode
     position:
-      x: 5180
-      'y': 840
+      x: 4780
+      'y': 820
     data:
       label: 'Prompt Template'
       config:
@@ -1479,13 +1482,13 @@ nodes:
       width: 290
       height: 106
     selected: false
-    dragging: true
+    dragging: false
   -
     id: data_extractor.1
     type: universalNode
     position:
-      x: 2240
-      'y': 100
+      x: 460
+      'y': -400
     data:
       label: 'Data Extractor'
       config:
@@ -1605,7 +1608,7 @@ nodes:
       width: 290
       height: 292
     selected: false
-    dragging: true
+    dragging: false
   -
     id: choice_input.1
     type: universalNode
@@ -2645,7 +2648,7 @@ nodes:
     measured:
       width: 290
       height: 106
-    selected: true
+    selected: false
     dragging: false
 edges:
   -
@@ -3127,10 +3130,11 @@ edges:
       height: 16
       color: '#18181c'
     class: flowdrop--edge--trigger
+    selected: false
 metadata:
   version: 1.0.0
   createdAt: '2026-01-28T09:01:32.652Z'
-  updatedAt: '2026-02-08T12:53:29.279Z'
+  updatedAt: '2026-02-12T13:41:47.085Z'
 created: 1769600262
-changed: 1770555209
+changed: 1770903707
 uid: 0

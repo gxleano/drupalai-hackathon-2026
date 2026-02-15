@@ -2,3 +2,6 @@ entity_operations:
   -
     workflow_id: content_validation_fixer
     label: '✨ Assistance'
+  -
+    workflow_id: fact_check
+    label: 'Fact Check'
