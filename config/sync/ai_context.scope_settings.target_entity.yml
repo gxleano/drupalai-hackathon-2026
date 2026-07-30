@@ -1,0 +1,7 @@
+_core:
+  default_config_hash: so90jgTwpjPVgpHZ3rclPXDnmMmo2Lf_GHAv1QgiDHw
+enabled: true
+target_entity_types:
+  - node
+  - taxonomy_term
+  - media

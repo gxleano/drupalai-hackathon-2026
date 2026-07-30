@@ -1,0 +1,24 @@
+diff --git a/src/Service/NodeSessionService.php b/src/Service/NodeSessionService.php
+index cbfc87f..6e9f899 100644
+--- a/src/Service/NodeSessionService.php
++++ b/src/Service/NodeSessionService.php
+@@ -340,7 +340,18 @@ class NodeSessionService {
+       if (!is_array($node) || !isset($node["id"])) {
+         continue;
+       }
+-      if ($node["data"]["metadata"]["executor_plugin"] == 'flowdrop_node_processor:entity_context') {
++      // Workflows saved in the slim node-identity format only store
++      // node_type_id in metadata; resolve the executor plugin through the
++      // node type config entity in that case.
++      $metadata = $node["data"]["metadata"] ?? [];
++      $plugin = $metadata["executor_plugin"] ?? NULL;
++      if ($plugin === NULL && isset($metadata["node_type_id"])) {
++        $nodeType = $this->entityTypeManager
++          ->getStorage("flowdrop_node_type")
++          ->load($metadata["node_type_id"]);
++        $plugin = $nodeType?->get("executor_plugin");
++      }
++      if ($plugin === 'flowdrop_node_processor:entity_context') {
+         $entityContextNodes[] = $node;
+         continue;
+       }

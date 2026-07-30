@@ -1,0 +1,66 @@
+uuid: 582b2690-2512-4362-a407-277ab1d9d881
+langcode: en
+status: true
+dependencies:
+  module:
+    - flowdrop_node_processor
+id: entity_context
+label: 'Entity Context'
+description: 'Load a Drupal entity (node, term, etc.) as context for the workflow. Supports specific revision loading.'
+category: data
+icon: 'mdi:page-layout-body'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  bundle:
+    configurable: false
+    connectable: true
+    required: false
+  entity:
+    configurable: false
+    connectable: false
+    required: false
+  entity_id:
+    configurable: false
+    connectable: true
+    required: false
+  entity_type:
+    configurable: false
+    connectable: true
+    required: false
+    default: node
+  is_default_revision:
+    configurable: true
+    connectable: false
+    required: false
+    default: true
+  revision_id:
+    configurable: false
+    connectable: true
+    required: false
+outputs:
+  bundle:
+    exposed: true
+  entity:
+    exposed: true
+  entity_id:
+    exposed: true
+  entity_type:
+    exposed: true
+  is_default_revision:
+    exposed: true
+  loaded_from:
+    exposed: true
+  revision_id:
+    exposed: true
+tags: {  }
+executor_plugin: 'flowdrop_node_processor:entity_context'
+visual_type: default
+supported_visual_types:
+  - default
+  - simple
+  - square
+unified_input_exposed: false
+unified_output_exposed: false
+tool_exposed: false
+reserved_port_exposure: {  }

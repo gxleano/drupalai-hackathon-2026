@@ -34,8 +34,9 @@
         "composer/composer": "^2.8",
         "composer/installers": "^2.3",
         "cweagans/composer-patches": "^2.0",
-        "drupal/ai": "^1.4",
+        "drupal/ai": "^1.5@alpha",
         "drupal/ai_agents": "^1.3",
+        "drupal/ai_context": "^1.0@beta",
         "drupal/ai_provider_amazeeio": "1.2.x-dev",
         "drupal/byte": "^1@beta",
         "drupal/byte_theme": "@beta",
@@ -56,7 +57,9 @@
         "drupal/entity_reference_revisions": "^1.14",
         "drupal/flowdrop": "^2.0@alpha",
         "drupal/flowdrop_agents": "^2.0",
+        "drupal/flowdrop_ai_context": "^2.0",
         "drupal/flowdrop_ai_provider": "^2.0",
+        "drupal/flowdrop_field_widget_actions": "^0.1.0",
         "drupal/flowdrop_gin": "^2.0",
         "drupal/flowdrop_node_session": "1.x-dev",
         "drupal/flowdrop_ui": "1.0.x-dev",
@@ -75,6 +78,7 @@
         "drush/drush": "^13.6.1",
         "ivanboring/drush_dtk": "dev-main",
         "mglaman/phpstan-drupal": "^2.0",
+        "phpro/grumphp": "^2.0",
         "phpstan/phpstan": "^2.2",
         "phpstan/phpstan-deprecation-rules": "^2.0"
     },
@@ -93,11 +97,15 @@
             "drupal/core-recipe-unpack": true,
             "drupal/core-vendor-hardening": true,
             "php-http/discovery": true,
-            "symfony/runtime": true
+            "symfony/runtime": true,
+            "phpro/grumphp": true
         },
         "bin-dir": "vendor/bin",
         "sort-packages": true,
-        "optimize-autoloader": true
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "8.3"
+        }
     },
     "extra": {
         "drupal-scaffold": {
@@ -112,19 +120,42 @@
             ]
         },
         "installer-paths": {
-            "web/core": ["type:drupal-core"],
-            "web/libraries/{$name}": ["type:drupal-library"],
-            "web/modules/contrib/{$name}": ["type:drupal-module"],
-            "web/profiles/contrib/{$name}": ["type:drupal-profile"],
-            "web/themes/contrib/{$name}": ["type:drupal-theme"],
-            "./drush/Commands/contrib/{$name}": ["type:drupal-drush"],
-            "web/modules/custom/{$name}": ["type:drupal-custom-module"],
-            "web/profiles/custom/{$name}": ["type:drupal-custom-profile"],
-            "./recipes/{$name}": ["type:drupal-recipe"],
-            "web/themes/custom/{$name}": ["type:drupal-custom-theme"]
+            "web/core": [
+                "type:drupal-core"
+            ],
+            "web/libraries/{$name}": [
+                "type:drupal-library"
+            ],
+            "web/modules/contrib/{$name}": [
+                "type:drupal-module"
+            ],
+            "web/profiles/contrib/{$name}": [
+                "type:drupal-profile"
+            ],
+            "web/themes/contrib/{$name}": [
+                "type:drupal-theme"
+            ],
+            "./drush/Commands/contrib/{$name}": [
+                "type:drupal-drush"
+            ],
+            "web/modules/custom/{$name}": [
+                "type:drupal-custom-module"
+            ],
+            "web/profiles/custom/{$name}": [
+                "type:drupal-custom-profile"
+            ],
+            "./recipes/{$name}": [
+                "type:drupal-recipe"
+            ],
+            "web/themes/custom/{$name}": [
+                "type:drupal-custom-theme"
+            ]
         },
         "drupal-core-project-message": {
-            "include-keys": ["homepage", "support"],
+            "include-keys": [
+                "homepage",
+                "support"
+            ],
             "post-create-project-cmd-message": [
                 "<bg=blue;fg=white>                                                   </>",
                 "<bg=blue;fg=white>  Congratulations, you’ve installed Drupal CMS!    </>",
@@ -140,12 +171,18 @@
             "composer/composer": false
         },
         "patches": {
-            "drupal/canvas": {
-                "#3568950: Let the agent know that the tools were succesful": "https://git.drupalcode.org/project/canvas/-/merge_requests/493.patch"
-            },
             "drupal/flowdrop": {
                 "Node type API routes declare {plugin_id} but the controllers take $node_type_id, so /nodes/{id}/metadata and /validate return 500": "patches/flowdrop-node-type-api-route-placeholder.patch"
+            },
+            "drupal/flowdrop_node_session": {
+                "Playground back button links to removed route flowdrop.workflows instead of entity.flowdrop_workflow.collection": "patches/flowdrop-node-session-workflows-route.patch",
+                "findEntityContextNodes() misses nodes stored in slim node-identity format (only node_type_id in metadata), so entity context is never injected": "patches/flowdrop-node-session-slim-node-format-entity-context.patch"
             }
+        },
+        "composer-patches": {
+            "ignore-dependency-patches": [
+                "drupal/ai_context"
+            ]
         }
     },
     "scripts": {

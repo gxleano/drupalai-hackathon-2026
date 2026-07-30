@@ -1,0 +1,11 @@
+--- a/src/Controller/EntityContextPlaygroundController.php
++++ b/src/Controller/EntityContextPlaygroundController.php
+@@ -188,7 +188,7 @@
+     $endpoint_config = $this->endpointConfigService->generateEndpointConfig($base_url);
+ 
+     // Build back URL - navigates to workflow listing when back button clicked.
+-    $back_url = Url::fromRoute("flowdrop.workflows")->toString();
++    $back_url = Url::fromRoute("entity.flowdrop_workflow.collection")->toString();
+ 
+     // Build editor URL - navigates to workflow editor when edit button clicked.
+     $editor_url = Url::fromRoute("flowdrop.workflow.editor", [

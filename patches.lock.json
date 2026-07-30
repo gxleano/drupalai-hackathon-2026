@@ -1,24 +1,34 @@
 {
-    "_hash": "fd83ff3bfbf4d8aa3b3a1c7cdecc612c965399507d6d60a99f8675e8f8dd2a38",
+    "_hash": "de759c5bb16cbec749f0cbab2ec8d1feb66b83caea0986fd578d2f26cf96261e",
     "patches": {
-        "drupal/canvas": [
-            {
-                "package": "drupal/canvas",
-                "description": "#3568950: Let the agent know that the tools were succesful",
-                "url": "https://git.drupalcode.org/project/canvas/-/merge_requests/493.patch",
-                "sha256": "186929c0824d37d522e46ff0189a0444112f5843718604f395e1baf914b61af7",
-                "depth": 1,
-                "extra": {
-                    "provenance": "root"
-                }
-            }
-        ],
         "drupal/flowdrop": [
             {
                 "package": "drupal/flowdrop",
                 "description": "Node type API routes declare {plugin_id} but the controllers take $node_type_id, so /nodes/{id}/metadata and /validate return 500",
                 "url": "patches/flowdrop-node-type-api-route-placeholder.patch",
                 "sha256": "4c7df4040623b07835158617d0501536b4aff34f101a6dff10391eb569124782",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ],
+        "drupal/flowdrop_node_session": [
+            {
+                "package": "drupal/flowdrop_node_session",
+                "description": "Playground back button links to removed route flowdrop.workflows instead of entity.flowdrop_workflow.collection",
+                "url": "patches/flowdrop-node-session-workflows-route.patch",
+                "sha256": "db0ff8a2c4438380ae09eeaec471eb451c3eab82e3dc77825c09ad622389e3c3",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            },
+            {
+                "package": "drupal/flowdrop_node_session",
+                "description": "findEntityContextNodes() misses nodes stored in slim node-identity format (only node_type_id in metadata), so entity context is never injected",
+                "url": "patches/flowdrop-node-session-slim-node-format-entity-context.patch",
+                "sha256": "d4f195dcbcfdbbe05d1986f180e49be087fd4cf9794d9eece394bcd041ea7cd1",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

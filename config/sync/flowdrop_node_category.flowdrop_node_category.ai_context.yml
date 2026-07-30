@@ -1,0 +1,12 @@
+uuid: a2ba21fd-a0f3-453b-b2cb-2f7ed7ba1274
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: kzKqrkXXuZ-dIZkYHA3ELTfmtBPzrfg0BNvEm0rXDsw
+id: ai_context
+enabled: true
+label: 'AI Context'
+description: 'Nodes for selecting and injecting AI Context Items into workflows to enrich agent prompts with curated context.'
+icon: 'mdi:text-box-search-outline'
+color: '#0ea5e9'

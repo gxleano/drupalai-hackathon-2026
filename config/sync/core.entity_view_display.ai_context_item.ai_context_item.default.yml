@@ -1,0 +1,90 @@
+uuid: 94938889-1d83-405b-b1e7-ac25854eb40b
+langcode: en
+status: true
+dependencies:
+  module:
+    - ai_context
+    - options
+    - user
+_core:
+  default_config_hash: _6ZzSU2fQxXjQWW2qge3RSWzlfmFi2wsWEYxM0T2baY
+id: ai_context_item.ai_context_item.default
+targetEntityType: ai_context_item
+bundle: ai_context_item
+mode: default
+content:
+  content:
+    type: ai_context_markdown
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  content_moderation_control:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  description:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  label:
+    type: string
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  parent:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  purpose:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  scope:
+    type: ai_context_map
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 8
+    region: content
+  subcontext_type:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  tags:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 9
+    region: content
+  uid:
+    type: author
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 10
+    region: content
+hidden:
+  search_api_excerpt: true
+  status: true
+  target_entities: true

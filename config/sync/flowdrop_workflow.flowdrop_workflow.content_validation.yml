@@ -3,7 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
-    - flowdrop_node_type.flowdrop_node_type.echack_flowdrop_node_session_content_context
+    - flowdrop_node_type.flowdrop_node_type.entity_context
     - flowdrop_node_type.flowdrop_node_type.flowdrop_ai_provider_chat
     - flowdrop_node_type.flowdrop_node_type.flowdrop_node_processor_validation_save
     - flowdrop_node_type.flowdrop_node_type.json_to_data
@@ -13,7 +13,7 @@ label: 'Content Validation'
 description: 'This workflow will validate the content based on EU guidelines returning the average of quality and suggesting changes if need it.'
 nodes:
   -
-    id: echack_flowdrop_node_session_content_context.1
+    id: entity_context.1
     position:
       x: 1480
       'y': 500
@@ -25,7 +25,7 @@ nodes:
         instanceTitle: ''
         instanceDescription: ''
       metadata:
-        node_type_id: echack_flowdrop_node_session_content_context
+        node_type_id: entity_context
       extensions:
         ui:
           hideUnconnectedHandles: true
@@ -183,8 +183,8 @@ edges:
       color: '#9ca3af'
     class: flowdrop--edge--data
   -
-    id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity-prompt_template.2prompt_template.2-input-variables
-    source: echack_flowdrop_node_session_content_context.1
+    id: xy-edge__entity_context.1entity_context.1-output-entity-prompt_template.2prompt_template.2-input-variables
+    source: entity_context.1
     target: prompt_template.2
     data:
       targetNodeType: universalNode
@@ -192,7 +192,7 @@ edges:
       metadata:
         edgeType: data
         sourcePortDataType: json
-    sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity
+    sourceHandle: entity_context.1-output-entity
     targetHandle: prompt_template.2-input-variables
     style: 'stroke: var(--flowdrop-edge-data-color);'
     markerEnd:
@@ -244,7 +244,7 @@ metadata:
   createdAt: '2026-01-28T09:01:32.652Z'
   updatedAt: '2026-01-28T13:29:37.971Z'
 created: 1769590598
-changed: 1785434033
+changed: 1785436517
 uid: 0
 input_ports: null
 output_ports: null

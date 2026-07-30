@@ -1,0 +1,25 @@
+grumphp:
+  process_timeout: 300
+  tasks:
+    phpcs:
+      standard:
+        - Drupal
+        - DrupalPractice
+      triggered_by: [php, module, inc, install, profile, theme, engine]
+      # ponytail: only lint our own code; contrib/core are not ours to fix.
+      whitelist_patterns:
+        - /^web\/modules\/custom\/(.*)/
+        - /^web\/themes\/custom\/(.*)/
+    # ponytail: phpstan left out of the hook — its Drupal autoloader blows up
+    # bootstrapping contrib (canvas_headless needs the missing custom_elements).
+    # Re-add once `vendor/bin/phpstan analyse` runs clean:
+    #   phpstan: { configuration: phpstan.neon, use_grumphp_paths: false }
+    yamllint:
+      whitelist_patterns:
+        - /^config\/sync\/(.*)/
+        - /^web\/modules\/custom\/(.*)/
+        - /^web\/themes\/custom\/(.*)/
+    git_commit_message:
+      max_subject_width: 72
+      max_body_width: 100
+      enforce_capitalized_subject: false

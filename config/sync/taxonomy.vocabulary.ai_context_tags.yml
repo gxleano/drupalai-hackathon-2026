@@ -1,0 +1,14 @@
+uuid: 4a08aa71-262f-44d6-8cc3-bda079bba653
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - ai_context
+_core:
+  default_config_hash: zSLA4ggDf3PoYLfqXzGmsekSjOMLvB9wbGVC8D5l8yk
+name: 'AI Context Tags'
+vid: ai_context_tags
+description: 'Tags to categorize AI Context items.'
+weight: 0
+new_revision: false

@@ -1,0 +1,84 @@
+uuid: 62a08ac9-f764-4dd3-949e-e446a61e7eff
+langcode: en
+status: true
+dependencies:
+  module:
+    - flowdrop_ai_context
+_core:
+  default_config_hash: XFnQ6wJ9SoIfRnLQrkDxG8Y5BWcdlXp-Q6mDl_PHNlw
+id: flowdrop_ai_context_dynamic_selector
+label: 'AI Context'
+description: "Automatically select AI Context Items for a task, optionally narrowed by scopes, a target entity, overrides, or an agent's saved context configuration."
+category: ai_context
+icon: 'mdi:text-search-variant'
+plugin_version: ''
+enabled: true
+parameters:
+  agent_id:
+    configurable: true
+    connectable: false
+    required: false
+  always_include:
+    configurable: false
+    connectable: true
+    required: false
+  entity_id:
+    configurable: false
+    connectable: true
+    required: false
+  entity_type:
+    configurable: false
+    connectable: true
+    required: false
+  max_items:
+    configurable: true
+    connectable: false
+    required: false
+    default: 0
+  max_tokens:
+    configurable: true
+    connectable: false
+    required: false
+    default: 0
+  never_include:
+    configurable: false
+    connectable: true
+    required: false
+  scope_subscriptions:
+    configurable: true
+    connectable: false
+    required: false
+  selection_mode:
+    configurable: true
+    connectable: false
+    required: false
+  task:
+    configurable: false
+    connectable: true
+    required: true
+outputs:
+  error_message:
+    exposed: true
+  item_count:
+    exposed: true
+  rendered_text:
+    exposed: true
+  selected_ids:
+    exposed: true
+  selected_items:
+    exposed: true
+  success:
+    exposed: true
+  tokens_used:
+    exposed: false
+tags:
+  - context
+  - ai
+executor_plugin: 'flowdrop_ai_context:ai_context_dynamic_selector'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
+tool_exposed: false
+reserved_port_exposure: {  }

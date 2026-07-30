@@ -5,6 +5,7 @@ dependencies:
   config:
     - node.type.page
   module:
+    - ai_context
     - content_moderation
 _core:
   default_config_hash: cTcLoeCkGY_boimnlZKzLdtKZmR7FXc6AirGUwq_Lts
@@ -52,6 +53,8 @@ type_settings:
       to: unpublished
       weight: 1
   entity_types:
+    ai_context_item:
+      - ai_context_item
     node:
       - page
   default_moderation_state: draft

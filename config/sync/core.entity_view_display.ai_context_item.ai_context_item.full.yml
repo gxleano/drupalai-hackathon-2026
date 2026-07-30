@@ -1,0 +1,51 @@
+uuid: be7c418b-aab6-4ebb-9407-82922673d043
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.ai_context_item.full
+  module:
+    - ai_context
+_core:
+  default_config_hash: FhJz_sXt2uhXIVT_H5j8uwcycwo8iYB6ArgGSyP0qEE
+id: ai_context_item.ai_context_item.full
+targetEntityType: ai_context_item
+bundle: ai_context_item
+mode: full
+content:
+  content:
+    type: ai_context_markdown
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  content_moderation_control:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  description:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  purpose:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 2
+    region: content
+hidden:
+  label: true
+  parent: true
+  scope: true
+  search_api_excerpt: true
+  status: true
+  subcontext_type: true
+  tags: true
+  target_entities: true
+  uid: true

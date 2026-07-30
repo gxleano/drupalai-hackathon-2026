@@ -1,0 +1,46 @@
+uuid: 19a44e88-72d4-41d7-82d5-f1acef09bae0
+langcode: en
+status: true
+dependencies:
+  module:
+    - flowdrop_ai_context
+_core:
+  default_config_hash: BCAEgcwibhNhBfApaW6kQnYTdCI_exRco5I_sJPOc_U
+id: flowdrop_ai_context_injector
+label: 'AI Context Item'
+description: 'Inject a specific, manually selected AI Context Item into the workflow. Connect rendered_text to additional_context on AI Agent Executor.'
+category: ai_context
+icon: 'mdi:text-box-outline'
+plugin_version: ''
+enabled: true
+parameters:
+  context_id:
+    configurable: true
+    connectable: false
+    required: true
+outputs:
+  content:
+    exposed: true
+  context_id:
+    exposed: true
+  error_message:
+    exposed: true
+  label:
+    exposed: true
+  purpose:
+    exposed: true
+  rendered_text:
+    exposed: true
+  success:
+    exposed: true
+tags:
+  - context
+  - ai
+executor_plugin: 'flowdrop_ai_context:ai_context_injector'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
+tool_exposed: false
+reserved_port_exposure: {  }
