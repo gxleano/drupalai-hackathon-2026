@@ -872,3 +872,14 @@ if (getenv('IS_DDEV_PROJECT') == 'true' && file_exists(__DIR__ . '/settings.ddev
 # if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
 #   include $app_root . '/' . $site_path . '/settings.local.php';
 # }
+
+/**
+ * AI output trust mode.
+ *
+ * The AI module's HostnameFilter rewrites/strips links in every chat
+ * response. Our FlowDrop workflows exchange JSON with the model; the
+ * filter injects raw quotes into JSON strings containing links, breaking
+ * parsing. Output is either escaped by the AI Review page or rendered
+ * through Drupal text formats, so filtering is redundant here.
+ */
+$settings['ai_output']['full_trust_mode'] = TRUE;

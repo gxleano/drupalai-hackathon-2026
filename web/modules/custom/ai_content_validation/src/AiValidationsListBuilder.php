@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_validation;
 
+use Drupal\user\UserInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Url;
@@ -55,7 +56,7 @@ final class AiValidationsListBuilder extends EntityListBuilder {
 
     // Check if the owner entity exists before accessing its methods.
     $ownerEntity = $entity->get('uid')->entity;
-    $isAuthenticated = $ownerEntity instanceof \Drupal\user\UserInterface && $ownerEntity->isAuthenticated();
+    $isAuthenticated = $ownerEntity instanceof UserInterface && $ownerEntity->isAuthenticated();
     $username_options = [
       'label' => 'hidden',
       'settings' => ['link' => $isAuthenticated],
@@ -79,7 +80,8 @@ final class AiValidationsListBuilder extends EntityListBuilder {
     $target_id = $revision[0]['target_id'] ?? NULL;
     $target_revision_id = $revision[0]['target_revision_id'] ?? NULL;
 
-    // Only add Process operation if workflow ID and revision data are available.
+    // Only add Process operation if workflow ID and revision data are
+    // available.
     if ($flowdrop_id !== '' && $target_id !== NULL) {
       $url = Url::fromRoute('flowdrop_node_session.playground.entity', [
         'workflow_id' => $flowdrop_id,

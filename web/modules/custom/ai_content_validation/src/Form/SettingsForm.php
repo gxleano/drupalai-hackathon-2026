@@ -19,9 +19,8 @@ final class SettingsForm extends ConfigFormBase {
   public function __construct(
     ConfigFactoryInterface $config_factory,
     TypedConfigManagerInterface $typedConfigManager,
-    protected EntityTypeManagerInterface $entityTypeManager
-  )
-  {
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
     return parent::__construct($config_factory, $typedConfigManager);
   }
 
@@ -49,7 +48,7 @@ final class SettingsForm extends ConfigFormBase {
     $flows = $this->config('ai_content_validation.settings')->get('flows') ?? [];
     // @todo Display an error if saved flows correspond to non-existing entities.
     $options = [];
-    foreach($entities as $entity) {
+    foreach ($entities as $entity) {
       $options[$entity->id()] = $entity->label();
     }
 
@@ -58,7 +57,7 @@ final class SettingsForm extends ConfigFormBase {
       '#options' => $options,
       '#title' => $this->t('Which flows do you want to enable?'),
       '#empty' => $this->t('No flows available.'),
-      '#default_value' => $this->config('ai_content_validation.settings')->get('flows'),
+      '#default_value' => $flows,
     ];
 
     return parent::buildForm($form, $form_state);

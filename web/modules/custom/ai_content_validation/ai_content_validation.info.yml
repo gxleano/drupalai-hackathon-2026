@@ -5,3 +5,7 @@ package: Custom
 core_version_requirement: ^10 || ^11
 dependencies:
   - flowdrop:flowdrop
+  - flowdrop:flowdrop_session
+  - flowdrop:flowdrop_interrupt
+  - flowdrop_node_session:flowdrop_node_session
+  - drupal:node

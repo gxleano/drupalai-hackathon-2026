@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_validation\Controller;
 
+use Drupal\Core\Url;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\node\NodeInterface;
 
@@ -17,7 +18,7 @@ final class AiNodeValidationsController extends ControllerBase {
    */
   public function revisionValidations(NodeInterface $node, string $node_revision): array {
     $ids = [];
-    $validations_storage = \Drupal::entityTypeManager()->getStorage('ai_content_validation_item');
+    $validations_storage = $this->entityTypeManager()->getStorage('ai_content_validation_item');
     $ids['pending'] = $validations_storage->getQuery()
       ->condition('field_content_revision', $node_revision)
       ->condition('field_validation_status', 'pending')
@@ -37,13 +38,13 @@ final class AiNodeValidationsController extends ControllerBase {
     $rows = [];
     foreach ($ids as $type => $validations_ids) {
       $validations = $validations_storage->loadMultiple($validations_ids);
-      foreach ($validations as $validation)  {
+      foreach ($validations as $validation) {
         $workflow = $validation->get('field_flowdrop_workflow')->getValue();
         $flowdrop_id = $workflow[0]['target_id'] ?? '';
         $rows[] = [
           'status' => $type,
           'worflow' => $flowdrop_id,
-          'actions' => \Drupal\Core\Url::fromRoute('<front>'),
+          'actions' => Url::fromRoute('<front>'),
         ];
       }
     }

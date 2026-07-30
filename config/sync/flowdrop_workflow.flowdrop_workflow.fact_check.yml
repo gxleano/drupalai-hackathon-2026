@@ -64,11 +64,15 @@ nodes:
 
           It is CRITICALLY important that the output is JSON and pure json
 
-          Generate a fact-checking validation JSON from the input content. IMPORTANT: Extract these values from the input data: title (use the "title" field), nid (use the "id" field as an INTEGER), vid (look inside "fields" then "vid" then first array element then "value" - this is the revision ID as an INTEGER).
+          Fact-check the input content and propose corrections. IMPORTANT: Extract these values from the input data: title (use the "title" field), nid (use the "id" field as an INTEGER), vid (look inside "fields" then "vid" then first array element then "value" - this is the revision ID as an INTEGER).
 
-          Example output format: {"label":"Fact Check: Article Title Here","status":true,"description":"AI fact-check","field_flowdrop_workflow":"fact_check_fixer","field_content_revision":{"target_id":123,"target_revision_id":456},"field_validation_status":"done","field_validation_result":"Your analysis here"}
+          Example output format: {"label":"Fact Check: Article Title Here","status":true,"description":"AI fact-check","field_flowdrop_workflow":"fact_check_fixer","field_content_revision":{"target_id":123,"target_revision_id":456},"field_validation_status":"pending","field_validation_result":"{\"summary\":\"One short paragraph summarizing the fact-check outcome.\",\"suggestions\":[{\"field\":\"title\",\"label\":\"Title\",\"current\":\"exact current value\",\"suggested\":\"corrected full replacement value\",\"reason\":\"why this correction is needed\"}]}"}
 
-          CRITICAL: target_id and target_revision_id MUST be integers (not arrays, not null). If you cannot find the id, use 0.
+          CRITICAL rules:
+          - field_validation_result MUST be a STRING containing escaped JSON with exactly two keys: "summary" and "suggestions".
+          - Each suggestion "field" MUST be the machine name of a field present in the input (e.g. "title", "body"). "suggested" MUST be the complete corrected value for that field, not a diff.
+          - Only add suggestions for factual errors you actually found. If the content is accurate, use an empty suggestions array and say so in the summary.
+          - target_id and target_revision_id MUST be integers (not arrays, not null). If you cannot find the id, use 0.
 
           OUTPUT ONLY THE JSON. START YOUR RESPONSE WITH { AND END WITH }
         instanceTitle: ''

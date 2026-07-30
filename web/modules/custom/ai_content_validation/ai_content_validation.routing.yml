@@ -21,6 +21,20 @@ ai_content_validation.ai_node_validations:
   requirements:
     _permission: 'administer ai_content_validation_item'
 
+ai_content_validation.node_review:
+  path: '/node/{node}/ai-review'
+  defaults:
+    _title: 'AI Review'
+    _form: '\Drupal\ai_content_validation\Form\AiReviewForm'
+  requirements:
+    _permission: 'create flowdrop_session'
+    _entity_access: 'node.update'
+    node: \d+
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
+
 ai_content_validation.main_dashboard:
   path: '/admin/ai-content-validation/main-dashboard'
   defaults:

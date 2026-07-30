@@ -17,7 +17,7 @@ final class MainDashboard extends ControllerBase {
    * Builds the response.
    */
   public function __invoke(): array {
-     $build = [
+    $build = [
       "#type" => "container",
       "#cache" => [
         "contexts" => ["user.permissions"],
@@ -148,4 +148,5 @@ final class MainDashboard extends ControllerBase {
 </svg>
 ';
   }
+
 }
