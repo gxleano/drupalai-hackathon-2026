@@ -1,0 +1,42 @@
+uuid: d9566221-bf4b-43ea-91d3-c3babadee28c
+langcode: en
+status: true
+dependencies:
+  module:
+    - flowdrop_node_processor
+id: tool_invoke
+label: 'Invoke tools'
+description: 'Run a batch of tool calls (each an auditable node execution via the tool invoker)'
+category: tools
+icon: 'mdi:apple-keyboard-command'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  tool:
+    configurable: false
+    connectable: true
+    required: false
+  tool_calls:
+    configurable: false
+    connectable: true
+    required: false
+    default: {  }
+outputs:
+  ok:
+    exposed: true
+  tool_messages:
+    exposed: true
+    exposed_by_default: false
+  tool_results:
+    exposed: true
+tags:
+  - tools
+  - agent
+executor_plugin: 'flowdrop_node_processor:tool_invoke'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
+tool_exposed: false
+reserved_port_exposure: {  }

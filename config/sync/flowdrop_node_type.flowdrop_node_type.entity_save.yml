@@ -76,3 +76,4 @@ supported_visual_types:
   - square
 unified_input_exposed: false
 unified_output_exposed: false
+tool_exposed: false

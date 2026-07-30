@@ -1,0 +1,50 @@
+uuid: 3be16048-8e64-4231-bcb0-a1f612b693b2
+langcode: en
+status: true
+dependencies: {  }
+id: flowdrop_ai_provider_text_to_speech
+label: 'Text to Speech'
+description: 'Convert text to speech using AI models'
+category: ai
+icon: 'mdi:volume-high'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  model:
+    configurable: true
+    connectable: false
+    required: false
+    default: ''
+  text:
+    configurable: false
+    connectable: true
+    required: true
+  voice:
+    configurable: true
+    connectable: false
+    required: false
+    default: default
+outputs:
+  audio_files:
+    exposed: true
+  model:
+    exposed: false
+  provider:
+    exposed: false
+  text:
+    exposed: false
+  voice:
+    exposed: false
+tags:
+  - model
+  - ai
+  - tts
+  - audio
+executor_plugin: 'flowdrop_ai_provider:text_to_speech'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
+tool_exposed: false
+reserved_port_exposure: {  }

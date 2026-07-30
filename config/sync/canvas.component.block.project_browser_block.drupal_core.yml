@@ -4,9 +4,23 @@ status: false
 dependencies:
   module:
     - project_browser
-active_version: 50103420ba2af480
+active_version: 134771f8886c9262
 versioned_properties:
   active:
+    settings:
+      default_settings:
+        id: 'project_browser_block:drupal_core'
+        label: 'Core modules'
+        label_display: '0'
+        provider: project_browser
+        paginate: true
+        page_sizes: '12, 24, 36, 48'
+        sort_options: null
+        default_sort: null
+        filters: null
+    fallback_metadata:
+      slot_definitions: null
+  50103420ba2af480:
     settings:
       default_settings:
         id: 'project_browser_block:drupal_core'

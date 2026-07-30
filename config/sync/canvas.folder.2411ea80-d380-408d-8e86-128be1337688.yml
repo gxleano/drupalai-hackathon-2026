@@ -1,7 +1,15 @@
 uuid: 2411ea80-d380-408d-8e86-128be1337688
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  config:
+    - canvas.component.sdc.mercury.accordion
+    - canvas.component.sdc.mercury.accordion-container
+    - canvas.component.sdc.mercury.footer
+    - canvas.component.sdc.mercury.grid
+    - canvas.component.sdc.mercury.group
+    - canvas.component.sdc.mercury.navbar
+    - canvas.component.sdc.mercury.section
 name: Layout
 configEntityTypeId: component
 weight: 0
@@ -9,6 +17,7 @@ items:
   - sdc.mercury.accordion
   - sdc.mercury.accordion-container
   - sdc.mercury.footer
+  - sdc.mercury.grid
   - sdc.mercury.group
   - sdc.mercury.navbar
   - sdc.mercury.section

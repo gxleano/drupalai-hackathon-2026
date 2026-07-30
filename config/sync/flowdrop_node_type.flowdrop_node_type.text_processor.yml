@@ -1,0 +1,35 @@
+uuid: 60af5351-5ba4-4de3-9a5b-070be47d874d
+langcode: en
+status: true
+dependencies:
+  module:
+    - flowdrop_node_processor
+id: text_processor
+label: 'Text Processor'
+description: 'Apply a common text utility (capitalize, uppercase, lowercase, trim, strip_tags) to a string'
+category: processing
+icon: 'mdi:format-letter-case'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  operation:
+    configurable: true
+    connectable: true
+    required: false
+    default: capitalize
+  text:
+    configurable: false
+    connectable: true
+    required: false
+outputs:
+  text:
+    exposed: true
+tags: {  }
+executor_plugin: 'flowdrop_node_processor:text_processor'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: true
+unified_output_exposed: true
+tool_exposed: true
+reserved_port_exposure: {  }

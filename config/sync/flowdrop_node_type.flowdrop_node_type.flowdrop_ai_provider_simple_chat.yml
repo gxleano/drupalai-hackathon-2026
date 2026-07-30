@@ -1,17 +1,20 @@
-uuid: 62c69c10-ea61-459c-a913-cfa07b40fe91
+uuid: b78990bd-a0f1-45e6-8b1a-a0fcd24f120f
 langcode: en
 status: true
 dependencies: {  }
-_core:
-  default_config_hash: N0eQy9CBXfvtEl7ArG55Ql2msEZPe5t4L3QPAxPUg8o
-id: flowdrop_ai_provider_chat_model
-label: 'Chat Model (Drupal AI)'
-description: 'AI chat model for conversation and text generation'
+id: flowdrop_ai_provider_simple_chat
+label: 'Simple Chat'
+description: 'AI chat model with a plain text system prompt'
 category: ai
 icon: 'mdi:robot'
-plugin_version: 1.0.0
+plugin_version: 1.1.0
 enabled: true
 parameters:
+  history:
+    configurable: false
+    connectable: true
+    required: false
+    default: {  }
   maxTokens:
     configurable: true
     connectable: false
@@ -20,16 +23,22 @@ parameters:
   message:
     configurable: false
     connectable: true
-    required: false
+    required: true
   model:
     configurable: true
     connectable: false
     required: false
-    default: mistral-large-latest
-  systemPrompt:
+    default: ''
+  operation_type:
     configurable: true
     connectable: false
     required: false
+    default: chat
+  systemPrompt:
+    configurable: true
+    connectable: true
+    required: false
+    default: ''
   temperature:
     configurable: true
     connectable: false
@@ -51,9 +60,11 @@ outputs:
 tags:
   - model
   - ai
-executor_plugin: 'flowdrop_ai_provider:chat_model'
+executor_plugin: 'flowdrop_ai_provider:simple_chat'
 visual_type: default
 supported_visual_types:
   - default
 unified_input_exposed: false
 unified_output_exposed: false
+tool_exposed: false
+reserved_port_exposure: {  }

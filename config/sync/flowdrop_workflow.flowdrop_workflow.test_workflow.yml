@@ -1,0 +1,186 @@
+uuid: 490e4145-fd02-4db1-bee5-1f704210698b
+langcode: en
+status: true
+dependencies:
+  config:
+    - flowdrop_node_type.flowdrop_node_type.chat_input
+    - flowdrop_node_type.flowdrop_node_type.chat_output
+    - flowdrop_node_type.flowdrop_node_type.flowdrop_ai_provider_chat
+    - flowdrop_node_type.flowdrop_node_type.flowdrop_ai_provider_session_history
+id: test_workflow
+label: 'Test Workflow'
+description: ''
+nodes:
+  -
+    id: chat_input.1
+    position:
+      x: -640
+      'y': 140
+    data:
+      label: 'Chat Input'
+      config:
+        nodeType: simple
+        maxRetries: 0
+      metadata:
+        node_type_id: chat_input
+    measured:
+      width: 280
+      height: 200
+  -
+    id: chat_output.1
+    position:
+      x: 1440
+      'y': 140
+    data:
+      label: 'Chat Output'
+      config:
+        format: text
+        showTimestamp: false
+        nodeType: simple
+        maxRetries: 0
+      metadata:
+        node_type_id: chat_output
+    measured:
+      width: 280
+      height: 200
+  -
+    id: flowdrop_ai_provider_chat.1
+    position:
+      x: 440
+      'y': 20
+    data:
+      label: Chat
+      config:
+        model: mistral-large-latest
+        operation_type: chat
+        temperature: 0.7
+        maxTokens: 1000
+        systemPrompt: ''
+        maxRetries: 0
+      metadata:
+        node_type_id: flowdrop_ai_provider_chat
+    measured:
+      width: 280
+      height: 501
+  -
+    id: flowdrop_ai_provider_session_history.1
+    position:
+      x: -160
+      'y': 360
+    data:
+      label: 'Session History'
+      config:
+        history_context_length: 4
+        maxRetries: 0
+      metadata:
+        node_type_id: flowdrop_ai_provider_session_history
+    measured:
+      width: 280
+      height: 441
+edges:
+  -
+    id: xy-edge__chat_input.1chat_input.1-output-sessionId-flowdrop_ai_provider_session_history.1flowdrop_ai_provider_session_history.1-input-session_id
+    source: chat_input.1
+    target: flowdrop_ai_provider_session_history.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: memories
+      metadata:
+        edgeType: data
+        sourcePortDataType: number
+    sourceHandle: chat_input.1-output-sessionId
+    targetHandle: flowdrop_ai_provider_session_history.1-input-session_id
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: var(--fd-edge-data)
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__chat_input.1chat_input.1-output-messageId-flowdrop_ai_provider_session_history.1flowdrop_ai_provider_session_history.1-input-message_id
+    source: chat_input.1
+    target: flowdrop_ai_provider_session_history.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: memories
+      metadata:
+        edgeType: data
+        sourcePortDataType: number
+    sourceHandle: chat_input.1-output-messageId
+    targetHandle: flowdrop_ai_provider_session_history.1-input-message_id
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: var(--fd-edge-data)
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__chat_input.1chat_input.1-output-message-flowdrop_ai_provider_chat.1flowdrop_ai_provider_chat.1-input-message
+    source: chat_input.1
+    target: flowdrop_ai_provider_chat.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: ai
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: chat_input.1-output-message
+    targetHandle: flowdrop_ai_provider_chat.1-input-message
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: var(--fd-edge-data)
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__flowdrop_ai_provider_session_history.1flowdrop_ai_provider_session_history.1-output-history-flowdrop_ai_provider_chat.1flowdrop_ai_provider_chat.1-input-history
+    source: flowdrop_ai_provider_session_history.1
+    target: flowdrop_ai_provider_chat.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: ai
+      metadata:
+        edgeType: data
+        sourcePortDataType: array
+    sourceHandle: flowdrop_ai_provider_session_history.1-output-history
+    targetHandle: flowdrop_ai_provider_chat.1-input-history
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: var(--fd-edge-data)
+    class: flowdrop--edge--data
+  -
+    id: xy-edge__flowdrop_ai_provider_chat.1flowdrop_ai_provider_chat.1-output-response-chat_output.1chat_output.1-input-message
+    source: flowdrop_ai_provider_chat.1
+    target: chat_output.1
+    data:
+      targetNodeType: universalNode
+      targetCategory: processing
+      metadata:
+        edgeType: data
+        sourcePortDataType: string
+    sourceHandle: flowdrop_ai_provider_chat.1-output-response
+    targetHandle: chat_output.1-input-message
+    style: 'stroke: var(--fd-edge-data);'
+    markerEnd:
+      type: arrowclosed
+      width: 16
+      height: 16
+      color: var(--fd-edge-data)
+    class: flowdrop--edge--data
+metadata:
+  createdAt: '2026-07-30T18:06:53.608Z'
+  updatedAt: '2026-07-30T18:07:51.635Z'
+created: 1785434806
+changed: 1785434871
+uid: 0
+input_ports: null
+output_ports: null
+parameter_schema: null
+output_schema: null
+schema_version: 0.0.0

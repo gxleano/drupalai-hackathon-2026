@@ -4,9 +4,18 @@ status: true
 dependencies:
   module:
     - system
-active_version: ad6359c331fc7c45
+active_version: 0d7e961dd03aa710
 versioned_properties:
   active:
+    settings:
+      default_settings:
+        id: system_breadcrumb_block
+        label: Breadcrumbs
+        label_display: '0'
+        provider: system
+    fallback_metadata:
+      slot_definitions: null
+  ad6359c331fc7c45:
     settings:
       default_settings:
         id: system_breadcrumb_block

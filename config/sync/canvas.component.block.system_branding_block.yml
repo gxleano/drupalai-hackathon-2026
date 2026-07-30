@@ -4,9 +4,21 @@ status: true
 dependencies:
   module:
     - system
-active_version: b168140fdcaebae5
+active_version: 7d528e00f56b3abf
 versioned_properties:
   active:
+    settings:
+      default_settings:
+        id: system_branding_block
+        label: 'Site branding'
+        label_display: '0'
+        provider: system
+        use_site_logo: true
+        use_site_name: true
+        use_site_slogan: true
+    fallback_metadata:
+      slot_definitions: null
+  b168140fdcaebae5:
     settings:
       default_settings:
         id: system_branding_block

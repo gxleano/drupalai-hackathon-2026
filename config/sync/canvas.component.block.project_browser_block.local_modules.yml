@@ -4,9 +4,23 @@ status: false
 dependencies:
   module:
     - project_browser
-active_version: 5817b1630ad267fd
+active_version: 9eba06ccb21f6648
 versioned_properties:
   active:
+    settings:
+      default_settings:
+        id: 'project_browser_block:local_modules'
+        label: 'Local modules'
+        label_display: '0'
+        provider: project_browser
+        paginate: true
+        page_sizes: '12, 24, 36, 48'
+        sort_options: null
+        default_sort: null
+        filters: null
+    fallback_metadata:
+      slot_definitions: null
+  5817b1630ad267fd:
     settings:
       default_settings:
         id: 'project_browser_block:local_modules'

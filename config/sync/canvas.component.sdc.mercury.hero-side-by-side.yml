@@ -17,7 +17,7 @@ dependencies:
     - mercury
 _core:
   default_config_hash: '-1iqTWI6b4vSt8beTb2JR-3c4bNMpf1CqUTs6y_nGCU'
-active_version: 39c3518b4824ac2a
+active_version: 134543b92be69eb8
 versioned_properties:
   active:
     settings:
@@ -33,6 +33,19 @@ versioned_properties:
             -
               value: large
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
+        justify_content:
+          required: true
+          field_type: list_string
+          field_storage_settings:
+            allowed_values_function: canvas_load_allowed_values_for_component_prop
+          field_instance_settings: {  }
+          field_widget: options_select
+          default_value:
+            -
+              value: center
+          expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         hero_flex_direction_mobile:
           required: false
           field_type: list_string
@@ -44,15 +57,7 @@ versioned_properties:
             -
               value: vertical
           expression: ℹ︎list_string␟value
-        background:
-          required: false
-          field_type: list_string
-          field_storage_settings:
-            allowed_values_function: canvas_load_allowed_values_for_component_prop
-          field_instance_settings: {  }
-          field_widget: options_select
-          default_value: null
-          expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         padding_block_start:
           required: true
           field_type: list_string
@@ -64,6 +69,7 @@ versioned_properties:
             -
               value: '0'
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         padding_block_end:
           required: true
           field_type: list_string
@@ -75,6 +81,7 @@ versioned_properties:
             -
               value: '0'
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         image_size:
           required: false
           field_type: list_string
@@ -86,6 +93,7 @@ versioned_properties:
             -
               value: '4:3'
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         image_position:
           required: false
           field_type: list_string
@@ -97,6 +105,7 @@ versioned_properties:
             -
               value: left
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         image_radius:
           required: false
           field_type: list_string
@@ -108,6 +117,7 @@ versioned_properties:
             -
               value: small
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         media:
           required: false
           field_type: entity_reference
@@ -122,6 +132,123 @@ versioned_properties:
           field_widget: media_library_widget
           default_value: {  }
           expression: 'ℹ︎entity_reference␟entity␜[␜entity:media:image␝field_media_image␞␟{src↠src_with_alternate_widths,alt↠alt,width↠width,height↠height}][␜entity:media:svg_image␝field_media_svg_image␞␟{src↠src_with_alternate_widths,alt↠alt,width↠width,height↠height}]'
+          derived_schema_metadata: {  }
+    fallback_metadata:
+      slot_definitions:
+        hero_slot:
+          title: Content
+  39c3518b4824ac2a:
+    settings:
+      prop_field_definitions:
+        hero_flex_gap:
+          required: false
+          field_type: list_string
+          field_storage_settings:
+            allowed_values_function: canvas_load_allowed_values_for_component_prop
+          field_instance_settings: {  }
+          field_widget: options_select
+          default_value:
+            -
+              value: large
+          expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
+        hero_flex_direction_mobile:
+          required: false
+          field_type: list_string
+          field_storage_settings:
+            allowed_values_function: canvas_load_allowed_values_for_component_prop
+          field_instance_settings: {  }
+          field_widget: options_select
+          default_value:
+            -
+              value: vertical
+          expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
+        background:
+          required: false
+          field_type: list_string
+          field_storage_settings:
+            allowed_values_function: canvas_load_allowed_values_for_component_prop
+          field_instance_settings: {  }
+          field_widget: options_select
+          default_value: null
+          expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
+        padding_block_start:
+          required: true
+          field_type: list_string
+          field_storage_settings:
+            allowed_values_function: canvas_load_allowed_values_for_component_prop
+          field_instance_settings: {  }
+          field_widget: options_select
+          default_value:
+            -
+              value: '0'
+          expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
+        padding_block_end:
+          required: true
+          field_type: list_string
+          field_storage_settings:
+            allowed_values_function: canvas_load_allowed_values_for_component_prop
+          field_instance_settings: {  }
+          field_widget: options_select
+          default_value:
+            -
+              value: '0'
+          expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
+        image_size:
+          required: false
+          field_type: list_string
+          field_storage_settings:
+            allowed_values_function: canvas_load_allowed_values_for_component_prop
+          field_instance_settings: {  }
+          field_widget: options_select
+          default_value:
+            -
+              value: '4:3'
+          expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
+        image_position:
+          required: false
+          field_type: list_string
+          field_storage_settings:
+            allowed_values_function: canvas_load_allowed_values_for_component_prop
+          field_instance_settings: {  }
+          field_widget: options_select
+          default_value:
+            -
+              value: left
+          expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
+        image_radius:
+          required: false
+          field_type: list_string
+          field_storage_settings:
+            allowed_values_function: canvas_load_allowed_values_for_component_prop
+          field_instance_settings: {  }
+          field_widget: options_select
+          default_value:
+            -
+              value: small
+          expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
+        media:
+          required: false
+          field_type: entity_reference
+          field_storage_settings:
+            target_type: media
+          field_instance_settings:
+            handler: 'default:media'
+            handler_settings:
+              target_bundles:
+                image: image
+                svg_image: svg_image
+          field_widget: media_library_widget
+          default_value: {  }
+          expression: 'ℹ︎entity_reference␟entity␜[␜entity:media:image␝field_media_image␞␟{src↠src_with_alternate_widths,alt↠alt,width↠width,height↠height}][␜entity:media:svg_image␝field_media_svg_image␞␟{src↠src_with_alternate_widths,alt↠alt,width↠width,height↠height}]'
+          derived_schema_metadata: {  }
     fallback_metadata:
       slot_definitions:
         hero_slot:
@@ -140,6 +267,7 @@ versioned_properties:
             -
               value: large
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         hero_flex_direction_mobile:
           required: false
           field_type: list_string
@@ -151,6 +279,7 @@ versioned_properties:
             -
               value: vertical
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         background:
           required: false
           field_type: list_string
@@ -160,6 +289,7 @@ versioned_properties:
           field_widget: options_select
           default_value: null
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         padding_block_start:
           required: true
           field_type: list_string
@@ -171,6 +301,7 @@ versioned_properties:
             -
               value: '0'
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         padding_block_end:
           required: true
           field_type: list_string
@@ -182,6 +313,7 @@ versioned_properties:
             -
               value: '0'
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         image_size:
           required: false
           field_type: list_string
@@ -193,6 +325,7 @@ versioned_properties:
             -
               value: '4:3'
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         image_position:
           required: false
           field_type: list_string
@@ -204,6 +337,7 @@ versioned_properties:
             -
               value: left
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         image_radius:
           required: false
           field_type: list_string
@@ -215,6 +349,7 @@ versioned_properties:
             -
               value: small
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         media:
           required: false
           field_type: entity_reference
@@ -229,6 +364,7 @@ versioned_properties:
           field_widget: media_library_widget
           default_value: {  }
           expression: 'ℹ︎entity_reference␟entity␜[␜entity:media:image␝field_media_image␞␟{src↠src_with_alternate_widths,alt↠alt,width↠width,height↠height}][␜entity:media:svg_image␝field_media_svg_image␞␟{src↠src_with_alternate_widths,alt↠alt,width↠width,height↠height}]'
+          derived_schema_metadata: {  }
     fallback_metadata:
       slot_definitions:
         hero_slot:

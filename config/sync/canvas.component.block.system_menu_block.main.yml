@@ -6,9 +6,21 @@ dependencies:
     - system.menu.main
   module:
     - system
-active_version: 023ff7ba63f80798
+active_version: 322535c0078cf59c
 versioned_properties:
   active:
+    settings:
+      default_settings:
+        id: 'system_menu_block:main'
+        label: 'Main navigation'
+        label_display: '0'
+        provider: system
+        level: 1
+        depth: null
+        expand_all_items: false
+    fallback_metadata:
+      slot_definitions: null
+  023ff7ba63f80798:
     settings:
       default_settings:
         id: 'system_menu_block:main'

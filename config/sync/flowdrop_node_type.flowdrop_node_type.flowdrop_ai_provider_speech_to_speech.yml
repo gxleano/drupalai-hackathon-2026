@@ -1,0 +1,45 @@
+uuid: 9704728e-7ccc-4d34-83a9-5e8797a1b91a
+langcode: en
+status: true
+dependencies: {  }
+id: flowdrop_ai_provider_speech_to_speech
+label: 'Speech to Speech'
+description: 'AI speech to speech transformation'
+category: ai
+icon: 'mdi:account-voice'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  audio:
+    configurable: false
+    connectable: true
+    required: false
+  audio_file:
+    configurable: false
+    connectable: true
+    required: false
+  model:
+    configurable: true
+    connectable: false
+    required: false
+    default: ''
+outputs:
+  audio_files:
+    exposed: true
+  model:
+    exposed: false
+  provider:
+    exposed: false
+tags:
+  - model
+  - ai
+  - speech
+  - transformation
+executor_plugin: 'flowdrop_ai_provider:speech_to_speech'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
+tool_exposed: false
+reserved_port_exposure: {  }

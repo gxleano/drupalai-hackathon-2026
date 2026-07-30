@@ -4,9 +4,18 @@ status: true
 dependencies:
   module:
     - system
-active_version: fcc4b9a4f6d6de35
+active_version: 5d275553b2355691
 versioned_properties:
   active:
+    settings:
+      default_settings:
+        id: system_powered_by_block
+        label: 'Powered by Drupal'
+        label_display: '0'
+        provider: system
+    fallback_metadata:
+      slot_definitions: null
+  fcc4b9a4f6d6de35:
     settings:
       default_settings:
         id: system_powered_by_block

@@ -2,9 +2,20 @@ uuid: f9dc2722-b746-40e0-b3c9-cb0985ce80ba
 langcode: en
 status: false
 dependencies: {  }
-active_version: 429966cebad152ba
+active_version: fbd9367ece78bba5
 versioned_properties:
   active:
+    settings:
+      default_settings:
+        id: local_tasks_block
+        label: Tabs
+        label_display: '0'
+        provider: core
+        primary: true
+        secondary: true
+    fallback_metadata:
+      slot_definitions: null
+  429966cebad152ba:
     settings:
       default_settings:
         id: local_tasks_block

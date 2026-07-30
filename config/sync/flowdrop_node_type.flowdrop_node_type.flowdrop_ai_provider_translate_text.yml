@@ -1,0 +1,55 @@
+uuid: f22c2a1d-7a1e-4e17-983f-ad349c525832
+langcode: en
+status: true
+dependencies: {  }
+id: flowdrop_ai_provider_translate_text
+label: 'Translate Text'
+description: 'Translate text between languages using AI models'
+category: ai
+icon: 'mdi:translate'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  model:
+    configurable: true
+    connectable: false
+    required: false
+    default: ''
+  source_language:
+    configurable: true
+    connectable: false
+    required: false
+    default: ''
+  target_language:
+    configurable: true
+    connectable: false
+    required: true
+    default: en
+  text:
+    configurable: false
+    connectable: true
+    required: true
+outputs:
+  model:
+    exposed: false
+  provider:
+    exposed: false
+  source_language:
+    exposed: true
+  target_language:
+    exposed: true
+  translated_text:
+    exposed: true
+tags:
+  - model
+  - ai
+  - translation
+  - language
+executor_plugin: 'flowdrop_ai_provider:translate_text'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
+tool_exposed: false
+reserved_port_exposure: {  }

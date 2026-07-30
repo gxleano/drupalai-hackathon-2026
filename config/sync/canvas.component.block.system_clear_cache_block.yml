@@ -4,9 +4,18 @@ status: false
 dependencies:
   module:
     - system
-active_version: 435d13d2208c8fee
+active_version: b789a990528fd1b0
 versioned_properties:
   active:
+    settings:
+      default_settings:
+        id: system_clear_cache_block
+        label: 'Clear cache'
+        label_display: '0'
+        provider: system
+    fallback_metadata:
+      slot_definitions: null
+  435d13d2208c8fee:
     settings:
       default_settings:
         id: system_clear_cache_block

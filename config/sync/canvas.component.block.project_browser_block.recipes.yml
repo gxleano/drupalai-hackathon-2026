@@ -4,9 +4,23 @@ status: false
 dependencies:
   module:
     - project_browser
-active_version: ac1129da9043000f
+active_version: f7ae68d8b945a397
 versioned_properties:
   active:
+    settings:
+      default_settings:
+        id: 'project_browser_block:recipes'
+        label: Recipes
+        label_display: '0'
+        provider: project_browser
+        paginate: true
+        page_sizes: '12, 24, 36, 48'
+        sort_options: null
+        default_sort: null
+        filters: null
+    fallback_metadata:
+      slot_definitions: null
+  ac1129da9043000f:
     settings:
       default_settings:
         id: 'project_browser_block:recipes'

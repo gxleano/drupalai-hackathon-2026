@@ -36,3 +36,4 @@ supported_visual_types:
   - note
 unified_input_exposed: false
 unified_output_exposed: false
+tool_exposed: false

@@ -1,0 +1,47 @@
+uuid: 38396e67-edcb-40a9-a271-1aa6515d4344
+langcode: en
+status: true
+dependencies: {  }
+id: flowdrop_ai_provider_object_detection
+label: 'Object Detection'
+description: 'Detect and locate objects within images using AI models'
+category: ai
+icon: 'mdi:magnify-scan'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  image_file:
+    configurable: false
+    connectable: true
+    required: false
+  image_url:
+    configurable: true
+    connectable: true
+    required: false
+    default: ''
+  model:
+    configurable: true
+    connectable: false
+    required: false
+    default: ''
+outputs:
+  detections:
+    exposed: true
+  model:
+    exposed: false
+  provider:
+    exposed: false
+tags:
+  - model
+  - ai
+  - image
+  - detection
+  - vision
+executor_plugin: 'flowdrop_ai_provider:object_detection'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
+tool_exposed: false
+reserved_port_exposure: {  }

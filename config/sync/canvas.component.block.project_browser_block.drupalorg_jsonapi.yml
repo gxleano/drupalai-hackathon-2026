@@ -4,9 +4,23 @@ status: false
 dependencies:
   module:
     - project_browser
-active_version: e37816eb455058be
+active_version: 9b8e8aa404b93168
 versioned_properties:
   active:
+    settings:
+      default_settings:
+        id: 'project_browser_block:drupalorg_jsonapi'
+        label: 'Contrib modules'
+        label_display: '0'
+        provider: project_browser
+        paginate: true
+        page_sizes: '12, 24, 36, 48'
+        sort_options: null
+        default_sort: null
+        filters: null
+    fallback_metadata:
+      slot_definitions: null
+  e37816eb455058be:
     settings:
       default_settings:
         id: 'project_browser_block:drupalorg_jsonapi'

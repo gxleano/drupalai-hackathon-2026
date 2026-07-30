@@ -4,9 +4,18 @@ status: false
 dependencies:
   module:
     - announcements_feed
-active_version: d2ee7918676f072c
+active_version: ba9c7263bee161ed
 versioned_properties:
   active:
+    settings:
+      default_settings:
+        id: announce_block
+        label: 'Announcements Feed'
+        label_display: '0'
+        provider: announcements_feed
+    fallback_metadata:
+      slot_definitions: null
+  d2ee7918676f072c:
     settings:
       default_settings:
         id: announce_block

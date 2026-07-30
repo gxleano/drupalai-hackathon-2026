@@ -17,11 +17,11 @@ selection_criteria:
   425d6456-71e3-4b65-9302-6c695efaab28:
     id: 'entity_bundle:node'
     negate: false
-    uuid: 425d6456-71e3-4b65-9302-6c695efaab28
     context_mapping:
       node: node
     bundles:
       page: page
+    uuid: 425d6456-71e3-4b65-9302-6c695efaab28
 selection_logic: and
 weight: -5
 relationships: {  }

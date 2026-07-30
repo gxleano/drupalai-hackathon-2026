@@ -1,0 +1,46 @@
+uuid: a9c8b1e4-6a57-4a37-af4c-c73a746733e5
+langcode: en
+status: true
+dependencies: {  }
+id: flowdrop_ai_provider_image_to_video
+label: 'Image to Video'
+description: 'AI image to video transformation'
+category: ai
+icon: 'mdi:video-image'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  image:
+    configurable: false
+    connectable: true
+    required: false
+  image_file:
+    configurable: false
+    connectable: true
+    required: false
+  model:
+    configurable: true
+    connectable: false
+    required: false
+    default: ''
+outputs:
+  model:
+    exposed: false
+  provider:
+    exposed: false
+  video_files:
+    exposed: true
+tags:
+  - model
+  - ai
+  - image
+  - video
+  - generation
+executor_plugin: 'flowdrop_ai_provider:image_to_video'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
+tool_exposed: false
+reserved_port_exposure: {  }

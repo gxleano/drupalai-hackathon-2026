@@ -10,6 +10,7 @@ dependencies:
     - media.type.svg_image
   module:
     - file
+    - link
     - media
     - media_library
     - options
@@ -17,7 +18,7 @@ dependencies:
     - mercury
 _core:
   default_config_hash: 5YjqYy2tG8E5lkK0fMlf3C-2faDrinkw6MGPxx6-uNU
-active_version: 0f35e59bdd6e6655
+active_version: 1cfce5d019a22099
 versioned_properties:
   active:
     settings:
@@ -32,6 +33,9 @@ versioned_properties:
             -
               value: 'My career’s guidance was crucial in helping me understand the tech industry landscape and ultimately secure my role.'
           expression: ℹ︎string_long␟value
+          derived_schema_metadata:
+            string_shape:
+              pattern: '(.|\r?\n)*'
         cite_name:
           required: false
           field_type: string
@@ -42,6 +46,8 @@ versioned_properties:
             -
               value: 'Isiah Julio'
           expression: ℹ︎string␟value
+          derived_schema_metadata:
+            string_shape: {  }
         cite_text:
           required: false
           field_type: string
@@ -52,14 +58,21 @@ versioned_properties:
             -
               value: 'Engineer, Technical Services'
           expression: ℹ︎string␟value
+          derived_schema_metadata:
+            string_shape: {  }
         cite_url:
           required: false
-          field_type: string
+          field_type: link
           field_storage_settings: {  }
-          field_instance_settings: {  }
-          field_widget: string_textfield
+          field_instance_settings:
+            title: 0
+            link_type: 17
+          field_widget: link_default
           default_value: null
-          expression: ℹ︎string␟value
+          expression: ℹ︎link␟url
+          derived_schema_metadata:
+            string_shape:
+              format: uri-reference
         align:
           required: true
           field_type: list_string
@@ -71,6 +84,7 @@ versioned_properties:
             -
               value: center
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         style:
           required: true
           field_type: list_string
@@ -82,6 +96,7 @@ versioned_properties:
             -
               value: default
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         media:
           required: false
           field_type: entity_reference
@@ -96,6 +111,93 @@ versioned_properties:
           field_widget: media_library_widget
           default_value: {  }
           expression: 'ℹ︎entity_reference␟entity␜[␜entity:media:image␝field_media_image␞␟{src↠src_with_alternate_widths,alt↠alt,width↠width,height↠height}][␜entity:media:svg_image␝field_media_svg_image␞␟{src↠src_with_alternate_widths,alt↠alt,width↠width,height↠height}]'
+          derived_schema_metadata: {  }
+    fallback_metadata:
+      slot_definitions: {  }
+  0f35e59bdd6e6655:
+    settings:
+      prop_field_definitions:
+        text:
+          required: false
+          field_type: string_long
+          field_storage_settings: {  }
+          field_instance_settings: {  }
+          field_widget: string_textarea
+          default_value:
+            -
+              value: 'My career’s guidance was crucial in helping me understand the tech industry landscape and ultimately secure my role.'
+          expression: ℹ︎string_long␟value
+          derived_schema_metadata: {  }
+        cite_name:
+          required: false
+          field_type: string
+          field_storage_settings: {  }
+          field_instance_settings: {  }
+          field_widget: string_textfield
+          default_value:
+            -
+              value: 'Isiah Julio'
+          expression: ℹ︎string␟value
+          derived_schema_metadata: {  }
+        cite_text:
+          required: false
+          field_type: string
+          field_storage_settings: {  }
+          field_instance_settings: {  }
+          field_widget: string_textfield
+          default_value:
+            -
+              value: 'Engineer, Technical Services'
+          expression: ℹ︎string␟value
+          derived_schema_metadata: {  }
+        cite_url:
+          required: false
+          field_type: string
+          field_storage_settings: {  }
+          field_instance_settings: {  }
+          field_widget: string_textfield
+          default_value: null
+          expression: ℹ︎string␟value
+          derived_schema_metadata: {  }
+        align:
+          required: true
+          field_type: list_string
+          field_storage_settings:
+            allowed_values_function: canvas_load_allowed_values_for_component_prop
+          field_instance_settings: {  }
+          field_widget: options_select
+          default_value:
+            -
+              value: center
+          expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
+        style:
+          required: true
+          field_type: list_string
+          field_storage_settings:
+            allowed_values_function: canvas_load_allowed_values_for_component_prop
+          field_instance_settings: {  }
+          field_widget: options_select
+          default_value:
+            -
+              value: default
+          expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
+        media:
+          required: false
+          field_type: entity_reference
+          field_storage_settings:
+            target_type: media
+          field_instance_settings:
+            handler: 'default:media'
+            handler_settings:
+              target_bundles:
+                image: image
+                svg_image: svg_image
+          field_widget: media_library_widget
+          default_value: {  }
+          expression: 'ℹ︎entity_reference␟entity␜[␜entity:media:image␝field_media_image␞␟{src↠src_with_alternate_widths,alt↠alt,width↠width,height↠height}][␜entity:media:svg_image␝field_media_svg_image␞␟{src↠src_with_alternate_widths,alt↠alt,width↠width,height↠height}]'
+          derived_schema_metadata: {  }
     fallback_metadata:
       slot_definitions: {  }
   6201c1700cf76371:
@@ -111,6 +213,7 @@ versioned_properties:
             -
               value: 'My career’s guidance was crucial in helping me understand the tech industry landscape and ultimately secure my role.'
           expression: ℹ︎string_long␟value
+          derived_schema_metadata: {  }
         cite_name:
           required: false
           field_type: string
@@ -121,6 +224,7 @@ versioned_properties:
             -
               value: 'Isiah Julio'
           expression: ℹ︎string␟value
+          derived_schema_metadata: {  }
         cite_text:
           required: false
           field_type: string
@@ -131,6 +235,7 @@ versioned_properties:
             -
               value: 'Engineer, Technical Services'
           expression: ℹ︎string␟value
+          derived_schema_metadata: {  }
         cite_url:
           required: false
           field_type: string
@@ -139,6 +244,7 @@ versioned_properties:
           field_widget: string_textfield
           default_value: null
           expression: ℹ︎string␟value
+          derived_schema_metadata: {  }
         align:
           required: true
           field_type: list_string
@@ -150,6 +256,7 @@ versioned_properties:
             -
               value: center
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         style:
           required: true
           field_type: list_string
@@ -161,6 +268,7 @@ versioned_properties:
             -
               value: default
           expression: ℹ︎list_string␟value
+          derived_schema_metadata: {  }
         media:
           required: false
           field_type: entity_reference
@@ -175,6 +283,7 @@ versioned_properties:
           field_widget: media_library_widget
           default_value: {  }
           expression: 'ℹ︎entity_reference␟entity␜[␜entity:media:image␝field_media_image␞␟{src↠src_with_alternate_widths,alt↠alt,width↠width,height↠height}][␜entity:media:svg_image␝field_media_svg_image␞␟{src↠src_with_alternate_widths,alt↠alt,width↠width,height↠height}]'
+          derived_schema_metadata: {  }
     fallback_metadata:
       slot_definitions: {  }
 label: 'Testimonial card'

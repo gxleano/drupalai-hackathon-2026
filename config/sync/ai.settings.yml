@@ -9,6 +9,9 @@ default_providers:
   chat_with_complex_json:
     provider_id: amazeeio
     model_id: mistral-large-latest
+  chat_with_image_vision:
+    provider_id: amazeeio
+    model_id: chat
   chat_with_structured_response:
     provider_id: amazeeio
     model_id: mistral-large-latest
@@ -19,3 +22,6 @@ default_providers:
     provider_id: amazeeio
     model_id: mistral-embed
 default_vdb_provider: ''
+request_timeout: 60
+allowed_hosts: {  }
+allowed_hosts_rewrite_links: false

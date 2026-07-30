@@ -6,9 +6,21 @@ dependencies:
     - system.menu.footer
   module:
     - system
-active_version: 68bdb40e1ac48125
+active_version: 075503dbc228a45c
 versioned_properties:
   active:
+    settings:
+      default_settings:
+        id: 'system_menu_block:footer'
+        label: Footer
+        label_display: '0'
+        provider: system
+        level: 1
+        depth: null
+        expand_all_items: false
+    fallback_metadata:
+      slot_definitions: null
+  68bdb40e1ac48125:
     settings:
       default_settings:
         id: 'system_menu_block:footer'

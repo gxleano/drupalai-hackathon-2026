@@ -1,0 +1,12 @@
+default_settings: |-
+  {
+      "ui": {
+          "configPlacement": "sidebar",
+          "consolePlacement": "sidebar"
+      },
+      "theme": {
+          "preference": "auto"
+      }
+  }
+exposed_categories:
+  - ui
