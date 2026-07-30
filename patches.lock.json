@@ -1,24 +1,24 @@
 {
-    "_hash": "d79639641d4d0fed6a424950536f5b0c3d65a4d1852b28c9f684501f3a17b796",
+    "_hash": "fd83ff3bfbf4d8aa3b3a1c7cdecc612c965399507d6d60a99f8675e8f8dd2a38",
     "patches": {
-        "drupal/core": [
-            {
-                "package": "drupal/core",
-                "description": "#3564735: Synthetic service (kernel) error during non-interactive install from existing config in Drupal 11.3",
-                "url": "https://git.drupalcode.org/project/drupal/-/merge_requests/14169.patch",
-                "sha256": "71fb6ea138a76694e061d9180489fdaf1008f6c9bfdd766cc1fb3ae5f06bd5f1",
-                "depth": 2,
-                "extra": {
-                    "provenance": "root"
-                }
-            }
-        ],
         "drupal/canvas": [
             {
                 "package": "drupal/canvas",
                 "description": "#3568950: Let the agent know that the tools were succesful",
                 "url": "https://git.drupalcode.org/project/canvas/-/merge_requests/493.patch",
-                "sha256": "e0fd9587ebcd9dc70843374473a1026c2c8cccece310de558959b3132822ca9d",
+                "sha256": "186929c0824d37d522e46ff0189a0444112f5843718604f395e1baf914b61af7",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ],
+        "drupal/flowdrop": [
+            {
+                "package": "drupal/flowdrop",
+                "description": "Node type API routes declare {plugin_id} but the controllers take $node_type_id, so /nodes/{id}/metadata and /validate return 500",
+                "url": "patches/flowdrop-node-type-api-route-placeholder.patch",
+                "sha256": "4c7df4040623b07835158617d0501536b4aff34f101a6dff10391eb569124782",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

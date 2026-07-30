@@ -91,3 +91,9 @@ private
 drush-backups
 .console
 platformsh-template
+
+# >>> drupal-agentic-workflow >>>
+web/modules/custom/**/AI_CONTEXT.md
+.claude/reference/
+.claude/site-api.json
+# <<< drupal-agentic-workflow <<<

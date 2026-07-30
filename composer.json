@@ -9,17 +9,33 @@
         "docs": "https://new.drupal.org/docs/drupal-cms",
         "chat": "https://drupal.org/node/314178"
     },
-    "repositories": {
-        "drupal": {
+    "repositories": [
+        {
+            "name": "drush_dtk",
+            "type": "package",
+            "package": {
+                "name": "ivanboring/drush_dtk",
+                "version": "dev-main",
+                "type": "drupal-module",
+                "source": {
+                    "url": "https://github.com/ivanboring/drush_dtk.git",
+                    "type": "git",
+                    "reference": "main"
+                }
+            }
+        },
+        {
+            "name": "drupal",
             "type": "composer",
             "url": "https://packages.drupal.org/8"
         }
-    },
+    ],
     "require": {
         "composer/composer": "^2.8",
         "composer/installers": "^2.3",
         "cweagans/composer-patches": "^2.0",
-        "drupal/ai": "^1.2.6",
+        "drupal/ai": "^1.4",
+        "drupal/ai_agents": "^1.3",
         "drupal/ai_provider_amazeeio": "1.2.x-dev",
         "drupal/byte": "^1@beta",
         "drupal/byte_theme": "@beta",
@@ -38,12 +54,15 @@
         "drupal/drupal_cms_seo_tools": "^2",
         "drupal/drupal_cms_starter": "^2",
         "drupal/entity_reference_revisions": "^1.14",
-        "drupal/flowdrop": "1.x-dev",
-        "drupal/flowdrop_agents": "^1.0@dev",
-        "drupal/flowdrop_ai_provider": "^0.1.0",
+        "drupal/flowdrop": "^2.0@alpha",
+        "drupal/flowdrop_agents": "^2.0",
+        "drupal/flowdrop_ai_provider": "^2.0",
+        "drupal/flowdrop_gin": "^2.0",
         "drupal/flowdrop_node_session": "1.x-dev",
         "drupal/flowdrop_ui": "1.0.x-dev",
-        "drupal/flowdrop_ui_agents": "^0.1",
+        "drupal/flowdrop_ui_agents": "^2.0",
+        "drupal/flowdrop_ui_components": "^2.0@alpha",
+        "drupal/gin": "^5.0",
         "drupal/mercury": "@beta",
         "drupal/metatag": "^2.2",
         "drupal/recipe_installer_kit": "^1",
@@ -52,7 +71,12 @@
         "symfony/property-access": "^7"
     },
     "require-dev": {
-        "drush/drush": "^13.6.1"
+        "drupal/coder": "^9.0",
+        "drush/drush": "^13.6.1",
+        "ivanboring/drush_dtk": "dev-main",
+        "mglaman/phpstan-drupal": "^2.0",
+        "phpstan/phpstan": "^2.2",
+        "phpstan/phpstan-deprecation-rules": "^2.0"
     },
     "conflict": {
         "drupal/drupal": "*"
@@ -63,11 +87,13 @@
         "allow-plugins": {
             "composer/installers": true,
             "cweagans/composer-patches": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
             "drupal/core-composer-scaffold": true,
             "drupal/core-project-message": true,
             "drupal/core-recipe-unpack": true,
             "drupal/core-vendor-hardening": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "symfony/runtime": true
         },
         "bin-dir": "vendor/bin",
         "sort-packages": true,
@@ -114,11 +140,11 @@
             "composer/composer": false
         },
         "patches": {
-            "drupal/core": {
-                "#3564735: Synthetic service (kernel) error during non-interactive install from existing config in Drupal 11.3": "https://git.drupalcode.org/project/drupal/-/merge_requests/14169.patch"
-            },
             "drupal/canvas": {
                 "#3568950: Let the agent know that the tools were succesful": "https://git.drupalcode.org/project/canvas/-/merge_requests/493.patch"
+            },
+            "drupal/flowdrop": {
+                "Node type API routes declare {plugin_id} but the controllers take $node_type_id, so /nodes/{id}/metadata and /validate return 500": "patches/flowdrop-node-type-api-route-placeholder.patch"
             }
         }
     },
