@@ -143,9 +143,35 @@ final class AiReviewForm extends FormBase {
         '#button_type' => 'primary',
         '#ajax' => $this->ajaxAction($this->aiProgressMessage($this->t('Analyzing the content against the 10 EU guidelines… (~30s)'))),
       ];
+      // Rendered as a Gin info message; the icon is drawn by Gin on
+      // .messages__header:before, so the full Claro inner structure
+      // (header + content) is required. Built as render arrays, NOT
+      // #markup — Xss::filterAdmin strips style attributes from #markup.
+      // role="note" keeps it out of the live-message noise.
       $form['rerun_help'] = [
-        '#markup' => '<p style="font-size: 0.85em; color: var(--gin-color-text-light, #55565b);">'
-          . $this->t('Takes about 30 seconds. Nothing is changed on your content until you apply a suggestion.') . '</p>',
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['messages', 'messages--info'],
+          'role' => 'note',
+          'style' => 'margin-top: 0.75em; max-width: 60em; font-size: 0.85em;',
+        ],
+        'header' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#attributes' => ['class' => ['messages__header']],
+          'title' => [
+            '#type' => 'html_tag',
+            '#tag' => 'h2',
+            '#attributes' => ['class' => ['messages__title', 'visually-hidden']],
+            '#value' => $this->t('Information'),
+          ],
+        ],
+        'content' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#attributes' => ['class' => ['messages__content']],
+          '#value' => $this->t('Takes about 30 seconds. Nothing is changed on your content until you apply a suggestion.'),
+        ],
       ];
     }
     if ($show_improve) {
@@ -305,7 +331,15 @@ final class AiReviewForm extends FormBase {
           '#type' => 'html_tag',
           '#tag' => 'p',
           '#value' => nl2br($this->escapeText($summary)),
-          '#attributes' => ['style' => 'max-width: 60em; margin: 0.75em 0 0;'],
+          // The grade color goes on the border and a faint background
+          // tint, never on the text itself: green/yellow body text on
+          // white fails WCAG contrast, inherited text color does not.
+          '#attributes' => [
+            'style' => 'max-width: 60em; margin: 0.75em 0 0; padding: 0.5em 0.75em;'
+              . ' border-left: 4px solid ' . $color . ';'
+              . ' background: color-mix(in srgb, ' . $color . ' 8%, transparent);'
+              . ' border-radius: 0 4px 4px 0;',
+          ],
         ]
         : [],
     ];
@@ -381,6 +415,7 @@ final class AiReviewForm extends FormBase {
     [, $workflow_id] = explode(':', $form_state->getTriggeringElement()['#name'], 2);
     $node = $this->loadNode($form_state);
     if ($node !== NULL) {
+      [$previous_score] = $this->acceptedScore($node);
       $this->startRun($node, $workflow_id);
       // Stamp the report this run just produced as an explicit manual run:
       // that flag is what unlocks the Improve content button. Reports from
@@ -394,7 +429,21 @@ final class AiReviewForm extends FormBase {
         $parsed = $this->parseResult((string) $report->get('field_validation_result')->value) ?? [];
         $parsed['manual_run'] = TRUE;
         $report->set('field_validation_result', json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-        if ((string) $report->get('field_validation_status')->value === 'pending') {
+        $new_score = is_numeric($parsed['score'] ?? NULL) ? (int) $parsed['score'] : NULL;
+        // No-regression guard: a re-validation may never silently replace
+        // an accepted score with a lower one (typical after applying AI
+        // improvements). The report stays pending — the editor sees why
+        // and can still accept the lower score deliberately.
+        if ($new_score !== NULL && $previous_score !== NULL && $new_score < $previous_score
+          && (string) $report->get('field_validation_status')->value === 'pending'
+        ) {
+          $report->save();
+          $this->messenger()->addWarning($this->t('The new validation scored @new/100, lower than the current @old/100 — the current content could not reach a better quality score, so the previous score is kept. You can still accept the lower score below.', [
+            '@new' => $new_score,
+            '@old' => $previous_score,
+          ]));
+        }
+        elseif ((string) $report->get('field_validation_status')->value === 'pending') {
           $this->acceptValidation($report);
         }
         else {
@@ -475,8 +524,8 @@ final class AiReviewForm extends FormBase {
     if ($grouped['superseded'] !== []) {
       $build['superseded'] = [
         '#type' => 'details',
-        '#title' => $this->t('Superseded (@count)', ['@count' => count($grouped['superseded'])]),
-        '#open' => FALSE,
+        '#title' => $this->t('Score history (@count)', ['@count' => count($grouped['superseded'])]),
+        '#open' => TRUE,
         '#weight' => $weight++,
       ] + $grouped['superseded'];
     }
@@ -591,7 +640,11 @@ final class AiReviewForm extends FormBase {
         '#name' => 'apply:' . $id,
         '#submit' => ['::applySuggestions'],
         '#button_type' => 'primary',
-        '#ajax' => $this->ajaxAction($this->t('Applying the changes…')),
+        // Deliberately NOT AJAX: applying changes the node revision, which
+        // flips the primary button from Improve content to Run validation.
+        // A full submit + redirect guarantees a fresh page state; the AJAX
+        // rebuild proved unreliable for that switch (same-second changed
+        // time comparisons).
       ];
     }
     elseif ($prepared !== []) {
@@ -725,6 +778,32 @@ final class AiReviewForm extends FormBase {
     if (is_numeric($score)) {
       $findings = 'Quality score: ' . (int) $score . '/100. ' . $findings;
     }
+    // Per-guideline scores tell the improver what is weak (fix it) and
+    // what already scores well (leave it alone) — see the workflow's
+    // non-regression rule. Named explicitly so the model never has to
+    // guess which number maps to which guideline.
+    if (is_array($parsed['scores'] ?? NULL) && $parsed['scores'] !== []) {
+      $names = [
+        1 => 'Accuracy & Evidence',
+        2 => 'Clarity & Plain Language',
+        3 => 'Neutrality & Objectivity',
+        4 => 'Source Transparency',
+        5 => 'Legal & Policy Consistency',
+        6 => 'Audience Relevance',
+        7 => 'Structure & Coherence',
+        8 => 'Completeness & Context',
+        9 => 'Inclusivity & Language Ethics',
+        10 => 'Practical Value',
+      ];
+      $lines = [];
+      foreach ($parsed['scores'] as $key => $value) {
+        if (isset($names[(int) $key]) && (is_numeric($value) || is_string($value))) {
+          $lines[] = $names[(int) $key] . ': ' . (is_numeric($value) ? ((int) $value . '/10') : $value);
+        }
+      }
+      $findings .= ' Per-guideline verdicts: ' . implode('; ', $lines)
+        . '. Concentrate ONLY on the guidelines marked major or fail (or scoring below 8); do not change anything marked pass or minor.';
+    }
     $form_state->setRebuild();
     if ($findings === '') {
       $this->messenger()->addWarning($this->t('This validation has no findings to improve from.'));
@@ -761,18 +840,37 @@ final class AiReviewForm extends FormBase {
         $current = $this->displayValue($this->currentNodeValue($node, $field));
       }
       $raw = $suggestion['suggested'] ?? '';
-      $suggested_raw = is_scalar($raw) ? (string) $raw : (string) json_encode($raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+      $suggested_raw = $this->normalizeKeyValueJson(is_scalar($raw) ? (string) $raw : (string) json_encode($raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+      // The improve model is told to OMIT fields it cannot edit without
+      // inventing content, but it sometimes emits them with an empty
+      // suggested value anyway — an empty "change" is never applicable,
+      // so drop the row instead of offering to blank a field.
+      if ($this->plainText($suggested_raw) === '') {
+        continue;
+      }
       $prepared['s' . $delta] = [
         'field' => $field,
         'label' => (string) ($suggestion['label'] ?? $field),
         'current' => $current,
-        'suggested_display' => $this->displayValue($raw),
+        'suggested_display' => $this->displayValue($suggested_raw),
         'suggested_raw' => $suggested_raw,
         'kind' => $this->valueKind($suggested_raw),
+        'format' => $this->fieldTextFormat($node, $field),
         'reason' => (string) ($suggestion['reason'] ?? ''),
       ];
     }
     return $prepared;
+  }
+
+  /**
+   * Reads the text format of a node field, when it has one.
+   */
+  private function fieldTextFormat(NodeInterface $node, string $field): ?string {
+    if ($field === '' || !$node->hasField($field)) {
+      return NULL;
+    }
+    $value = $node->get($field)->first()?->getValue() ?? [];
+    return isset($value['format']) ? (string) $value['format'] : NULL;
   }
 
   /**
@@ -798,29 +896,33 @@ final class AiReviewForm extends FormBase {
    *
    * Non-technical editors must never see raw JSON or HTML: JSON values get
    * one text field per key (re-encoded on apply, so the JSON can never
-   * break), HTML values are not editable here at all — apply, then refine
-   * in the content editor. Only plain text gets a free-form textarea.
+   * break), HTML values (body) get a rich-text editor pinned to the
+   * field's own text format, and plain text gets a free-form textarea.
    *
-   * @param array{suggested_raw: string, kind: string} $s
+   * @param array{suggested_raw: string, kind: string, format: string|null} $s
    *   One prepared suggestion.
    *
    * @return array<string, mixed>
    *   Render/form array for the edit control.
    */
   private function buildEditControl(array $s): array {
-    if ($s['kind'] === 'html') {
-      return [
-        '#type' => 'html_tag',
-        '#tag' => 'p',
-        '#value' => $this->t('This suggestion contains formatting and cannot be edited here. Apply it, then refine the text in the content editor.'),
-        '#attributes' => ['style' => 'font-size: 0.85em; color: var(--gin-color-text-light, #55565b); margin: 0.5em 0 0;'],
-      ];
-    }
     $edit = [
       '#type' => 'details',
       '#title' => $this->t('Edit suggestion'),
       '#open' => FALSE,
     ];
+    if ($s['kind'] === 'html') {
+      $format = $s['format'] ?: 'basic_html';
+      $edit['value'] = [
+        '#type' => 'text_format',
+        '#format' => $format,
+        '#allowed_formats' => [$format],
+        '#default_value' => $s['suggested_raw'],
+        '#rows' => 8,
+        '#description' => $this->t('Your edited text replaces the AI suggestion when applied.'),
+      ];
+      return $edit;
+    }
     if ($s['kind'] === 'json') {
       foreach (json_decode($s['suggested_raw'], TRUE) as $key => $item) {
         if (!is_scalar($item)) {
@@ -889,6 +991,34 @@ final class AiReviewForm extends FormBase {
       '#markup' => Markup::create('<div style="background: #ffebe9; ' . $line . '4px 4px 0 0;">− ' . $del . '</div>'
         . '<div style="background: #e6ffec; ' . $line . '0 0 4px 4px;">+ ' . $ins . '</div>'),
     ];
+  }
+
+  /**
+   * Converts a JSON list of {key, value} pairs into a plain JSON object.
+   *
+   * The improve model sometimes serializes meta tags as
+   * [{"key":"title","value":"…"}, …] instead of {"title":"…"} — usually
+   * when the current value is empty and gives it no format to mirror.
+   * The stored metatag format is the object shape, so normalize before
+   * display, edit and apply. Anything else passes through unchanged.
+   */
+  private function normalizeKeyValueJson(string $raw): string {
+    $trimmed = ltrim($raw);
+    if (!str_starts_with($trimmed, '[')) {
+      return $raw;
+    }
+    $decoded = json_decode($trimmed, TRUE);
+    if (!is_array($decoded) || $decoded === []) {
+      return $raw;
+    }
+    $assoc = [];
+    foreach ($decoded as $item) {
+      if (!is_array($item) || !is_scalar($item['key'] ?? NULL) || !is_scalar($item['value'] ?? NULL)) {
+        return $raw;
+      }
+      $assoc[(string) $item['key']] = $item['value'];
+    }
+    return (string) json_encode($assoc, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
   }
 
   /**
@@ -1061,10 +1191,12 @@ final class AiReviewForm extends FormBase {
       // back to the AI suggestion so a stray clear never wipes a value.
       // JSON suggestions come back as per-key fields and are re-encoded
       // here, so the serialized value can never be malformed. HTML
-      // suggestions have no edit control and always apply as suggested.
-      $suggested_raw = is_scalar($suggestion['suggested'])
+      // suggestions come back from a text_format element as
+      // {value, format} — only the value is applied (the field keeps its
+      // stored format).
+      $suggested_raw = $this->normalizeKeyValueJson(is_scalar($suggestion['suggested'])
         ? (string) $suggestion['suggested']
-        : (string) json_encode($suggestion['suggested'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        : (string) json_encode($suggestion['suggested'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
       $value = $suggested_raw;
       $edit = $row['change']['edit'] ?? [];
       if (is_array($edit['json'] ?? NULL)) {
@@ -1076,8 +1208,19 @@ final class AiReviewForm extends FormBase {
         }
         $value = (string) json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
       }
-      elseif (trim((string) ($edit['value'] ?? '')) !== '') {
-        $value = trim((string) $edit['value']);
+      else {
+        $edited = $edit['value'] ?? '';
+        if (is_array($edited)) {
+          $edited = $edited['value'] ?? '';
+        }
+        if (trim((string) $edited) !== '') {
+          $value = trim((string) $edited);
+        }
+      }
+      // Never blank a field: an empty replacement value is a model
+      // mistake (skipped-field contract), not an instruction to clear.
+      if ($this->plainText($value) === '') {
+        continue;
       }
       if ($this->applyToNode($node, (string) $suggestion['field'], $value, (string) ($suggestion['current'] ?? ''))) {
         $applied[] = $suggestion['label'] ?? $suggestion['field'];
@@ -1127,7 +1270,8 @@ final class AiReviewForm extends FormBase {
     else {
       $this->messenger()->addWarning($this->t('No changes were applied.'));
     }
-    $form_state->setRebuild();
+    // No setRebuild(): the non-AJAX submit redirects back to this page, so
+    // the button state is rebuilt from scratch on a fresh GET.
   }
 
   /**
