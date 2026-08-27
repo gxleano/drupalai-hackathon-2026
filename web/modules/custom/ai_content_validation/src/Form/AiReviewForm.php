@@ -839,8 +839,7 @@ final class AiReviewForm extends FormBase {
       if ($current === '') {
         $current = $this->displayValue($this->currentNodeValue($node, $field));
       }
-      $raw = $suggestion['suggested'] ?? '';
-      $suggested_raw = $this->normalizeKeyValueJson(is_scalar($raw) ? (string) $raw : (string) json_encode($raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+      $suggested_raw = $this->rawValue($suggestion['suggested'] ?? '');
       // The improve model is told to OMIT fields it cannot edit without
       // inventing content, but it sometimes emits them with an empty
       // suggested value anyway — an empty "change" is never applicable,
@@ -991,6 +990,19 @@ final class AiReviewForm extends FormBase {
       '#markup' => Markup::create('<div style="background: #ffebe9; ' . $line . '4px 4px 0 0;">− ' . $del . '</div>'
         . '<div style="background: #e6ffec; ' . $line . '0 0 4px 4px;">+ ' . $ins . '</div>'),
     ];
+  }
+
+  /**
+   * Normalizes a model-sent value (scalar or array) to a string.
+   *
+   * Arrays are JSON-encoded (never cast — casting an array to string is a
+   * PHP warning and yields the literal "Array"), and key/value-pair lists
+   * are normalized to the stored object shape.
+   */
+  private function rawValue(mixed $value): string {
+    return $this->normalizeKeyValueJson(is_scalar($value)
+      ? (string) $value
+      : (string) json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
   }
 
   /**
@@ -1194,9 +1206,7 @@ final class AiReviewForm extends FormBase {
       // suggestions come back from a text_format element as
       // {value, format} — only the value is applied (the field keeps its
       // stored format).
-      $suggested_raw = $this->normalizeKeyValueJson(is_scalar($suggestion['suggested'])
-        ? (string) $suggestion['suggested']
-        : (string) json_encode($suggestion['suggested'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+      $suggested_raw = $this->rawValue($suggestion['suggested']);
       $value = $suggested_raw;
       $edit = $row['change']['edit'] ?? [];
       if (is_array($edit['json'] ?? NULL)) {
@@ -1222,7 +1232,7 @@ final class AiReviewForm extends FormBase {
       if ($this->plainText($value) === '') {
         continue;
       }
-      if ($this->applyToNode($node, (string) $suggestion['field'], $value, (string) ($suggestion['current'] ?? ''))) {
+      if ($this->applyToNode($node, (string) $suggestion['field'], $value, $this->rawValue($suggestion['current'] ?? ''))) {
         $applied[] = $suggestion['label'] ?? $suggestion['field'];
         $applied_fields[] = (string) $suggestion['field'];
         // Store what was ACTUALLY applied, so the done item's diff shows
