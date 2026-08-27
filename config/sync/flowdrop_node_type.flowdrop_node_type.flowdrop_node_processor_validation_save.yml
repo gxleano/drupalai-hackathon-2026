@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   module:
+    - ai_content_validation
     - flowdrop_node_processor
 id: flowdrop_node_processor_validation_save
 label: 'Save Validation'
@@ -57,7 +58,7 @@ outputs:
   uuid:
     exposed: false
 tags: {  }
-executor_plugin: 'flowdrop_node_processor:entity_save'
+executor_plugin: 'ai_content_validation:validation_save'
 visual_type: default
 supported_visual_types:
   - default

@@ -4,24 +4,20 @@ status: true
 dependencies:
   config:
     - flowdrop_node_type.flowdrop_node_type.ai_content_validation_normalize
-    - flowdrop_node_type.flowdrop_node_type.chat_output
-    - flowdrop_node_type.flowdrop_node_type.choice_input
     - flowdrop_node_type.flowdrop_node_type.data_to_json
     - flowdrop_node_type.flowdrop_node_type.echack_flowdrop_node_session_content_context
     - flowdrop_node_type.flowdrop_node_type.flowdrop_ai_provider_chat
     - flowdrop_node_type.flowdrop_node_type.flowdrop_node_processor_validation_save
     - flowdrop_node_type.flowdrop_node_type.json_to_data
-    - flowdrop_node_type.flowdrop_node_type.prompt_template
-    - flowdrop_node_type.flowdrop_node_type.switch_gateway
 id: content_validation_fixer
-label: 'Content Validation Fixer'
-description: 'This workflow will fix the content based on demand validation.'
+label: 'AI Validation'
+description: 'Validates an article against the 10 EU content guidelines in one pass: quality score, summary, factual corrections and full improved field values as appliable suggestions.'
 nodes:
   -
     id: echack_flowdrop_node_session_content_context.1
     position:
       x: 0
-      'y': -120
+      'y': 0
     data:
       label: 'Content Context'
       config:
@@ -38,244 +34,10 @@ nodes:
       width: 290
       height: 203
   -
-    id: flowdrop_ai_provider_chat.2
-    position:
-      x: 2660
-      'y': -340
-    data:
-      label: Chat
-      config:
-        model: mistral-large-latest
-        temperature: 0.7
-        maxTokens: 4000
-        systemPrompt: |-
-          You are a JSON generator. Output ONLY valid JSON. No text, no markdown, no code fences, no explanation. Start your response with { and end with }.
-
-          NEVER include hyperlinks, URLs, <a> tags, or markdown links anywhere in your output - name sources in plain text instead (e.g. "(EFSA, 2023)").
-
-          TASK:
-          You are an expert content editor specializing in European Commission content standards. Rewrite the provided article so it meets all 10 EU Commission content standards (citations from official EU sources, plain language, neutrality, source attribution, legal/policy consistency with EU treaties, structure and coherence, context and completeness, inclusive gender-neutral language, practical value, SEO). Propose the improved values as suggestions - do not describe them, write the full improved values.
-
-          IMPORTANT: Extract these values from the input data: title (the "title" field), nid (the "id" field as an INTEGER), vid (inside "fields" then "vid" then first array element then "value", as an INTEGER).
-
-          Example output format: {"label":"Assistance (Improve): Article Title Here","status":true,"description":"AI content improvement","field_flowdrop_workflow":"content_validation_fixer","field_content_revision":{"target_id":123,"target_revision_id":456},"field_validation_status":"pending","field_validation_result":{"summary":"One short paragraph describing the improvements made.","suggestions":[{"field":"title","label":"Title","current":"exact current value","suggested":"improved full replacement value","reason":"which standard this addresses and why"},{"field":"field_body","label":"Body","current":"current HTML","suggested":"full improved HTML content","reason":"..."}]}}
-
-          CRITICAL rules:
-          - field_validation_result MUST be a JSON OBJECT with exactly two keys: "summary" and "suggestions".
-          - Each suggestion "field" MUST be the machine name of a field present in the input (e.g. "title", "field_body"). "suggested" MUST be the complete improved value for that field, not a diff. For field_body use full HTML.
-          - target_id and target_revision_id MUST be integers (not arrays, not null). If you cannot find the id, use 0.
-
-          OUTPUT ONLY THE JSON. START YOUR RESPONSE WITH { AND END WITH }
-        instanceTitle: 'Content Improver AI'
-        instanceDescription: ''
-      metadata:
-        node_type_id: flowdrop_ai_provider_chat
-      extensions:
-        ui:
-          hideUnconnectedHandles: false
-    measured:
-      width: 290
-      height: 410
-  -
-    id: prompt_template.3
-    position:
-      x: 2240
-      'y': -80
-    data:
-      label: 'Prompt Template'
-      config:
-        template: |-
-          Improve this article according to EU Commission content standards. Follow the output format from your instructions exactly.
-
-          Article data (JSON):
-          - id: {{ id }}
-          - title: {{ title }}
-          - revision id (vid): {{ fields.vid[0].value }}
-          - Current Body:
-          {% if field_body %}
-          {{ field_body[0].value|raw }}
-          {% else %}
-          [No body content]
-          {% endif %}
-          - Current Meta Tags: {{ field_metatags }}
-        nodeType: simple
-        instanceTitle: ''
-        instanceDescription: ''
-      metadata:
-        node_type_id: prompt_template
-      extensions:
-        ui:
-          hideUnconnectedHandles: false
-    measured:
-      width: 290
-      height: 106
-  -
-    id: choice_input.1
-    position:
-      x: 940
-      'y': 120
-    data:
-      label: 'Choice Input'
-      config:
-        message: ''
-        options:
-          -
-            value: validate
-            label: 'Run Validation'
-            description: ''
-          -
-            value: improve
-            label: 'Improve Article'
-            description: ''
-        multiple: false
-        min_selections: 1
-        nodeType: default
-        instanceTitle: 'Ask User what they want to do'
-        instanceDescription: 'Validate, or Improve?'
-      metadata:
-        node_type_id: choice_input
-      extensions:
-        ui:
-          hideUnconnectedHandles: true
-    measured:
-      width: 290
-      height: 272
-  -
-    id: prompt_template.6
-    position:
-      x: 500
-      'y': 120
-    data:
-      label: 'Prompt Template'
-      config:
-        template: 'You have selected "{{ title }} ({{ id }})". What do you want to do?'
-        nodeType: simple
-      metadata:
-        node_type_id: prompt_template
-      extensions:
-        ui:
-          hideUnconnectedHandles: false
-    measured:
-      width: 290
-      height: 106
-  -
-    id: switch_gateway.1
-    position:
-      x: 1360
-      'y': 220
-    data:
-      label: 'Switch Gateway'
-      config:
-        default_branch: default
-        branches:
-          -
-            name: Default
-            value: default
-          -
-            name: improve
-            value: improve
-          -
-            name: validate
-            value: validate
-      metadata:
-        node_type_id: switch_gateway
-      extensions:
-        ui:
-          hideUnconnectedHandles: false
-    measured:
-      width: 290
-      height: 389
-  -
-    id: flowdrop_ai_provider_chat.3
-    position:
-      x: 2480
-      'y': 640
-    data:
-      label: Chat
-      config:
-        model: mistral-large-latest
-        temperature: 0.7
-        maxTokens: 4000
-        systemPrompt: |
-          You are a JSON generator. Output ONLY valid JSON. No text, no markdown, no code fences, no explanation. Start your response with { and end with }.
-
-          NEVER include hyperlinks, URLs, <a> tags, or markdown links anywhere in your output - name sources in plain text instead (e.g. "(EFSA, 2023)").
-
-          TASK:
-          You are an expert content validator specializing in European Commission content standards. Analyze the provided article against the 10 EU Commission content standards (citations from official EU sources, plain language, neutrality, source attribution, legal/policy consistency with EU treaties, structure and coherence, context and completeness, inclusive gender-neutral language, practical value, SEO).
-
-          IMPORTANT: Extract these values from the input data: title (the "title" field), nid (the "id" field as an INTEGER), vid (inside "fields" then "vid" then first array element then "value", as an INTEGER).
-
-          Example output format: {"label":"Assistance: Article Title Here","status":true,"description":"AI content standards review","field_flowdrop_workflow":"content_validation_fixer","field_content_revision":{"target_id":123,"target_revision_id":456},"field_validation_status":"pending","field_validation_result":{"summary":"One short paragraph summarizing how the article measures against the EU content standards.","suggestions":[{"field":"title","label":"Title","current":"exact current value","suggested":"improved full replacement value","reason":"which standard this addresses and why"}]}}
-
-          CRITICAL rules:
-          - field_validation_result MUST be a JSON OBJECT with exactly two keys: "summary" and "suggestions".
-          - Each suggestion "field" MUST be the machine name of a field present in the input (e.g. "title", "field_body"). "suggested" MUST be the complete corrected value for that field, not a diff. For field_body use full HTML.
-          - Only add suggestions for standards the article actually fails. If the article meets all standards, use an empty suggestions array and say so in the summary.
-          - target_id and target_revision_id MUST be integers (not arrays, not null). If you cannot find the id, use 0.
-
-          OUTPUT ONLY THE JSON. START YOUR RESPONSE WITH { AND END WITH }
-      metadata:
-        node_type_id: flowdrop_ai_provider_chat
-      extensions:
-        ui:
-          hideUnconnectedHandles: false
-    measured:
-      width: 290
-      height: 410
-  -
-    id: json_to_data.5
-    position:
-      x: 2980
-      'y': 560
-    data:
-      label: 'Parse Validation JSON'
-      config:
-        parse_mode: tolerant
-      metadata:
-        node_type_id: json_to_data
-  -
-    id: ai_content_validation_normalize.1
-    position:
-      x: 3320
-      'y': 560
-    data:
-      label: 'Normalize Values'
-      config: {  }
-      metadata:
-        node_type_id: ai_content_validation_normalize
-  -
-    id: flowdrop_node_processor_validation_save.1
-    position:
-      x: 3660
-      'y': 560
-    data:
-      label: 'Save Validation'
-      config:
-        entity_type: ai_content_validation_item
-      metadata:
-        node_type_id: flowdrop_node_processor_validation_save
-  -
-    id: chat_output.3
-    position:
-      x: 2980
-      'y': 820
-    data:
-      label: 'Chat Output'
-      config:
-        format: text
-        showTimestamp: false
-        nodeType: simple
-      metadata:
-        node_type_id: chat_output
-    measured:
-      width: 290
-      height: 91
-  -
     id: data_to_json.1
     position:
-      x: 1980
-      'y': 580
+      x: 400
+      'y': 0
     data:
       label: 'Data to JSON'
       config:
@@ -289,177 +51,102 @@ nodes:
       width: 290
       height: 489
   -
-    id: chat_output.4
+    id: flowdrop_ai_provider_chat.3
     position:
-      x: 1860
-      'y': 60
-    data:
-      label: 'Chat Output'
-      config:
-        format: text
-        showTimestamp: false
-        nodeType: simple
-      metadata:
-        node_type_id: chat_output
-    measured:
-      width: 290
-      height: 91
-  -
-    id: prompt_template.7
-    position:
-      x: 1360
+      x: 800
       'y': 0
     data:
-      label: 'Prompt Template'
+      label: Chat
       config:
-        template: |-
-          # NOTICE
+        model: mistral-medium-latest
+        temperature: 0
+        maxTokens: 1000
+        systemPrompt: |
+          You are a JSON generator. Output ONLY valid JSON. No text, no markdown, no code fences, no explanation. Start your response with { and end with }.
 
-          Automatic Tagging assistance has been disabled temporarily because of adverse performance.
+          NEVER include hyperlinks, URLs, <a> tags, or markdown links anywhere in your output - name sources in plain text instead (e.g. "(EFSA, 2023)").
 
-          > This is just an example message.
-        nodeType: simple
+          TASK:
+          You are an expert content validator specializing in European Commission content standards. Analyze the provided article against the 10 EU content guidelines:
+          1. Accuracy & Evidence
+          2. Clarity & Plain Language
+          3. Neutrality & Objectivity
+          4. Source Transparency
+          5. Legal & Policy Consistency
+          6. Audience Relevance
+          7. Structure & Coherence
+          8. Completeness & Context
+          9. Inclusivity & Language Ethics
+          10. Practical Value
+
+          SCORING RUBRIC (follow exactly — the score must be reproducible):
+          Score each of the 10 guidelines from 0 to 10 using these anchors:
+          - 10 = fully compliant, no issues
+          - 8 = minor wording/style issues only
+          - 5 = notable problems that need fixing
+          - 2 = serious violation
+          - 0 = guideline completely failed (e.g. the content for it is missing)
+          Hard caps: a confirmed factual error (wrong date, number, name, attribution) caps guideline 1 (Accuracy & Evidence) at 3, no matter how good the rest of that guideline is. Missing body content caps guidelines 7, 8 and 10 at 2.
+          The overall "score" MUST be exactly the SUM of the ten guideline scores (0-100). Report the ten guideline scores in the "scores" object so the sum is verifiable. Fact-check every verifiable claim (dates, names, numbers, attributions) as part of guideline 1.
+
+          You DIAGNOSE only — you never rewrite content. The "summary" must describe, in a few sentences, which guidelines the article fails and why (naming factual errors you found), so a later improvement pass can fix them.
+
+          IMPORTANT: Extract these values from the input data: title (the "title" field), nid (the "id" field as an INTEGER), vid (inside "fields" then "vid" then first array element then "value", as an INTEGER).
+
+          Example output format: {"label":"Validation: Article Title Here","status":true,"description":"AI content standards review","field_flowdrop_workflow":"content_validation_fixer","field_content_revision":{"target_id":123,"target_revision_id":456},"field_validation_status":"pending","field_validation_result":{"score":72,"scores":{"1":3,"2":8,"3":10,"4":5,"5":8,"6":10,"7":8,"8":5,"9":10,"10":5},"summary":"A few sentences describing which guidelines fail and why, naming concrete problems.","suggestions":[]}}
+
+          CRITICAL rules:
+          - field_validation_result MUST be a JSON OBJECT with exactly four keys: "score", "scores", "summary" and "suggestions".
+          - "scores" MUST be an object with keys "1" to "10", each an INTEGER 0-10.
+          - "score" MUST be an INTEGER equal to the sum of the ten "scores" values (never null, never a string).
+          - "suggestions" MUST ALWAYS be an empty array []. Never propose rewrites here.
+          - field_validation_status MUST be the string "pending".
+          - target_id and target_revision_id MUST be integers (not arrays, not null). If you cannot find the id, use 0.
+
+          OUTPUT ONLY THE JSON. START YOUR RESPONSE WITH { AND END WITH }
+        instanceTitle: 'Content Validator AI'
+        instanceDescription: ''
       metadata:
-        node_type_id: prompt_template
+        node_type_id: flowdrop_ai_provider_chat
       extensions:
         ui:
-          hideUnconnectedHandles: true
+          hideUnconnectedHandles: false
     measured:
       width: 290
-      height: 106
+      height: 410
+  -
+    id: json_to_data.5
+    position:
+      x: 1200
+      'y': 0
+    data:
+      label: 'Parse Validation JSON'
+      config:
+        parse_mode: tolerant
+      metadata:
+        node_type_id: json_to_data
+  -
+    id: ai_content_validation_normalize.1
+    position:
+      x: 1600
+      'y': 0
+    data:
+      label: 'Normalize Values'
+      config: {  }
+      metadata:
+        node_type_id: ai_content_validation_normalize
+  -
+    id: flowdrop_node_processor_validation_save.1
+    position:
+      x: 2000
+      'y': 0
+    data:
+      label: 'Save Validation'
+      config:
+        entity_type: ai_content_validation_item
+      metadata:
+        node_type_id: flowdrop_node_processor_validation_save
 edges:
-  -
-    id: xy-edge__prompt_template.3prompt_template.3-output-prompt-flowdrop_ai_provider_chat.2flowdrop_ai_provider_chat.2-input-message
-    source: prompt_template.3
-    target: flowdrop_ai_provider_chat.2
-    data:
-      targetNodeType: universalNode
-      targetCategory: ai
-      metadata:
-        edgeType: data
-        sourcePortDataType: string
-    sourceHandle: prompt_template.3-output-prompt
-    targetHandle: flowdrop_ai_provider_chat.2-input-message
-    style: 'stroke: var(--fd-edge-data);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#a3a3ad'
-    class: flowdrop--edge--data
-  -
-    id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity-prompt_template.3prompt_template.3-input-variables
-    source: echack_flowdrop_node_session_content_context.1
-    target: prompt_template.3
-    data:
-      targetNodeType: universalNode
-      targetCategory: prompts
-      metadata:
-        edgeType: data
-        sourcePortDataType: json
-    sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity
-    targetHandle: prompt_template.3-input-variables
-    style: 'stroke: var(--fd-edge-data);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#a3a3ad'
-    class: flowdrop--edge--data
-  -
-    id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity-prompt_template.6prompt_template.6-input-variables
-    source: echack_flowdrop_node_session_content_context.1
-    target: prompt_template.6
-    data:
-      targetNodeType: universalNode
-      targetCategory: prompts
-      metadata:
-        edgeType: data
-        sourcePortDataType: json
-    sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity
-    targetHandle: prompt_template.6-input-variables
-    style: 'stroke: var(--fd-edge-data);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#a3a3ad'
-    class: flowdrop--edge--data
-  -
-    id: xy-edge__prompt_template.6prompt_template.6-output-prompt-choice_input.1choice_input.1-input-message
-    source: prompt_template.6
-    target: choice_input.1
-    data:
-      targetNodeType: universalNode
-      targetCategory: human_in_loop
-      metadata:
-        edgeType: data
-        sourcePortDataType: string
-    sourceHandle: prompt_template.6-output-prompt
-    targetHandle: choice_input.1-input-message
-    style: 'stroke: var(--fd-edge-data);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#a3a3ad'
-    class: flowdrop--edge--data
-  -
-    id: xy-edge__choice_input.1choice_input.1-output-selected-switch_gateway.1switch_gateway.1-input-expression
-    source: choice_input.1
-    target: switch_gateway.1
-    data:
-      targetNodeType: universalNode
-      targetCategory: logic
-      metadata:
-        edgeType: data
-        sourcePortDataType: mixed
-    sourceHandle: choice_input.1-output-selected
-    targetHandle: switch_gateway.1-input-expression
-    style: 'stroke: var(--fd-edge-data);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#a3a3ad'
-    class: flowdrop--edge--data
-  -
-    id: edge-chat3-json2
-    source: flowdrop_ai_provider_chat.3
-    target: json_to_data.5
-    sourceHandle: flowdrop_ai_provider_chat.3-output-response
-    targetHandle: json_to_data.5-input-json
-  -
-    id: edge-json2-normalize
-    source: json_to_data.5
-    target: ai_content_validation_normalize.1
-    sourceHandle: json_to_data.5-output-data
-    targetHandle: ai_content_validation_normalize.1-input-data
-  -
-    id: edge-normalize-validationsave
-    source: ai_content_validation_normalize.1
-    target: flowdrop_node_processor_validation_save.1
-    sourceHandle: ai_content_validation_normalize.1-output-values
-    targetHandle: flowdrop_node_processor_validation_save.1-input-values
-  -
-    id: xy-edge__flowdrop_ai_provider_chat.3flowdrop_ai_provider_chat.3-output-response-chat_output.3chat_output.3-input-message
-    source: flowdrop_ai_provider_chat.3
-    target: chat_output.3
-    data:
-      targetNodeType: universalNode
-      targetCategory: processing
-      metadata:
-        edgeType: data
-        sourcePortDataType: string
-    sourceHandle: flowdrop_ai_provider_chat.3-output-response
-    targetHandle: chat_output.3-input-message
-    style: 'stroke: var(--fd-edge-data);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#a3a3ad'
-    class: flowdrop--edge--data
   -
     id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity-data_to_json.1data_to_json.1-input-data
     source: echack_flowdrop_node_session_content_context.1
@@ -499,87 +186,23 @@ edges:
       color: '#a3a3ad'
     class: flowdrop--edge--data
   -
-    id: xy-edge__switch_gateway.1switch_gateway.1-output-validate-flowdrop_ai_provider_chat.3flowdrop_ai_provider_chat.3-input-trigger
-    source: switch_gateway.1
-    target: flowdrop_ai_provider_chat.3
-    data:
-      targetNodeType: universalNode
-      targetCategory: ai
-      metadata:
-        edgeType: trigger
-        sourcePortDataType: trigger
-    sourceHandle: switch_gateway.1-output-validate
-    targetHandle: flowdrop_ai_provider_chat.3-input-trigger
-    style: 'stroke: var(--fd-edge-trigger); stroke-width: var(--fd-edge-trigger-width);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#18181c'
-    class: flowdrop--edge--trigger
-  -
-    id: xy-edge__switch_gateway.1switch_gateway.1-output-improve-chat_output.4chat_output.4-input-trigger
-    source: switch_gateway.1
-    target: chat_output.4
-    data:
-      targetNodeType: universalNode
-      targetCategory: processing
-      metadata:
-        edgeType: trigger
-        sourcePortDataType: trigger
-    sourceHandle: switch_gateway.1-output-improve
-    targetHandle: chat_output.4-input-trigger
-    style: 'stroke: var(--fd-edge-trigger); stroke-width: var(--fd-edge-trigger-width);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#18181c'
-    class: flowdrop--edge--trigger
-  -
-    id: xy-edge__prompt_template.7prompt_template.7-output-prompt-chat_output.4chat_output.4-input-message
-    source: prompt_template.7
-    target: chat_output.4
-    data:
-      targetNodeType: universalNode
-      targetCategory: processing
-      metadata:
-        edgeType: data
-        sourcePortDataType: string
-    sourceHandle: prompt_template.7-output-prompt
-    targetHandle: chat_output.4-input-message
-    style: 'stroke: var(--fd-edge-data);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#a3a3ad'
-    class: flowdrop--edge--data
-  -
-    id: xy-edge__chat_output.4chat_output.4-output-trigger-prompt_template.3prompt_template.3-input-trigger
-    source: chat_output.4
-    target: prompt_template.3
-    data:
-      targetNodeType: universalNode
-      targetCategory: prompts
-      metadata:
-        edgeType: trigger
-        sourcePortDataType: trigger
-    sourceHandle: chat_output.4-output-trigger
-    targetHandle: prompt_template.3-input-trigger
-    style: 'stroke: var(--fd-edge-trigger); stroke-width: var(--fd-edge-trigger-width);'
-    markerEnd:
-      type: arrowclosed
-      width: 16
-      height: 16
-      color: '#18181c'
-    class: flowdrop--edge--trigger
-  -
-    id: edge-chat2-json5
-    source: flowdrop_ai_provider_chat.2
+    id: edge-chat3-json2
+    source: flowdrop_ai_provider_chat.3
     target: json_to_data.5
-    sourceHandle: flowdrop_ai_provider_chat.2-output-response
+    sourceHandle: flowdrop_ai_provider_chat.3-output-response
     targetHandle: json_to_data.5-input-json
+  -
+    id: edge-json2-normalize
+    source: json_to_data.5
+    target: ai_content_validation_normalize.1
+    sourceHandle: json_to_data.5-output-data
+    targetHandle: ai_content_validation_normalize.1-input-data
+  -
+    id: edge-normalize-validationsave
+    source: ai_content_validation_normalize.1
+    target: flowdrop_node_processor_validation_save.1
+    sourceHandle: ai_content_validation_normalize.1-output-values
+    targetHandle: flowdrop_node_processor_validation_save.1-input-values
 metadata:
   version: 1.0.0
   createdAt: '2026-01-28T09:01:32.652Z'

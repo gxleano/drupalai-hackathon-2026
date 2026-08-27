@@ -21,7 +21,7 @@ entity.ai_content_validation_item.collection:
   base_route: system.admin_content
   weight: 10
 ai_content_validation.node_review:
-  title: 'AI Review'
+  title: 'AI Validation'
   route_name: ai_content_validation.node_review
   base_route: entity.node.canonical
   weight: 12

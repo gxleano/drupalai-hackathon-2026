@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   module:
+    - ai_content_validation
     - node
     - user
 _core:
@@ -262,6 +263,15 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
+        ai_quality_score:
+          id: ai_quality_score
+          table: node_field_data
+          field: ai_quality_score
+          relationship: none
+          plugin_id: ai_quality_score
+          label: 'Quality Score'
+          exclude: false
+          element_default_classes: true
         operations:
           id: operations
           table: node

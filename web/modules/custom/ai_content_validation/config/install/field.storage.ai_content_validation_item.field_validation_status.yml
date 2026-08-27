@@ -19,6 +19,9 @@ settings:
     -
       value: ignored
       label: Ignored
+    -
+      value: superseded
+      label: Superseded
   allowed_values_function: ''
 module: options
 locked: false

@@ -11,8 +11,11 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
 use Drupal\user\UserInterface;
+use Drupal\views\ViewExecutable;
 
 /**
  * Implements hook_theme().
@@ -45,7 +48,7 @@ function template_preprocess_ai_content_validation_item(array &$variables): void
  * Implements hook_entity_operation_alter().
  *
  * Replaces the per-workflow playground operations added by
- * flowdrop_node_session with a single "AI Review" link to the review page,
+ * flowdrop_node_session with a single "AI Validation" link to the review page,
  * where workflows are run and their suggestions can be applied.
  */
 function ai_content_validation_entity_operation_alter(array &$operations, EntityInterface $entity): void {
@@ -61,7 +64,7 @@ function ai_content_validation_entity_operation_alter(array &$operations, Entity
   }
   if ($replaced) {
     $operations['ai_review'] = [
-      'title' => t('AI Review'),
+      'title' => t('AI Validation'),
       'url' => Url::fromRoute('ai_content_validation.node_review', ['node' => $entity->id()]),
       'weight' => 50,
     ];
@@ -144,5 +147,132 @@ function ai_content_validation_user_predelete(UserInterface $account): void {
     ->execute();
   $storage->delete(
     $storage->loadMultiple($ai_content_validation_item_ids)
+  );
+}
+
+/**
+ * Implements hook_views_pre_render().
+ *
+ * Looks up pending AI validation counts for all nodes in the content
+ * overview in one aggregated query, and attaches the validation list cache
+ * tag so the view refreshes when validations change.
+ */
+function ai_content_validation_views_pre_render(ViewExecutable $view): void {
+  if ($view->id() !== 'content') {
+    return;
+  }
+  $nids = [];
+  foreach ($view->result as $row) {
+    $entity = $row->_entity ?? NULL;
+    if ($entity instanceof NodeInterface) {
+      $nids[] = (int) $entity->id();
+    }
+  }
+  $counts = &drupal_static('ai_content_validation_pending_counts', []);
+  $scores = &drupal_static('ai_content_validation_latest_scores', []);
+  if ($nids !== []) {
+    $storage = \Drupal::entityTypeManager()->getStorage('ai_content_validation_item');
+    $results = $storage->getAggregateQuery()
+      // System-wide indicator, not user-scoped data.
+      ->accessCheck(FALSE)
+      ->condition('field_content_revision.target_id', $nids, 'IN')
+      ->condition('field_validation_status', 'pending')
+      ->groupBy('field_content_revision.target_id')
+      ->aggregate('id', 'COUNT')
+      ->execute();
+    foreach ($results as $result) {
+      $nid = (int) ($result['field_content_revision_target_id'] ?? 0);
+      $counts[$nid] = (int) ($result['id_count'] ?? 0);
+    }
+
+    // Newest accepted quality score per node: only done items count — a
+    // pending score is provisional until the editor accepts it, ignored
+    // and superseded ones never apply. The score lives inside the JSON
+    // result field, so items are loaded and parsed; newest-first order
+    // means the first parsable score per node wins.
+    $ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('field_content_revision.target_id', $nids, 'IN')
+      ->condition('field_validation_status', 'done')
+      ->sort('created', 'DESC')
+      ->range(0, 200)
+      ->execute();
+    $items = $storage->loadMultiple($ids);
+    foreach ($ids as $id) {
+      $item = $items[$id] ?? NULL;
+      if ($item === NULL) {
+        continue;
+      }
+      $nid = (int) ($item->get('field_content_revision')->target_id ?? 0);
+      if ($nid === 0 || isset($scores[$nid])) {
+        continue;
+      }
+      $decoded = json_decode((string) ($item->get('field_validation_result')->value ?? ''), TRUE);
+      if (is_string($decoded)) {
+        $decoded = json_decode($decoded, TRUE);
+      }
+      $score = is_array($decoded) ? ($decoded['score'] ?? NULL) : NULL;
+      if (is_numeric($score)) {
+        $scores[$nid] = (int) $score;
+      }
+    }
+  }
+  $view->element['#cache']['tags'][] = 'ai_content_validation_item_list';
+}
+
+/**
+ * Implements hook_views_data_alter().
+ *
+ * Exposes the AI quality score donut as a views field on nodes, used by
+ * the Quality Score column in the content overview.
+ */
+function ai_content_validation_views_data_alter(array &$data): void {
+  $data['node_field_data']['ai_quality_score'] = [
+    'title' => t('AI Quality Score'),
+    'help' => t('Latest AI validation quality score as a colored donut ring.'),
+    'field' => [
+      'id' => 'ai_quality_score',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for views-view-field.html.twig.
+ *
+ * Appends a warning icon after the title in the content overview when the
+ * node has pending AI validations. Hovering shows the count, clicking goes
+ * to the node's AI Validation page.
+ */
+function ai_content_validation_preprocess_views_view_field(array &$variables): void {
+  if ($variables['view']->id() !== 'content' || $variables['field']->field !== 'title') {
+    return;
+  }
+  $entity = $variables['row']->_entity ?? NULL;
+  if (!$entity instanceof NodeInterface) {
+    return;
+  }
+  $counts = drupal_static('ai_content_validation_pending_counts', []);
+  $count = $counts[(int) $entity->id()] ?? 0;
+  if ($count === 0) {
+    return;
+  }
+
+  $info = \Drupal::translation()->formatPlural(
+    $count,
+    '1 pending AI validation needs your attention — click to review.',
+    '@count pending AI validations need your attention — click to review.'
+  );
+  $url = Url::fromRoute('ai_content_validation.node_review', ['node' => $entity->id()])->toString();
+  // The Gin status-report warning octagon: its sprite masked over the theme
+  // warning color, mirroring .system-status-report__status-icon--warning.
+  $sprite = '/' . \Drupal::service('extension.list.theme')->getPath('gin') . '/dist/media/sprite.svg#warning-view';
+  $mask = 'mask-image: url(' . $sprite . '); mask-repeat: no-repeat; mask-position: center; mask-size: 16px;';
+  $icon = '<span style="display: inline-block; width: 16px; height: 16px; vertical-align: text-bottom;'
+    . ' background-color: var(--gin-color-warning, #e29700);'
+    . ' -webkit-' . $mask . ' ' . $mask . '"></span>';
+  $variables['output'] = Markup::create(
+    (string) $variables['output']
+    . ' <a href="' . Html::escape($url) . '" title="' . Html::escape((string) $info) . '"'
+    . ' aria-label="' . Html::escape((string) $info) . '" style="text-decoration: none;">' . $icon . '</a>'
   );
 }

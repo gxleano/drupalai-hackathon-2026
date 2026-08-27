@@ -4,16 +4,48 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_validation;
 
-use Drupal\user\UserInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
-use Drupal\Core\Url;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Url;
+use Drupal\user\UserInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides a list controller for the ai validations entity type.
  */
 final class AiValidationsListBuilder extends EntityListBuilder {
+
+  /**
+   * Workflow labels keyed by workflow id, loaded once per request.
+   *
+   * @var array<string, string>|null
+   */
+  private ?array $workflowLabels = NULL;
+
+  public function __construct(
+    EntityTypeInterface $entity_type,
+    EntityStorageInterface $storage,
+    private readonly EntityStorageInterface $workflowStorage,
+    private readonly RequestStack $requestStack,
+  ) {
+    parent::__construct($entity_type, $storage);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): static {
+    return new static(
+      $entity_type,
+      $container->get('entity_type.manager')->getStorage($entity_type->id()),
+      $container->get('entity_type.manager')->getStorage('flowdrop_workflow'),
+      $container->get('request_stack'),
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -36,16 +68,8 @@ final class AiValidationsListBuilder extends EntityListBuilder {
     /** @var \Drupal\ai_content_validation\AiValidationsInterface $entity */
     $row['id'] = $entity->id();
 
-    // Get the workflow label with null safety.
-    $workflow = $entity->get('field_flowdrop_workflow')->getValue();
-    $flowdrop_id = $workflow[0]['target_id'] ?? '';
-    $workflow_label = '';
-    if ($flowdrop_id) {
-      $flowdrop = \Drupal::entityTypeManager()->getStorage('flowdrop_workflow')?->load($flowdrop_id);
-      // Only get label if the workflow entity exists.
-      $workflow_label = $flowdrop?->label() ?? '';
-    }
-    $row['workflow'] = $workflow_label;
+    $flowdrop_id = (string) ($entity->get('field_flowdrop_workflow')->target_id ?? '');
+    $row['workflow'] = $this->workflowLabels()[$flowdrop_id] ?? '';
 
     // Get entity label with fallback to prevent null link text.
     $entityLabel = $entity->label();
@@ -68,13 +92,29 @@ final class AiValidationsListBuilder extends EntityListBuilder {
   }
 
   /**
+   * Loads all workflow labels once instead of one query per row.
+   *
+   * @return array<string, string>
+   *   Labels keyed by workflow id. Workflows are config entities, so a
+   *   single loadMultiple() is cheap.
+   */
+  private function workflowLabels(): array {
+    if ($this->workflowLabels === NULL) {
+      $this->workflowLabels = array_map(
+        static fn ($workflow): string => (string) $workflow->label(),
+        $this->workflowStorage->loadMultiple(),
+      );
+    }
+    return $this->workflowLabels;
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function getDefaultOperations(EntityInterface $entity): array {
     $operations = parent::getDefaultOperations($entity);
 
-    $workflow = $entity->get('field_flowdrop_workflow')->getValue();
-    $flowdrop_id = $workflow[0]['target_id'] ?? '';
+    $flowdrop_id = (string) ($entity->get('field_flowdrop_workflow')->target_id ?? '');
 
     $revision = $entity->get('field_content_revision')->getValue();
     $target_id = $revision[0]['target_id'] ?? NULL;
@@ -108,7 +148,7 @@ final class AiValidationsListBuilder extends EntityListBuilder {
    */
   protected function getEntityListQuery(): QueryInterface {
     $query = parent::getEntityListQuery();
-    $flow = \Drupal::request()->query->get('flow');
+    $flow = $this->requestStack->getCurrentRequest()?->query->get('flow');
     if (!empty($flow)) {
       $query->condition('field_flowdrop_workflow.target_id', $flow);
     }

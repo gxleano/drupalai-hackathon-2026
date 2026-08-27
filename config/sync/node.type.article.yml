@@ -27,6 +27,6 @@ name: Article
 type: article
 description: 'Use this content type to create articles pages.'
 help: null
-new_revision: false
+new_revision: true
 preview_mode: 1
 display_submitted: false

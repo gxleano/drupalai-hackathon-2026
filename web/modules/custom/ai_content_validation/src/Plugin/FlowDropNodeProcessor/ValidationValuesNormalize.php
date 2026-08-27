@@ -62,8 +62,23 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
   public function process(ParameterBagInterface $params): array {
     $data = $params->getArray('data');
     if (isset($data['field_validation_result']) && is_array($data['field_validation_result'])) {
-      $data['field_validation_result'] = json_encode($data['field_validation_result'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+      $result = $data['field_validation_result'];
+      // The model judges per guideline (0-10 each) but is unreliable at
+      // adding them up: recompute the total mechanically so the score is
+      // always the exact sum of the rubric breakdown.
+      $scores = $result['scores'] ?? NULL;
+      if (is_array($scores) && count($scores) === 10) {
+        $numeric = array_filter($scores, 'is_numeric');
+        if (count($numeric) === 10) {
+          $result['score'] = (int) min(100, max(0, array_sum($numeric)));
+        }
+      }
+      $data['field_validation_result'] = json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
+    // Every AI result awaits a human decision: a score report is accepted
+    // or ignored, a proposal is applied or ignored. Done is always a
+    // UI-driven transition, never set by the model.
+    $data['field_validation_status'] = 'pending';
     return ['values' => $data];
   }
 

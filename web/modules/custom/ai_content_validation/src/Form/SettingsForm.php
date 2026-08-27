@@ -6,25 +6,28 @@ namespace Drupal\ai_content_validation\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\TypedConfigManagerInterface;
+use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drush\Commands\AutowireTrait;
 
 /**
  * Configure Ai content validation settings for this site.
  */
 final class SettingsForm extends ConfigFormBase {
 
+  use AutowireTrait;
+
+  /**
+   * Constructs the settings form.
+   */
   public function __construct(
     ConfigFactoryInterface $config_factory,
     TypedConfigManagerInterface $typedConfigManager,
     protected EntityTypeManagerInterface $entityTypeManager,
   ) {
-    return parent::__construct($config_factory, $typedConfigManager);
+    parent::__construct($config_factory, $typedConfigManager);
   }
-
-  use AutowireTrait;
 
   /**
    * {@inheritdoc}
