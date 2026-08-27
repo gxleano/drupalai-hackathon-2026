@@ -1,7 +1,9 @@
 uuid: b29ea5d8-709a-4fa9-a26f-bb56a22795c8
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - flowdrop_node_processor
 _core:
   default_config_hash: 7THpfbb_R-KdhIhSz0X1uQKlcUZezYPyjuW3TbvVUsA
 id: entity_save
@@ -77,3 +79,10 @@ supported_visual_types:
 unified_input_exposed: false
 unified_output_exposed: false
 tool_exposed: false
+confirmation:
+  policy: skip
+  author_controls:
+    - waive
+    - require
+  dynamic_controls: {  }
+reserved_port_exposure: {  }

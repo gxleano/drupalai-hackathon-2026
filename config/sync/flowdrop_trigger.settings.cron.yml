@@ -3,6 +3,4 @@ _core:
 enabled: true
 allowed_event_types:
   - cron.run
-log_cron_triggers: false
-min_interval: 0
 max_workflows_per_run: 0

@@ -5,9 +5,5 @@ logging:
   log_to_watchdog: true
 execution:
   default_orchestrator: synchronous_pipeline
-  max_execution_time: 300
-realtime:
-  enabled: true
-  polling_interval: 2000
 ui:
   icon_picker_enabled: true

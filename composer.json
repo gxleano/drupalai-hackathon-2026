@@ -55,7 +55,7 @@
         "drupal/drupal_cms_seo_tools": "^2",
         "drupal/drupal_cms_starter": "^2",
         "drupal/entity_reference_revisions": "^1.14",
-        "drupal/flowdrop": "^2.0@alpha",
+        "drupal/flowdrop": "^2.4",
         "drupal/flowdrop_agents": "^2.0",
         "drupal/flowdrop_ai_context": "^2.0",
         "drupal/flowdrop_ai_provider": "^2.0",
@@ -75,6 +75,7 @@
     },
     "require-dev": {
         "drupal/coder": "^9.0",
+        "drupal/dtk": "^1.0",
         "drush/drush": "^13.6.1",
         "ivanboring/drush_dtk": "dev-main",
         "mglaman/phpstan-drupal": "^2.0",
@@ -158,7 +159,7 @@
             ],
             "post-create-project-cmd-message": [
                 "<bg=blue;fg=white>                                                   </>",
-                "<bg=blue;fg=white>  Congratulations, you’ve installed Drupal CMS!    </>",
+                "<bg=blue;fg=white>  Congratulations, you\u2019ve installed Drupal CMS!    </>",
                 "<bg=blue;fg=white>                                                   </>",
                 "",
                 "<bg=yellow;fg=black>Next steps</>:",
@@ -171,9 +172,6 @@
             "composer/composer": false
         },
         "patches": {
-            "drupal/flowdrop": {
-                "Node type API routes declare {plugin_id} but the controllers take $node_type_id, so /nodes/{id}/metadata and /validate return 500": "patches/flowdrop-node-type-api-route-placeholder.patch"
-            },
             "drupal/flowdrop_node_session": {
                 "Playground back button links to removed route flowdrop.workflows instead of entity.flowdrop_workflow.collection": "patches/flowdrop-node-session-workflows-route.patch",
                 "findEntityContextNodes() misses nodes stored in slim node-identity format (only node_type_id in metadata), so entity context is never injected": "patches/flowdrop-node-session-slim-node-format-entity-context.patch"

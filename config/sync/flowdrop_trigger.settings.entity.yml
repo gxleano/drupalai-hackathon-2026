@@ -8,4 +8,3 @@ allowed_event_types:
 allowed_entity_types:
   - node
 allowed_bundles: {  }
-log_entity_changes: false

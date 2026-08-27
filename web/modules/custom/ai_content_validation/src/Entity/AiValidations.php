@@ -25,10 +25,10 @@ use Drupal\views\EntityViewsData;
  */
 #[ContentEntityType(
   id: 'ai_content_validation_item',
-  label: new TranslatableMarkup('Ai validations'),
-  label_collection: new TranslatableMarkup('Ai validations'),
-  label_singular: new TranslatableMarkup('ai validations'),
-  label_plural: new TranslatableMarkup('ai validations'),
+  label: new TranslatableMarkup('AI Validations'),
+  label_collection: new TranslatableMarkup('AI Validations'),
+  label_singular: new TranslatableMarkup('AI Validations'),
+  label_plural: new TranslatableMarkup('AI Validations'),
   entity_keys: [
     'id' => 'id',
     'label' => 'label',

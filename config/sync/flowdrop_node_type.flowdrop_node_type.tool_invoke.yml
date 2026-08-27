@@ -9,7 +9,7 @@ label: 'Invoke tools'
 description: 'Run a batch of tool calls (each an auditable node execution via the tool invoker)'
 category: tools
 icon: 'mdi:apple-keyboard-command'
-plugin_version: 1.0.0
+plugin_version: 1.1.0
 enabled: true
 parameters:
   tool:
@@ -22,8 +22,14 @@ parameters:
     required: false
     default: {  }
 outputs:
+  executed:
+    exposed: true
+    exposed_by_default: false
   ok:
     exposed: true
+  tool_artifacts:
+    exposed: true
+    exposed_by_default: false
   tool_messages:
     exposed: true
     exposed_by_default: false
@@ -39,4 +45,5 @@ supported_visual_types:
 unified_input_exposed: false
 unified_output_exposed: false
 tool_exposed: false
+confirmation: {  }
 reserved_port_exposure: {  }

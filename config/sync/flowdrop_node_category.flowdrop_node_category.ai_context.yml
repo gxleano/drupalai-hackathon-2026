@@ -5,7 +5,6 @@ dependencies: {  }
 _core:
   default_config_hash: kzKqrkXXuZ-dIZkYHA3ELTfmtBPzrfg0BNvEm0rXDsw
 id: ai_context
-enabled: true
 label: 'AI Context'
 description: 'Nodes for selecting and injecting AI Context Items into workflows to enrich agent prompts with curated context.'
 icon: 'mdi:text-box-search-outline'

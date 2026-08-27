@@ -1,0 +1,49 @@
+uuid: cc7444da-4f8b-4576-b541-9b56a734596d
+langcode: en
+status: true
+dependencies:
+  module:
+    - flowdrop_node_processor
+id: message_from_text
+label: 'Message from Text'
+description: 'Build one chat message from a text value and a role — the string-to-message adapter for agent loops'
+category: processing
+icon: 'mdi:message-text-outline'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  role:
+    configurable: true
+    connectable: true
+    required: false
+    default: user
+  text:
+    configurable: true
+    connectable: true
+    required: false
+    default: ''
+  tool_call_id:
+    configurable: true
+    connectable: true
+    exposed_by_default: false
+    required: false
+    default: ''
+outputs:
+  message:
+    exposed: true
+    exposed_by_default: false
+  messages:
+    exposed: true
+tags:
+  - messages
+  - memory
+  - agent
+executor_plugin: 'flowdrop_node_processor:message_from_text'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
+tool_exposed: true
+confirmation: {  }
+reserved_port_exposure: {  }
