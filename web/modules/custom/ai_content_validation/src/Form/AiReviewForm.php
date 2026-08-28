@@ -105,10 +105,17 @@ final class AiReviewForm extends FormBase {
       $node->getCacheTags(),
       ['ai_content_validation_item_list'],
     );
-    $form['messages'] = [
-      '#type' => 'status_messages',
-      '#weight' => -100,
-    ];
+    // Only during an AJAX rebuild: the AJAX response replaces just this
+    // wrapper, so messages must render inside the form to be seen at all.
+    // On a regular page load the theme's messages region already renders
+    // the queue — including the element here too made every message
+    // appear twice (both placeholders resolve to the same rendered set).
+    if ($form_state->isRebuilding()) {
+      $form['messages'] = [
+        '#type' => 'status_messages',
+        '#weight' => -100,
+      ];
+    }
 
     // AI fixes are offered per field only (the Fix with AI buttons on the
     // finding rows), and ONLY right after an explicit Run validation on
@@ -717,7 +724,9 @@ final class AiReviewForm extends FormBase {
     if ($operations === []) {
       return;
     }
-    $this->runAndAccept($node, $operations[0]['workflow_id']);
+    // Quiet: "Applied the suggestion…" plus the refreshed page already
+    // tell the story — a second "finished" status would be noise.
+    $this->runAndAccept($node, $operations[0]['workflow_id'], TRUE);
   }
 
   /**
@@ -1096,10 +1105,14 @@ final class AiReviewForm extends FormBase {
    *   The node to validate.
    * @param string $workflow_id
    *   The validation workflow to run.
+   * @param bool $quiet
+   *   When TRUE the routine "finished" status message is suppressed —
+   *   warnings and errors still surface. Used by the post-apply
+   *   re-validation, whose outcome the refreshed page already shows.
    */
-  private function runAndAccept(NodeInterface $node, string $workflow_id): void {
+  private function runAndAccept(NodeInterface $node, string $workflow_id, bool $quiet = FALSE): void {
     [$previous_score] = $this->acceptedScore($node);
-    $this->startRun($node, $workflow_id);
+    $this->startRun($node, $workflow_id, 'Run', $quiet);
     // Stamp the report this run just produced as an explicit manual run:
     // that flag is what unlocks the per-field Fix with AI buttons. Reports from
     // entity-save triggers or the post-apply re-validation are never
@@ -2002,7 +2015,7 @@ final class AiReviewForm extends FormBase {
    * before any AI call, so this is fast. Quiet on the expected
    * awaiting-input outcome — the question renders inline right below.
    */
-  private function startRun(NodeInterface $node, string $workflow_id, string $message = 'Run'): void {
+  private function startRun(NodeInterface $node, string $workflow_id, string $message = 'Run', bool $quiet = FALSE): void {
     $workflow = $this->entityTypeManager->getStorage('flowdrop_workflow')->load($workflow_id);
     if (!$workflow instanceof FlowDropWorkflow) {
       return;
@@ -2027,7 +2040,9 @@ final class AiReviewForm extends FormBase {
       );
       $result = $this->turnService->executeTurn((string) $session->id(), $message, new TurnOptions(wait: TRUE));
       if ($result->status === TurnResult::STATUS_COMPLETED) {
-        $this->messenger()->addStatus($this->t('@label finished. Review the results below.', ['@label' => $workflow->label()]));
+        if (!$quiet) {
+          $this->messenger()->addStatus($this->t('@label finished. Review the results below.', ['@label' => $workflow->label()]));
+        }
       }
       elseif ($result->status !== TurnResult::STATUS_AWAITING_INPUT) {
         $this->messenger()->addWarning($this->t('@label finished with status: @status.', [
