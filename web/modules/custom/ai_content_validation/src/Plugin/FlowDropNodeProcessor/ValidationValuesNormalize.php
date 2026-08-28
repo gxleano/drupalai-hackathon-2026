@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_validation\Plugin\FlowDropNodeProcessor;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ai_content_validation\ContentHasher;
+use Drupal\ai_content_validation\ValidationScorer;
 use Drupal\flowdrop\Attribute\FlowDropNodeProcessor;
 use Drupal\flowdrop\DTO\ParameterBagInterface;
 use Drupal\flowdrop\Plugin\FlowDropNodeProcessor\AbstractFlowDropNodeProcessor;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Normalizes AI validation output for entity_save.
@@ -16,6 +21,10 @@ use Drupal\flowdrop\Plugin\FlowDropNodeProcessor\AbstractFlowDropNodeProcessor;
  * LLMs); the storage field is string_long. This node JSON-encodes the
  * object so entity_save can write it, avoiding the fragile
  * escaped-JSON-inside-JSON prompt contract.
+ *
+ * It also stamps the content hash of the revision the result is attached
+ * to, so a later run on unchanged content can reuse this result instead of
+ * calling the model again.
  */
 #[FlowDropNodeProcessor(
   id: 'ai_content_validation_normalize',
@@ -24,6 +33,53 @@ use Drupal\flowdrop\Plugin\FlowDropNodeProcessor\AbstractFlowDropNodeProcessor;
   version: '1.0.0',
 )]
 final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
+
+  /**
+   * Constructs the processor.
+   *
+   * @param array<string, mixed> $configuration
+   *   The plugin configuration.
+   * @param string $plugin_id
+   *   The plugin id.
+   * @param mixed $plugin_definition
+   *   The plugin definition.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager, used to load the validated node revision.
+   */
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The service container.
+   * @param array<string, mixed> $configuration
+   *   The plugin configuration.
+   * @param string $plugin_id
+   *   The plugin id.
+   * @param mixed $plugin_definition
+   *   The plugin definition.
+   */
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+  ): static {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager'),
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -63,47 +119,18 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
     $data = $params->getArray('data');
     if (isset($data['field_validation_result']) && is_array($data['field_validation_result'])) {
       $result = $data['field_validation_result'];
-      // The model classifies each guideline (pass/minor/major/fail) —
-      // classification is far more reproducible than a 0-10 number, which
-      // wobbled ±1-2 per guideline (±6 total) on unchanged content. The
-      // numeric score is derived mechanically here, never by the model.
-      $scores = $result['scores'] ?? NULL;
-      if (is_array($scores) && count($scores) === 10) {
-        // The model persistently invents a "current-year fact is
-        // future-dated" contradiction from the publication date or the
-        // revision timestamp, against explicit rubric rules. Those are
-        // never legitimate — a contradiction must be between two article
-        // statements — so they are discarded mechanically.
-        if (is_array($result['contradictions'] ?? NULL)) {
-          $result['contradictions'] = array_values(array_filter(
-            $result['contradictions'],
-            static fn ($entry): bool => is_string($entry)
-              && !preg_match('/publication date|timestamp|future[ -]dated|current year/i', $entry),
-          ));
-        }
-        $points = ['pass' => 10, 'minor' => 8, 'major' => 4, 'fail' => 0];
-        $numeric = [];
-        foreach ($scores as $key => $verdict) {
-          if (is_string($verdict) && isset($points[strtolower(trim($verdict))])) {
-            $numeric[$key] = $points[strtolower(trim($verdict))];
-          }
-          elseif (is_numeric($verdict)) {
-            // Legacy numeric breakdowns (older stored prompts) still sum.
-            $numeric[$key] = (int) $verdict;
-          }
-        }
-        // The factual-error verdict on guideline 1 is only legitimate
-        // when the model actually listed contradictions; it habitually
-        // condemns Accuracy while its own reasoning says the article is
-        // consistent, so the rule is enforced mechanically: no
-        // contradictions → at least "minor".
-        if (($result['contradictions'] ?? NULL) === [] && ($numeric['1'] ?? 10) < $points['minor']) {
-          $numeric['1'] = $points['minor'];
-          $result['scores']['1'] = 'minor';
-        }
-        if (count($numeric) === 10) {
-          $result['score'] = (int) min(100, max(0, array_sum($numeric)));
-        }
+      // The numeric score is derived mechanically from the model's ten
+      // verdicts, never produced by the model. The computation lives in
+      // ValidationScorer so the AI Improve non-regression gate scores its
+      // candidate on exactly the same scale as this header score.
+      $result = ValidationScorer::applyDerivedScore($result);
+      // The hash of the exact field values this verdict was formed on.
+      // A later run whose content hashes the same reuses this result
+      // instead of asking the model again, so the score of unchanged
+      // content is deterministic.
+      $hash = $this->contentHash($data['field_content_revision'] ?? NULL);
+      if ($hash !== '') {
+        $result['content_hash'] = $hash;
       }
       $data['field_validation_result'] = json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
@@ -112,6 +139,43 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
     // UI-driven transition, never set by the model.
     $data['field_validation_status'] = 'pending';
     return ['values' => $data];
+  }
+
+  /**
+   * Hashes the node revision this result is about.
+   *
+   * The hash is computed here, next to the reference the result is stored
+   * with, so it always describes the revision the item is attached to.
+   *
+   * @param mixed $reference
+   *   The field_content_revision value from the incoming data: a map with
+   *   target_id and target_revision_id, or a list of such maps.
+   *
+   * @return string
+   *   The content hash, or an empty string when the referenced revision
+   *   cannot be resolved.
+   */
+  private function contentHash(mixed $reference): string {
+    if (is_array($reference) && isset($reference[0]) && is_array($reference[0])) {
+      $reference = $reference[0];
+    }
+    if (!is_array($reference)) {
+      return '';
+    }
+    $nid = (int) ($reference['target_id'] ?? 0);
+    $vid = (int) ($reference['target_revision_id'] ?? 0);
+    if ($nid === 0) {
+      return '';
+    }
+    $storage = $this->entityTypeManager->getStorage('node');
+    $revision = $vid === 0 ? NULL : $storage->loadRevision($vid);
+    // A revision id the model misread could belong to another node; only
+    // the revision that really belongs to the referenced node may be
+    // hashed, otherwise the hash would describe foreign content.
+    if (!$revision instanceof FieldableEntityInterface || (int) $revision->id() !== $nid) {
+      $revision = $storage->load($nid);
+    }
+    return $revision instanceof FieldableEntityInterface ? ContentHasher::hash($revision) : '';
   }
 
 }

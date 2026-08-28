@@ -8,7 +8,11 @@ okf_version: '0.1'
 > This index only orients you; leaves hold the durable guidance. Open at least one relevant leaf before acting.
 
 ## Subfolders
-_None._
+- Load [`ai/`](ai/index.md) for more information on Ai.
+- Load [`config/`](config/index.md) for more information on Config.
+- Load [`flowdrop/`](flowdrop/index.md) for more information on Flowdrop.
+- Load [`project/`](project/index.md) for more information on Project.
+- Load [`standards/`](standards/index.md) for more information on Standards.
 
 ## Conventions (how we build)
 _None yet._

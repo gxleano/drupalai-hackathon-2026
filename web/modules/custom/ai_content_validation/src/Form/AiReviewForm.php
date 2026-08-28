@@ -16,6 +16,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Render\Markup;
+use Drupal\ai_content_validation\ContentHasher;
 use Drupal\flowdrop_node_session\Service\NodeSessionService;
 use Drupal\flowdrop_session\DTO\TurnOptions;
 use Drupal\flowdrop_session\DTO\TurnResult;
@@ -94,7 +95,8 @@ final class AiReviewForm extends FormBase {
     // Every action submits over AJAX and replaces this wrapper, so the page
     // never freezes on a full-page load while the model runs — the button's
     // throbber tells the editor what is happening.
-    $form['#prefix'] = '<div id="ai-review-form-wrapper">';
+    $form['#attached']['library'][] = 'ai_content_validation/ai_review';
+    $form['#prefix'] = '<div id="ai-review-form-wrapper" class="ai-review">';
     $form['#suffix'] = '</div>';
     // The page content derives from the node and its validation items, so
     // any cached representation must invalidate when either changes.
@@ -124,58 +126,53 @@ final class AiReviewForm extends FormBase {
       ? NULL
       : $this->parseResult((string) ($latest_report->get('field_validation_result')->value ?? ''));
     $show_improve = $revision_match && !empty($report_parsed['manual_run']);
+    // A report whose ten verdicts are all pass/minor has nothing left to
+    // rewrite: the improver would only churn prose that already complies.
+    // The button disappears and the editor is told to edit manually.
+    $nothing_to_improve = $show_improve && !$this->hasWeakGuideline($report_parsed);
+    $show_improve = $show_improve && !$nothing_to_improve;
 
-    $form['current_score'] = $this->buildCurrentScore($node, $revision_match);
+    // One card holds the whole report: score, per-field findings, overall
+    // assessment. The editor reads a single panel top to bottom instead of
+    // loose fragments floating on the page background.
+    $form['report'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['ai-review-card']],
+      'current_score' => $this->buildCurrentScore($node, $revision_match),
+      'field_findings' => $this->buildFieldFindings($report_parsed, $latest_report),
+      'overall_summary' => $this->buildOverallSummary($report_parsed, $latest_report),
+    ];
 
     if ($latest_report === NULL) {
       $form['intro'] = [
         '#markup' => '<p>' . $this->t('AI validation checks this content against the 10 EU content guidelines (accuracy, clarity, neutrality, completeness, …) and produces a quality score with concrete improvement suggestions.') . '</p>',
       ];
     }
+    // All primary/secondary actions sit on one row, with a single short
+    // hint underneath — not a stack of message boxes competing for
+    // attention.
+    $form['actions'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['ai-review-actions']],
+    ];
     if (!$show_improve && $operations !== []) {
-      $form['rerun'] = [
+      $form['actions']['rerun'] = [
         '#type' => 'submit',
-        '#value' => $latest_report !== NULL
-          ? $this->t('Re-run validation on the new version')
-          : $this->t('Run validation'),
+        // On a fully compliant, current report the content has NOT changed
+        // — "on the new version" would be a lie there.
+        '#value' => match (TRUE) {
+          $nothing_to_improve => $this->t('Re-run validation'),
+          $latest_report !== NULL => $this->t('Re-run validation on the new version'),
+          default => $this->t('Run validation'),
+        },
         '#name' => 'rerun:' . $operations[0]['workflow_id'],
         '#submit' => ['::rerunValidation'],
-        '#button_type' => 'primary',
+        '#button_type' => $nothing_to_improve ? NULL : 'primary',
         '#ajax' => $this->ajaxAction($this->aiProgressMessage($this->t('Analyzing the content against the 10 EU guidelines… (~30s)'))),
-      ];
-      // Rendered as a Gin info message; the icon is drawn by Gin on
-      // .messages__header:before, so the full Claro inner structure
-      // (header + content) is required. Built as render arrays, NOT
-      // #markup — Xss::filterAdmin strips style attributes from #markup.
-      // role="note" keeps it out of the live-message noise.
-      $form['rerun_help'] = [
-        '#type' => 'container',
-        '#attributes' => [
-          'class' => ['messages', 'messages--info'],
-          'role' => 'note',
-          'style' => 'margin-top: 0.75em; max-width: 60em; font-size: 0.85em;',
-        ],
-        'header' => [
-          '#type' => 'html_tag',
-          '#tag' => 'div',
-          '#attributes' => ['class' => ['messages__header']],
-          'title' => [
-            '#type' => 'html_tag',
-            '#tag' => 'h2',
-            '#attributes' => ['class' => ['messages__title', 'visually-hidden']],
-            '#value' => $this->t('Information'),
-          ],
-        ],
-        'content' => [
-          '#type' => 'html_tag',
-          '#tag' => 'div',
-          '#attributes' => ['class' => ['messages__content']],
-          '#value' => $this->t('Takes about 30 seconds. Nothing is changed on your content until you apply a suggestion.'),
-        ],
       ];
     }
     if ($show_improve) {
-      $form['improve'] = [
+      $form['actions']['improve'] = [
         '#type' => 'submit',
         '#value' => $this->t('Improve content'),
         '#name' => 'improve:' . $latest_report->id(),
@@ -184,9 +181,60 @@ final class AiReviewForm extends FormBase {
         '#ajax' => $this->ajaxAction($this->aiProgressMessage($this->t('Rewriting the content based on the findings… (~1 min)'))),
       ];
     }
+    // Clicking Run validation on content that has not changed reuses the
+    // stored score instead of asking the model again, so the editor needs
+    // a way out when they want a fresh verdict anyway. Only offered while
+    // such a report actually exists — otherwise the normal run is fresh.
+    if ($operations !== [] && $this->cachedReport($node, $operations[0]['workflow_id']) !== NULL) {
+      $form['actions']['revalidate_anyway'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Re-validate anyway'),
+        '#name' => 'revalidate:' . $operations[0]['workflow_id'],
+        '#submit' => ['::forceRerunValidation'],
+        '#ajax' => $this->ajaxAction($this->aiProgressMessage($this->t('Re-analyzing the content against the 10 EU guidelines… (~30s)'))),
+      ];
+    }
+    if ($form['actions'] === ['#type' => 'container', '#attributes' => ['class' => ['ai-review-actions']]]) {
+      unset($form['actions']);
+    }
+    else {
+      $form['actions_hint'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#attributes' => ['class' => ['ai-review-hint']],
+        '#value' => $this->t('A run takes 30–60 seconds. Nothing is changed on your content until you apply a suggestion.'),
+      ];
+    }
     $form['validations'] = $this->buildValidations($node);
 
     return $form;
+  }
+
+  /**
+   * Whether any of the ten guideline verdicts is worth rewriting for.
+   *
+   * Mirrors the instruction the improver itself receives (fix everything
+   * below a full "pass"): when every verdict is a pass, the improve run has
+   * nothing to act on. A report with no verdict map at all is treated as
+   * improvable — the old behaviour.
+   *
+   * @param array<string, mixed>|null $result
+   *   The parsed validation result.
+   *
+   * @return bool
+   *   TRUE when at least one guideline is weak.
+   */
+  private function hasWeakGuideline(?array $result): bool {
+    $scores = $result === NULL ? NULL : ($result['scores'] ?? NULL);
+    if (!is_array($scores) || $scores === []) {
+      return TRUE;
+    }
+    foreach ($scores as $verdict) {
+      if (is_numeric($verdict) ? (int) $verdict < 10 : strtolower(trim((string) $verdict)) !== 'pass') {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
   /**
@@ -273,75 +321,204 @@ final class AiReviewForm extends FormBase {
    *   Render array with the big score (or a hint when unscored).
    */
   private function buildCurrentScore(NodeInterface $node, bool $validated_current = TRUE): array {
-    [$score, $date, $summary] = $this->acceptedScore($node);
+    [$score, $date] = $this->acceptedScore($node);
 
     // Same grade colors and thresholds as the content overview donut, so
     // the number carries meaning without cross-referencing the list.
-    if ($score === NULL) {
-      $color = 'var(--gin-color-disabled, #8f939a)';
-      $word = $this->t('Not validated yet');
+    $color = $this->scoreColor($score);
+    $word = match (TRUE) {
+      $score === NULL => $this->t('Not validated yet'),
+      $score >= 80 => $this->t('Good'),
+      $score >= 50 => $this->t('Needs work'),
+      default => $this->t('Poor'),
+    };
+
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['ai-review-score']],
+      'value' => [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#value' => $score !== NULL
+          ? $this->t('@score / 100', ['@score' => $score])
+          : $this->t('– / 100'),
+        '#attributes' => [
+          'class' => ['ai-review-score__value'],
+          'style' => 'color: ' . $color . ';',
+        ],
+      ],
+      'meta' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-review-score__meta']],
+        'word' => [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#value' => $word,
+          '#attributes' => ['class' => ['ai-review-score__word']],
+        ],
+        'date' => [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          // Markup::create(): the stale variant embeds the core warning
+          // icon and t() output is already safe.
+          '#value' => $score !== NULL
+            ? ($validated_current
+              ? $this->t('Quality score, validated @date', ['@date' => date('d.m.Y H:i', $date)])
+              : Markup::create($this->warningIcon() . ' ' . $this->t('Score from a previous version (@date) — the content has changed since', ['@date' => date('d.m.Y H:i', $date)])))
+            : $this->t('Run a validation to get a quality score'),
+          '#attributes' => ['class' => ['ai-review-score__date']],
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Maps a quality score to its grade color.
+   *
+   * Same grade colors and thresholds as the content overview donut.
+   *
+   * @param int|null $score
+   *   The score, or NULL when the node was never validated.
+   *
+   * @return string
+   *   A CSS color value.
+   */
+  private function scoreColor(?int $score): string {
+    return match (TRUE) {
+      $score === NULL => 'var(--gin-color-disabled, #8f939a)',
+      $score >= 80 => 'var(--gin-color-green, #26a769)',
+      $score >= 50 => 'var(--gin-color-warning, #e29700)',
+      default => 'var(--gin-color-danger, #dc2323)',
+    };
+  }
+
+  /**
+   * Builds the per-field findings of a validation report.
+   *
+   * The validator reports one finding per validated field. Only the three
+   * known fields are rendered, in a fixed order, so an unexpected extra
+   * key in the model's response can never inject a section of its own.
+   * Reports written before per-field findings existed simply render
+   * nothing here.
+   *
+   * @param array<string, mixed>|null $result
+   *   The decoded validation result, or NULL when there is none.
+   * @param \Drupal\Core\Entity\ContentEntityInterface|null $report
+   *   The report the findings came from, for cache metadata.
+   *
+   * @return array<string, mixed>
+   *   Render array, empty when there are no per-field findings.
+   */
+  private function buildFieldFindings(?array $result, ?ContentEntityInterface $report): array {
+    $labels = [
+      'title' => $this->t('Title'),
+      'field_body' => $this->t('Body'),
+      'field_metatags' => $this->t('Meta Tags'),
+    ];
+    $findings = $result === NULL ? NULL : ($result['field_findings'] ?? NULL);
+    if (!is_array($findings)) {
+      return [];
     }
-    elseif ($score >= 80) {
-      $color = 'var(--gin-color-green, #26a769)';
-      $word = $this->t('Good');
+
+    $sections = [];
+    foreach ($labels as $field => $label) {
+      $text = $findings[$field] ?? NULL;
+      // An affirmative finding ("Accurate and specific.") is still a
+      // finding: only an absent or empty value hides the section.
+      if (!is_string($text) || trim($text) === '') {
+        continue;
+      }
+      // A finding that names a guideline is a problem to act on; anything
+      // else is a pass. The dot color in front of the label tells the
+      // editor at a glance which fields need attention.
+      $issue = (bool) preg_match('/guideline\s*\d/i', $text);
+      $sections[$field] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => array_merge(['ai-review-finding'], $issue ? ['ai-review-finding--issue'] : []),
+        ],
+        'label' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => $label,
+          '#attributes' => ['class' => ['ai-review-finding__label']],
+        ],
+        // The finding text comes from the model and is untrusted:
+        // #plain_text is escaped by the renderer, #markup would not be.
+        'text' => [
+          '#type' => 'html_tag',
+          '#tag' => 'p',
+          '#attributes' => ['class' => ['ai-review-finding__text']],
+          'value' => ['#plain_text' => trim($text)],
+        ],
+      ];
     }
-    elseif ($score >= 50) {
-      $color = 'var(--gin-color-warning, #e29700)';
-      $word = $this->t('Needs work');
-    }
-    else {
-      $color = 'var(--gin-color-danger, #dc2323)';
-      $word = $this->t('Poor');
+    if ($sections === []) {
+      return [];
     }
 
     return [
       '#type' => 'container',
-      '#attributes' => [
-        'class' => ['ai-review-score'],
-        'style' => 'margin: 0 0 1em;',
+      '#attributes' => ['class' => ['ai-review-findings']],
+      '#cache' => [
+        'tags' => $report === NULL ? [] : $report->getCacheTags(),
       ],
-      'value' => [
+      'heading' => [
         '#type' => 'html_tag',
-        '#tag' => 'strong',
-        '#value' => $score !== NULL
-          ? $this->t('@score / 100', ['@score' => $score])
-          : $this->t('– / 100'),
-        '#attributes' => ['style' => 'font-size: 2.5em; line-height: 1; color: ' . $color . ';'],
+        '#tag' => 'h3',
+        '#value' => $this->t('Findings per field'),
+        '#attributes' => ['class' => ['ai-review-findings__heading']],
       ],
-      'label' => [
+    ] + $sections;
+  }
+
+  /**
+   * Builds the report's overall closing assessment.
+   *
+   * Rendered after the per-field findings: the summary judges the content
+   * as a whole, the findings say which field to act on.
+   *
+   * @param array<string, mixed>|null $result
+   *   The decoded validation result, or NULL when there is none.
+   * @param \Drupal\Core\Entity\ContentEntityInterface|null $report
+   *   The report the summary came from, for cache metadata.
+   *
+   * @return array<string, mixed>
+   *   Render array, empty when the report carries no summary.
+   */
+  private function buildOverallSummary(?array $result, ?ContentEntityInterface $report): array {
+    $summary = is_scalar($result['summary'] ?? NULL) ? trim((string) $result['summary']) : '';
+    if ($summary === '') {
+      return [];
+    }
+    $score = is_numeric($result['score'] ?? NULL) ? (int) $result['score'] : NULL;
+
+    return [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['ai-review-summary'],
+        // The grade color goes on the border and a faint background tint
+        // (via the --ai-review-grade custom property the stylesheet
+        // reads), never on the text itself: green/yellow body text on
+        // white fails WCAG contrast, inherited text color does not.
+        'style' => '--ai-review-grade: ' . $this->scoreColor($score) . ';',
+      ],
+      '#cache' => [
+        'tags' => $report === NULL ? [] : $report->getCacheTags(),
+      ],
+      'heading' => [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        // Markup::create(): the stale variant embeds the core warning icon
-        // and t() output is already safe.
-        '#value' => $score !== NULL
-          ? ($validated_current
-            ? $this->t('@word — quality score, validated @date', [
-              '@word' => $word,
-              '@date' => date('d.m.Y H:i', $date),
-            ])
-            : Markup::create($this->warningIcon() . ' ' . $this->t('@word — score from a previous version (@date) — the content has changed since', [
-              '@word' => $word,
-              '@date' => date('d.m.Y H:i', $date),
-            ])))
-          : $this->t('Quality score — not validated yet'),
-        '#attributes' => ['style' => 'font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em;'],
+        '#value' => $this->t('Overall assessment'),
+        '#attributes' => ['class' => ['ai-review-summary__heading']],
       ],
-      'summary' => $score !== NULL && $summary !== ''
-        ? [
-          '#type' => 'html_tag',
-          '#tag' => 'p',
-          '#value' => nl2br($this->escapeText($summary)),
-          // The grade color goes on the border and a faint background
-          // tint, never on the text itself: green/yellow body text on
-          // white fails WCAG contrast, inherited text color does not.
-          '#attributes' => [
-            'style' => 'max-width: 60em; margin: 0.75em 0 0; padding: 0.5em 0.75em;'
-              . ' border-left: 4px solid ' . $color . ';'
-              . ' background: color-mix(in srgb, ' . $color . ' 8%, transparent);'
-              . ' border-radius: 0 4px 4px 0;',
-          ],
-        ]
-        : [],
+      // Untrusted model output: escaped by the renderer, never #markup.
+      'text' => [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#attributes' => ['class' => ['ai-review-summary__text']],
+        'value' => ['#plain_text' => $summary],
+      ],
     ];
   }
 
@@ -415,43 +592,133 @@ final class AiReviewForm extends FormBase {
     [, $workflow_id] = explode(':', $form_state->getTriggeringElement()['#name'], 2);
     $node = $this->loadNode($form_state);
     if ($node !== NULL) {
-      [$previous_score] = $this->acceptedScore($node);
-      $this->startRun($node, $workflow_id);
-      // Stamp the report this run just produced as an explicit manual run:
-      // that flag is what unlocks the Improve content button. Reports from
-      // entity-save triggers or the post-apply re-validation are never
-      // stamped, so any content change falls back to Run validation.
-      $report = $this->latestReport($node);
-      if ($report !== NULL
-        && (int) $report->get('created')->value >= $this->time->getRequestTime()
-        && (int) ($report->get('field_content_revision')->target_revision_id ?? 0) === (int) $node->getRevisionId()
-      ) {
-        $parsed = $this->parseResult((string) $report->get('field_validation_result')->value) ?? [];
-        $parsed['manual_run'] = TRUE;
-        $report->set('field_validation_result', json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-        $new_score = is_numeric($parsed['score'] ?? NULL) ? (int) $parsed['score'] : NULL;
-        // No-regression guard: a re-validation may never silently replace
-        // an accepted score with a lower one (typical after applying AI
-        // improvements). The report stays pending — the editor sees why
-        // and can still accept the lower score deliberately.
-        if ($new_score !== NULL && $previous_score !== NULL && $new_score < $previous_score
-          && (string) $report->get('field_validation_status')->value === 'pending'
-        ) {
-          $report->save();
-          $this->messenger()->addWarning($this->t('The new validation scored @new/100, lower than the current @old/100 — the current content could not reach a better quality score, so the previous score is kept. You can still accept the lower score below.', [
-            '@new' => $new_score,
-            '@old' => $previous_score,
-          ]));
-        }
-        elseif ((string) $report->get('field_validation_status')->value === 'pending') {
-          $this->acceptValidation($report);
-        }
-        else {
-          $report->save();
-        }
+      $cached = $this->cachedReport($node, $workflow_id);
+      if ($cached !== NULL) {
+        // A hit does no work at all: no run is dispatched, the run lock is
+        // never taken, and the existing item is left exactly as it is —
+        // stamping manual_run here would flip the primary button without
+        // a fresh verdict behind it.
+        $parsed = $this->parseResult((string) ($cached->get('field_validation_result')->value ?? '')) ?? [];
+        $this->messenger()->addStatus($this->t('The validated content has not changed since the last validation, so the score of @score/100 still applies and no new AI validation was run. Use "Re-validate anyway" to force a fresh run.', [
+          '@score' => (int) ($parsed['score'] ?? 0),
+        ]));
+        $form_state->setRebuild();
+        return;
       }
+      $this->runAndAccept($node, $workflow_id);
     }
     $form_state->setRebuild();
+  }
+
+  /**
+   * Runs the validation workflow unconditionally, bypassing the cache.
+   *
+   * The editor asked for a fresh verdict on content the memoization
+   * considers unchanged, so no lookup happens here.
+   */
+  public function forceRerunValidation(array &$form, FormStateInterface $form_state): void {
+    [, $workflow_id] = explode(':', $form_state->getTriggeringElement()['#name'], 2);
+    $node = $this->loadNode($form_state);
+    if ($node !== NULL) {
+      $this->runAndAccept($node, $workflow_id);
+    }
+    $form_state->setRebuild();
+  }
+
+  /**
+   * Finds a current report whose stored hash matches the node's content.
+   *
+   * Only reports — items without suggestions — that are still current
+   * (pending or done) for this node and workflow can satisfy the cache: a
+   * superseded or ignored item is history and must never present its score
+   * as the current one. A report without a numeric score is skipped too,
+   * as a hit has to have something to show.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node about to be validated.
+   * @param string $workflow_id
+   *   The workflow whose report may be reused.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface|null
+   *   The reusable report, or NULL when the model has to run.
+   */
+  private function cachedReport(NodeInterface $node, string $workflow_id): ?ContentEntityInterface {
+    $hash = ContentHasher::hash($node);
+    $storage = $this->entityTypeManager->getStorage('ai_content_validation_item');
+    // accessCheck(FALSE): an internal consistency lookup deciding whether
+    // the model must run again. The route already gates who may open this
+    // page, and the decision itself discloses no item content.
+    $ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('field_content_revision.target_id', $node->id())
+      ->condition('field_flowdrop_workflow', $workflow_id)
+      ->condition('field_validation_status', ['pending', 'done'], 'IN')
+      ->sort('created', 'DESC')
+      ->range(0, 10)
+      ->execute();
+
+    $items = $storage->loadMultiple($ids);
+    // $ids is ordered newest first; loadMultiple() is not.
+    foreach ($ids as $id) {
+      $item = $items[$id] ?? NULL;
+      if (!$item instanceof ContentEntityInterface) {
+        continue;
+      }
+      $parsed = $this->parseResult((string) ($item->get('field_validation_result')->value ?? ''));
+      if ($parsed === NULL || ($parsed['suggestions'] ?? []) !== [] || !is_numeric($parsed['score'] ?? NULL)) {
+        continue;
+      }
+      if (is_string($parsed['content_hash'] ?? NULL) && $parsed['content_hash'] === $hash) {
+        return $item;
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * Runs the workflow and accepts or defends the resulting score.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to validate.
+   * @param string $workflow_id
+   *   The validation workflow to run.
+   */
+  private function runAndAccept(NodeInterface $node, string $workflow_id): void {
+    [$previous_score] = $this->acceptedScore($node);
+    $this->startRun($node, $workflow_id);
+    // Stamp the report this run just produced as an explicit manual run:
+    // that flag is what unlocks the Improve content button. Reports from
+    // entity-save triggers or the post-apply re-validation are never
+    // stamped, so any content change falls back to Run validation.
+    $report = $this->latestReport($node);
+    if ($report !== NULL
+      && (int) $report->get('created')->value >= $this->time->getRequestTime()
+      && (int) ($report->get('field_content_revision')->target_revision_id ?? 0) === (int) $node->getRevisionId()
+    ) {
+      $parsed = $this->parseResult((string) $report->get('field_validation_result')->value) ?? [];
+      $parsed['manual_run'] = TRUE;
+      $report->set('field_validation_result', json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+      $new_score = is_numeric($parsed['score'] ?? NULL) ? (int) $parsed['score'] : NULL;
+      // No-regression guard: a re-validation may never silently replace
+      // an accepted score with a lower one (typical after applying AI
+      // improvements). The report stays pending — the editor sees why
+      // and can still accept the lower score deliberately.
+      if ($new_score !== NULL && $previous_score !== NULL && $new_score < $previous_score
+        && (string) $report->get('field_validation_status')->value === 'pending'
+      ) {
+        $report->save();
+        $this->messenger()->addWarning($this->t('The new validation scored @new/100, lower than the current @old/100 — the current content could not reach a better quality score, so the previous score is kept. You can still accept the lower score below.', [
+          '@new' => $new_score,
+          '@old' => $previous_score,
+        ]));
+      }
+      elseif ((string) $report->get('field_validation_status')->value === 'pending') {
+        $this->acceptValidation($report);
+      }
+      else {
+        $report->save();
+      }
+    }
   }
 
   /**
@@ -802,7 +1069,29 @@ final class AiReviewForm extends FormBase {
         }
       }
       $findings .= ' Per-guideline verdicts: ' . implode('; ', $lines)
-        . '. Concentrate ONLY on the guidelines marked major or fail (or scoring below 8); do not change anything marked pass or minor.';
+        . '. Concentrate ONLY on the guidelines marked minor, major or fail (or scoring below 10); do not change anything marked pass.';
+    }
+    // The per-field findings name the exact guideline that failed on each
+    // field ("Title — Guideline 3: promotional rather than neutral"). Without
+    // them the improver only sees the overall prose summary and rewrites
+    // whatever it feels like; with them each suggestion targets its own
+    // field's named guideline.
+    if (is_array($parsed['field_findings'] ?? NULL)) {
+      $labels = [
+        'title' => 'Title (field "title")',
+        'field_body' => 'Body (field "field_body")',
+        'field_metatags' => 'Meta Tags (field "field_metatags")',
+      ];
+      $lines = [];
+      foreach ($labels as $field => $label) {
+        $text = $parsed['field_findings'][$field] ?? NULL;
+        if (is_scalar($text) && trim((string) $text) !== '') {
+          $lines[] = $label . ' → ' . trim((string) $text);
+        }
+      }
+      if ($lines !== []) {
+        $findings .= ' Per-field findings (each line is the ONLY reason that field may be changed): ' . implode(' | ', $lines);
+      }
     }
     $form_state->setRebuild();
     if ($findings === '') {

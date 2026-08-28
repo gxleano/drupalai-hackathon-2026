@@ -1,0 +1,46 @@
+uuid: c95d9ffa-90b8-4d65-bd1f-22af405811c2
+langcode: en
+status: true
+dependencies:
+  module:
+    - ai_content_validation
+id: ai_content_validation_improve_gate
+label: 'Gate Improvement'
+description: 'Re-validates an AI Improve proposal and discards it when it would lower the quality score'
+category: logic
+icon: 'mdi:shield-check-outline'
+plugin_version: 1.0.0
+enabled: true
+parameters:
+  data:
+    configurable: false
+    connectable: true
+    required: true
+  validation_workflow:
+    configurable: true
+    connectable: false
+    required: false
+    default: content_validation_fixer
+outputs:
+  accepted:
+    exposed: true
+  baseline_score:
+    exposed: true
+  candidate_score:
+    exposed: true
+  data:
+    exposed: true
+  outcome:
+    exposed: true
+  reason:
+    exposed: true
+tags: {  }
+executor_plugin: 'ai_content_validation:ai_content_validation_improve_gate'
+visual_type: default
+supported_visual_types:
+  - default
+unified_input_exposed: false
+unified_output_exposed: false
+tool_exposed: false
+confirmation: {  }
+reserved_port_exposure: {  }

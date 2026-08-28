@@ -17,6 +17,13 @@ use Drupal\flowdrop_node_processor\Plugin\FlowDropNodeProcessor\EntitySave;
  * pending item for the same node revision and workflow as superseded,
  * so reviewers only ever see the latest proposal. Items already marked
  * done or ignored are never touched.
+ *
+ * One kind of item is exempt: the outcome the AI Improve non-regression
+ * gate writes when it discards a proposal. Such an item carries an EMPTY
+ * suggestions array, which makes it look exactly like a score report to
+ * the rule above — and a rejected improvement must never retire the real
+ * report (nor a still-applicable earlier proposal). It is neither a report
+ * nor a proposal, so it supersedes nothing at all.
  */
 #[FlowDropNodeProcessor(
   id: 'validation_save',
@@ -30,6 +37,32 @@ final class ValidationSave extends EntitySave {
    * The entity type this processor supersedes items for.
    */
   private const ENTITY_TYPE = 'ai_content_validation_item';
+
+  /**
+   * Outcome markers of items that are neither a report nor a proposal.
+   *
+   * @var list<string>
+   */
+  private const NON_SUPERSEDING_OUTCOMES = [
+    ImproveGate::OUTCOME_REJECTED,
+    ImproveGate::OUTCOME_NO_SUGGESTIONS,
+  ];
+
+  /**
+   * Tells whether a result payload is a gate outcome that retires nothing.
+   *
+   * @param array<string, mixed> $result
+   *   The decoded field_validation_result payload.
+   *
+   * @return bool
+   *   TRUE for a discarded AI Improve outcome — an item that carries no
+   *   score for the node's current content and no applicable suggestion,
+   *   and therefore replaces neither a report nor a proposal.
+   */
+  public static function isGateOutcome(array $result): bool {
+    $outcome = $result['outcome'] ?? NULL;
+    return is_string($outcome) && in_array($outcome, self::NON_SUPERSEDING_OUTCOMES, TRUE);
+  }
 
   /**
    * {@inheritdoc}
@@ -60,6 +93,19 @@ final class ValidationSave extends EntitySave {
     $storage = $this->entityTypeManager->getStorage(self::ENTITY_TYPE);
     $saved = $storage->load($output['entity_id']);
     if ($saved === NULL) {
+      return 0;
+    }
+
+    // A discarded improvement is not a new verdict on the content: it is
+    // a record that the model could not improve it. Letting it supersede
+    // anything would silently retire the editor's real score report,
+    // which an empty suggestions array otherwise looks identical to.
+    $raw = (string) ($saved->get('field_validation_result')->value ?? '');
+    $decoded = json_decode($raw, TRUE);
+    if (is_string($decoded)) {
+      $decoded = json_decode($decoded, TRUE);
+    }
+    if (is_array($decoded) && self::isGateOutcome($decoded)) {
       return 0;
     }
 

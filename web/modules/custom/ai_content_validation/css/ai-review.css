@@ -1,0 +1,129 @@
+/**
+ * AI Validation review page (Gin admin).
+ *
+ * Uses Gin CSS custom properties with Claro-safe fallbacks so the page
+ * follows the active admin color scheme, including dark mode.
+ */
+
+/* --- Report card: score + per-field findings + overall assessment. --- */
+.ai-review-card {
+  margin: 0 0 1.5em;
+  padding: 1.25em 1.5em;
+  background: var(--gin-bg-layer, #fff);
+  border: 1px solid var(--gin-border-color-layer, #d4d4d8);
+  border-radius: var(--gin-border-m, 8px);
+  box-shadow: var(--gin-shadow-level-1, 0 1px 2px rgba(0, 0, 0, 0.05));
+}
+
+.ai-review-score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75em;
+  flex-wrap: wrap;
+  padding-bottom: 1em;
+  margin-bottom: 1em;
+  border-bottom: 1px solid var(--gin-border-color-layer, #d4d4d8);
+}
+
+.ai-review-score__value {
+  font-size: 2.75em;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.ai-review-score__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+}
+
+.ai-review-score__word {
+  font-weight: 600;
+  font-size: 1em;
+}
+
+.ai-review-score__date {
+  font-size: 0.8em;
+  color: var(--gin-color-text-light, #55565b);
+}
+
+/* --- Findings list. --- */
+.ai-review-findings__heading,
+.ai-review-summary__heading {
+  margin: 0 0 0.75em;
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gin-color-text-light, #55565b);
+}
+
+.ai-review-finding {
+  display: grid;
+  grid-template-columns: 9em 1fr;
+  gap: 0.75em;
+  align-items: start;
+  padding: 0.6em 0;
+}
+
+.ai-review-finding + .ai-review-finding {
+  border-top: 1px solid var(--gin-border-color-layer, #ececef);
+}
+
+.ai-review-finding__label {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+/* Status dot: green = compliant, amber = a guideline is named. */
+.ai-review-finding__label::before {
+  content: "";
+  flex: none;
+  width: 0.6em;
+  height: 0.6em;
+  border-radius: 50%;
+  background: var(--gin-color-green, #058260);
+}
+
+.ai-review-finding--issue .ai-review-finding__label::before {
+  background: var(--gin-color-warning, #d8a800);
+}
+
+.ai-review-finding__text {
+  margin: 0;
+  font-size: 0.95em;
+  line-height: 1.5;
+}
+
+/* --- Overall assessment strip inside the card. --- */
+.ai-review-summary {
+  margin-top: 1em;
+  padding: 0.75em 1em;
+  border-left: 4px solid var(--ai-review-grade, var(--gin-color-green, #058260));
+  background: color-mix(in srgb, var(--ai-review-grade, #058260) 7%, transparent);
+  border-radius: 0 4px 4px 0;
+}
+
+.ai-review-summary__text {
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* --- Actions. --- */
+.ai-review-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  flex-wrap: wrap;
+  margin: 0 0 0.5em;
+}
+
+.ai-review-hint {
+  margin: 0 0 1.5em;
+  font-size: 0.85em;
+  color: var(--gin-color-text-light, #55565b);
+}

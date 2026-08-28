@@ -12,6 +12,18 @@ icon: 'mdi:code-block-braces'
 plugin_version: 1.0.0
 enabled: true
 parameters:
+  # Declared so the runtime's ParameterResolver forwards the per-instance
+  # dynamicInputs DEFINITIONS into the parameter bag. Without an entry here
+  # the resolver treats the key as non-configurable, PromptTemplate reads an
+  # empty definition list and every named dynamic input renders as an empty
+  # string — the values are delivered but never bound to the template. The
+  # node types that already ship with dynamic ports (merge, data_mapper,
+  # message_assemble) declare it exactly like this.
+  dynamicInputs:
+    configurable: true
+    connectable: false
+    required: false
+    default: {  }
   template:
     configurable: true
     connectable: false
@@ -37,3 +49,5 @@ supported_visual_types:
 unified_input_exposed: false
 unified_output_exposed: false
 tool_exposed: false
+confirmation: {  }
+reserved_port_exposure: {  }

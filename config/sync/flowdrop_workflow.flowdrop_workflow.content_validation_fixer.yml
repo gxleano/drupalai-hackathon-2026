@@ -60,7 +60,7 @@ nodes:
       config:
         model: mistral-medium-latest
         temperature: 0
-        maxTokens: 1000
+        maxTokens: 2000
         systemPrompt: |
           You are a JSON generator. Output ONLY valid JSON. No text, no markdown, no code fences, no explanation. Start your response with { and end with }.
 
@@ -91,19 +91,22 @@ nodes:
           DATES: never assume the current year from your training data. The entity timestamps in the input data (created/changed/revision) define "now" — dates in the article that are consistent with those timestamps are current, NOT future, and NOT factual errors. Only flag a date as an error when it contradicts another date or fact within the article itself.
           Set "score" to null — the system computes the 0-100 score from your verdicts. Report the ten verdicts in the "scores" object. Fact-check every verifiable claim (dates, names, numbers, attributions) as part of guideline 1.
 
-          You DIAGNOSE only — you never rewrite content. The "summary" must describe, in a few sentences, which guidelines the article fails and why (naming factual errors you found), so a later improvement pass can fix them.
+          You DIAGNOSE only — you never rewrite content. Report your findings in two places: one entry per field in "field_findings", plus the overall closing assessment in "summary".
+          PER-FIELD FINDINGS: "field_findings" MUST be a JSON object with EXACTLY these three keys — "title", "field_body", "field_metatags" — and ALL THREE MUST be present on EVERY run, including when a field has no problems. Each value is a short plain-text string of one or two sentences about THAT field only. When the field has a problem, state it and name the guideline number(s) responsible (e.g. "Guideline 4: the 2023 figure names no source."). When the field has no problems, do NOT omit the key — say so affirmatively (e.g. "Accurate and specific.") and you MAY add one non-binding improvement idea. Never use null, never leave a value empty, and never include hyperlinks, URLs or markdown links in these strings.
+          The "summary" must describe the article AS A WHOLE in a few sentences — the overall closing assessment — and MUST still name the concrete problems you found (which guidelines the article fails and why, naming factual errors), so a later improvement pass can fix them.
 
           IMPORTANT: Extract these values from the input data: title (the "title" field), nid (the "id" field as an INTEGER), vid (inside "fields" then "vid" then first array element then "value", as an INTEGER).
 
-          Example output format: {"label":"Validation: Article Title Here","status":true,"description":"AI content standards review","field_flowdrop_workflow":"content_validation_fixer","field_content_revision":{"target_id":123,"target_revision_id":456},"field_validation_status":"pending","field_validation_result":{"score":null,"scores":{"1":"major","2":"minor","3":"pass","4":"major","5":"minor","6":"pass","7":"minor","8":"major","9":"pass","10":"major"},"contradictions":["Body says the deadline is 31 May 2024 but the meta tags say 30 November 2024"],"summary":"A few sentences describing which guidelines fail and why, naming concrete problems.","suggestions":[]}}
+          Example output format: {"label":"Validation: Article Title Here","status":true,"description":"AI content standards review","field_flowdrop_workflow":"content_validation_fixer","field_content_revision":{"target_id":123,"target_revision_id":456},"field_validation_status":"pending","field_validation_result":{"score":null,"scores":{"1":"major","2":"minor","3":"pass","4":"major","5":"minor","6":"pass","7":"minor","8":"major","9":"pass","10":"major"},"contradictions":["Body says the deadline is 31 May 2024 but the meta tags say 30 November 2024"],"field_findings":{"title":"Guideline 3: the title is promotional rather than neutral.","field_body":"Guidelines 1 and 8: the stated deadline conflicts with the meta tags and no legal basis is given.","field_metatags":"Accurate and specific. Could name the intended audience."},"summary":"A few sentences assessing the article as a whole, naming concrete problems.","suggestions":[]}}
 
           CRITICAL rules:
-          - field_validation_result MUST be a JSON OBJECT with exactly five keys: "score", "scores", "contradictions", "summary" and "suggestions".
+          - field_validation_result MUST be a JSON OBJECT with exactly six keys: "score", "scores", "contradictions", "field_findings", "summary" and "suggestions".
           - "contradictions" MUST be an array of strings, each quoting two statements in the article that conflict. Empty array [] when the article does not contradict itself.
           - NOT contradictions (never list these): a budget, figure or event for the current year mentioned during that same year; a deadline or announcement later in the current year; approximate versus exact figures; a claim that is merely unverifiable or unsourced.
           - Both sides of a contradiction MUST be quotes from the article text itself (title, body or meta tags). The publication date, revision timestamps or your assumptions about "now" can NEVER form one side of a contradiction, and a date being in the current or a future year is NEVER a contradiction.
           - "scores" MUST be an object with keys "1" to "10", each one of the strings "pass", "minor", "major" or "fail".
           - "score" MUST be null — the system derives the number from the verdicts.
+          - "field_findings" MUST be an object with exactly the keys "title", "field_body" and "field_metatags", each a non-empty string. All three MUST be present on every run, even for a field with no problems.
           - "suggestions" MUST ALWAYS be an empty array []. Never propose rewrites here.
           - field_validation_status MUST be the string "pending".
           - target_id and target_revision_id MUST be integers (not arrays, not null). If you cannot find the id, use 0.
