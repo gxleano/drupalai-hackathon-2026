@@ -110,12 +110,12 @@ final class AiReviewForm extends FormBase {
       '#weight' => -100,
     ];
 
-    // The primary action alternates: Improve content shows ONLY right
-    // after an explicit Run validation on this page (report stamped
-    // manual_run and still matching the current revision). Any node edit
-    // or applied improvement produces a new revision and/or an unstamped
-    // report (entity triggers validate on save too), so the page falls
-    // back to Run validation — changed content gets validated first.
+    // AI fixes are offered per field only (the Fix with AI buttons on the
+    // finding rows), and ONLY right after an explicit Run validation on
+    // this page (report stamped manual_run and still matching the current
+    // revision). Any node edit or applied improvement produces a new
+    // revision and/or an unstamped report (entity triggers validate on
+    // save too), so changed content gets validated first.
     $latest_report = $this->latestReport($node);
     // The changed-time guard catches edits saved WITHOUT a new revision
     // (content types with "Create new revision" off keep the same
@@ -126,18 +126,14 @@ final class AiReviewForm extends FormBase {
     $report_parsed = $latest_report === NULL
       ? NULL
       : $this->parseResult((string) ($latest_report->get('field_validation_result')->value ?? ''));
-    $show_improve = $revision_match && !empty($report_parsed['manual_run']);
-    // A report whose ten verdicts are all pass/minor has nothing left to
-    // rewrite: the improver would only churn prose that already complies.
-    // The button disappears and the editor is told to edit manually.
-    $nothing_to_improve = $show_improve && !$this->hasWeakGuideline($report_parsed);
-    $show_improve = $show_improve && !$nothing_to_improve;
+    $report_current = $revision_match && !empty($report_parsed['manual_run']);
 
     // ---- Status hero -----------------------------------------------------
     // One banner answers the editor's first question — "is this content OK?"
     // — with a state color, a plain-words verdict, the three key numbers and
     // the actions, before any detail below.
     [$score, $date] = $this->acceptedScore($node);
+    $pending = $this->pendingSuggestions($node);
     $scores_map = $revision_match && is_array($report_parsed['scores'] ?? NULL) && $report_parsed['scores'] !== []
       ? $report_parsed['scores']
       : NULL;
@@ -164,7 +160,11 @@ final class AiReviewForm extends FormBase {
       ],
       'stale' => [
         $this->t('Content has changed'),
-        $this->t('These results are from a previous version. Re-run the validation for a current verdict.'),
+        $pending !== []
+          // Mid review session: applies change the revision on purpose and
+          // the closing apply/ignore re-validates automatically.
+          ? $this->t('Suggestions are being applied. The score refreshes automatically when you finish reviewing them below.')
+          : $this->t('These results are from a previous version. Re-run the validation for a current verdict.'),
       ],
       default => [
         $this->t('Not validated yet'),
@@ -222,12 +222,10 @@ final class AiReviewForm extends FormBase {
         '#attributes' => ['class' => ['ai-review-hero__actions']],
       ],
     ];
-    // A cached report means a plain re-run would only replay the stored
-    // score — offering it NEXT TO "Re-validate anyway" is two buttons for
-    // one action. So there is exactly one validate button: forced-fresh
-    // when a cached report exists, the normal run otherwise.
+    // Exactly one validate button: the handler always runs fresh, so the
+    // label only tells the editor whether this is a first run or a re-run.
     $cached = $operations !== [] ? $this->cachedReport($node, $operations[0]['workflow_id']) : NULL;
-    if (!$show_improve && $operations !== []) {
+    if ($operations !== []) {
       $form['hero']['actions']['rerun'] = [
         '#type' => 'submit',
         '#value' => match (TRUE) {
@@ -235,34 +233,17 @@ final class AiReviewForm extends FormBase {
           $latest_report !== NULL => $this->t('Re-run validation on the new version'),
           default => $this->t('Run validation'),
         },
-        '#name' => ($cached !== NULL ? 'revalidate:' : 'rerun:') . $operations[0]['workflow_id'],
-        '#submit' => [$cached !== NULL ? '::forceRerunValidation' : '::rerunValidation'],
+        // The #name must be STABLE across builds: an AJAX click submits the
+        // name painted on the previous render, and if the rebuild names the
+        // button differently (state moved on) no triggering element matches
+        // and the click silently does nothing. The cached-vs-fresh decision
+        // therefore lives in the submit handler, not in the name.
+        '#name' => 'rerun:' . $operations[0]['workflow_id'],
+        '#submit' => ['::rerunValidation'],
         // A passed report needs no urgent action — the button stays
         // secondary so the green banner remains the loudest element.
         '#button_type' => $state === 'passed' ? NULL : 'primary',
         '#ajax' => $this->ajaxAction($this->aiProgressMessage($this->t('Analyzing the content against the 10 EU guidelines… (~30s)'))),
-      ];
-    }
-    if ($show_improve) {
-      $form['hero']['actions']['improve'] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Improve content'),
-        '#name' => 'improve:' . $latest_report->id(),
-        '#submit' => ['::improveArticle'],
-        '#button_type' => 'primary',
-        '#ajax' => $this->ajaxAction($this->aiProgressMessage($this->t('Rewriting the content based on the findings… (~1 min)'))),
-      ];
-    }
-    // Next to Improve content, a fresh verdict is still one click away —
-    // but only while a cached report exists (otherwise a run is fresh by
-    // definition and the single rerun button above covers it).
-    if ($show_improve && $cached !== NULL) {
-      $form['hero']['actions']['revalidate_anyway'] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Re-validate anyway'),
-        '#name' => 'revalidate:' . $operations[0]['workflow_id'],
-        '#submit' => ['::forceRerunValidation'],
-        '#ajax' => $this->ajaxAction($this->aiProgressMessage($this->t('Re-analyzing the content against the 10 EU guidelines… (~30s)'))),
       ];
     }
     if (count(Element::children($form['hero']['actions'])) > 0) {
@@ -278,11 +259,25 @@ final class AiReviewForm extends FormBase {
     $form['report'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['ai-review-results']],
-      'field_findings' => $this->buildFieldFindings($report_parsed, $latest_report),
+      'field_findings' => $this->buildFieldFindings(
+        $report_parsed,
+        $latest_report,
+        $report_current ? (int) $latest_report->id() : NULL,
+        $pending,
+        $this->fieldDecisions($node),
+      ),
       'overall_summary' => $this->buildOverallSummary($report_parsed, $latest_report),
     ];
 
-    $form['validations'] = $this->buildValidations($node);
+    // Every pending suggestion renders inline under a field row — whether
+    // it came from a full improve run or a per-field Fix
+    // with AI — so the newest pending improve item never repeats in the
+    // history below with its bulk apply table: one review path, per-field
+    // Accept/Reject decisions, regardless of origin.
+    $form['validations'] = $this->buildValidations(
+      $node,
+      $pending === [] ? NULL : reset($pending)['id'],
+    );
 
     return $form;
   }
@@ -392,6 +387,340 @@ final class AiReviewForm extends FormBase {
   }
 
   /**
+   * Collects the newest pending improve item's suggestions per field.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node being reviewed.
+   *
+   * @return array<string, array{id: int, suggestion: array<string, mixed>}>
+   *   Prepared suggestions keyed by field name; empty when nothing is
+   *   pending.
+   */
+  private function pendingSuggestions(NodeInterface $node): array {
+    $item = $this->latestPendingImprove($node);
+    if ($item === NULL) {
+      return [];
+    }
+    $parsed = $this->parseResult((string) ($item->get('field_validation_result')->value ?? ''));
+    $suggestions = is_array($parsed['suggestions'] ?? NULL) ? $parsed['suggestions'] : [];
+    $applied = is_array($parsed['applied_fields'] ?? NULL) ? $parsed['applied_fields'] : [];
+    $map = [];
+    foreach ($this->prepareSuggestions($suggestions, $node) as $prepared) {
+      // An applied suggestion is done — offering its panel again would
+      // invite applying the same change twice.
+      if (in_array($prepared['field'], $applied, TRUE)) {
+        continue;
+      }
+      $map[$prepared['field']] = ['id' => (int) $item->id(), 'suggestion' => $prepared];
+    }
+    return $map;
+  }
+
+  /**
+   * Loads the newest pending improve item for the node, if any.
+   */
+  private function latestPendingImprove(NodeInterface $node): ?ContentEntityInterface {
+    $storage = $this->entityTypeManager->getStorage('ai_content_validation_item');
+    $ids = $storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('field_content_revision.target_id', $node->id())
+      ->condition('field_flowdrop_workflow', 'content_improve')
+      ->condition('field_validation_status', 'pending')
+      ->sort('created', 'DESC')
+      ->range(0, 1)
+      ->execute();
+    $item = $ids ? $storage->load(reset($ids)) : NULL;
+    if (!$item instanceof ContentEntityInterface) {
+      return NULL;
+    }
+    // Self-heal items stuck in pending by the old closing logic (every
+    // suggestion decided, yet the status never flipped): close them here
+    // so they stop rendering as an open review session.
+    $parsed = $this->parseResult((string) ($item->get('field_validation_result')->value ?? '')) ?? [];
+    $applied = is_array($parsed['applied_fields'] ?? NULL) ? $parsed['applied_fields'] : [];
+    $unresolved = array_filter(
+      is_array($parsed['suggestions'] ?? NULL) ? $parsed['suggestions'] : [],
+      fn ($s) => !is_array($s) || !in_array($s['field'] ?? NULL, $applied, TRUE),
+    );
+    if ($unresolved === [] && ($applied !== [] || ($parsed['ignored_suggestions'] ?? []) !== [])) {
+      if ($applied !== []) {
+        $parsed['done_by'] = (int) $this->currentUser()->id();
+        $parsed['done_at'] = $this->time->getRequestTime();
+        $item->set('field_validation_result', json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+      }
+      $item->set('field_validation_status', $applied !== [] ? 'done' : 'ignored')->save();
+      return NULL;
+    }
+    return $item;
+  }
+
+  /**
+   * Reads the per-field accept/reject decisions of the open review session.
+   *
+   * While an improve item is still pending, fields already decided carry
+   * their outcome here so the findings list can badge them Accepted or
+   * Rejected instead of leaving the stale Review/Passed verdict. Once the
+   * session closes, the automatic re-validation supplies fresh verdicts
+   * and this map is empty again.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node being reviewed.
+   *
+   * @return array<string, string>
+   *   Field name to 'accepted' or 'rejected'.
+   */
+  private function fieldDecisions(NodeInterface $node): array {
+    $item = $this->latestPendingImprove($node);
+    if ($item === NULL) {
+      return [];
+    }
+    $parsed = $this->parseResult((string) ($item->get('field_validation_result')->value ?? ''));
+    $decisions = [];
+    foreach ($parsed['ignored_suggestions'] ?? [] as $suggestion) {
+      if (is_array($suggestion) && is_string($suggestion['field'] ?? NULL)) {
+        $decisions[$suggestion['field']] = 'rejected';
+      }
+    }
+    foreach ($parsed['applied_fields'] ?? [] as $field) {
+      if (is_string($field)) {
+        $decisions[$field] = 'accepted';
+      }
+    }
+    return $decisions;
+  }
+
+  /**
+   * Builds the inline suggestion panel shown under a field's finding row.
+   *
+   * @param int $validation_id
+   *   The pending improve item the suggestion belongs to.
+   * @param array{field: string, label: string, current: string, suggested_display: string, reason: string} $s
+   *   One prepared suggestion.
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup $label
+   *   The field's display label.
+   *
+   * @return array<string, mixed>
+   *   The render array.
+   */
+  private function buildInlineSuggestion(int $validation_id, array $s, $label): array {
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['ai-review-suggestion']],
+      // Namespaced values: every panel's edit control submits under
+      // ['inline_suggestion'][<field>] instead of colliding on 'edit'.
+      '#tree' => TRUE,
+      '#parents' => ['inline_suggestion', $s['field']],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('AI suggestion — waiting for your review'),
+        '#attributes' => ['class' => ['ai-review-suggestion__heading']],
+      ],
+      'diff' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-review-suggestion__diff']],
+        'value' => $this->diffMarkup($s['current'], $s['suggested_display']),
+      ],
+      'reason' => trim($s['reason']) === '' ? [] : [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#attributes' => ['class' => ['ai-review-suggestion__reason']],
+        'value' => ['#plain_text' => $s['reason']],
+      ],
+      'edit' => $this->buildEditControl($s),
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-review-suggestion__actions']],
+        // Deliberately NOT AJAX: a decision must land as a fresh full page
+        // so only this field's state changes and every other panel comes
+        // back from storage exactly as it is — the AJAX rebuild proved
+        // unreliable for that (same-second changed-time comparisons).
+        'apply' => [
+          '#type' => 'submit',
+          '#value' => $this->t('Accept change'),
+          '#name' => 'applyfieldsug:' . $validation_id . ':' . $s['field'],
+          '#submit' => ['::applyFieldSuggestion'],
+          '#button_type' => 'primary',
+          '#attributes' => ['class' => ['button--small']],
+        ],
+        'ignore' => [
+          '#type' => 'submit',
+          '#value' => $this->t('Reject change'),
+          '#name' => 'ignorefieldsug:' . $validation_id . ':' . $s['field'],
+          '#submit' => ['::ignoreFieldSuggestion'],
+          '#attributes' => ['class' => ['button--small']],
+        ],
+        'hint' => [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#value' => $this->t('Edits under "Edit suggestion" replace the AI text when you accept.'),
+          '#attributes' => ['class' => ['ai-review-hint']],
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Applies one field's pending suggestion from the inline panel.
+   *
+   * The suggestion is applied unedited (editing lives in the pending
+   * item's table). The item goes done once every suggested field has been
+   * applied; until then it stays pending with the applied fields recorded.
+   */
+  public function applyFieldSuggestion(array &$form, FormStateInterface $form_state): void {
+    [, $validation_id, $field] = explode(':', $form_state->getTriggeringElement()['#name'], 3);
+    $validation = $this->entityTypeManager->getStorage('ai_content_validation_item')->load($validation_id);
+    $node = $this->loadNode($form_state);
+    if ($validation === NULL || $node === NULL) {
+      return;
+    }
+    $parsed = $this->parseResult((string) $validation->get('field_validation_result')->value) ?? [];
+    $suggestions = is_array($parsed['suggestions'] ?? NULL) ? $parsed['suggestions'] : [];
+    $suggestion = NULL;
+    foreach ($suggestions as $candidate) {
+      if (is_array($candidate) && ($candidate['field'] ?? NULL) === $field && isset($candidate['suggested'])) {
+        $suggestion = $candidate;
+        break;
+      }
+    }
+    $edit = $form_state->getValue(['inline_suggestion', $field, 'edit'], []);
+    $value = $suggestion === NULL
+      ? ''
+      : $this->editedValue(is_array($edit) ? $edit : [], $this->rawValue($suggestion['suggested']));
+    if ($suggestion === NULL || $this->plainText($value) === '') {
+      $this->messenger()->addWarning($this->t('No applicable suggestion for field %field.', ['%field' => $field]));
+      return;
+    }
+    if (!$this->applyToNode($node, $field, $value, $this->rawValue($suggestion['current'] ?? ''))) {
+      $this->messenger()->addWarning($this->t('Could not apply suggestion for field %field.', ['%field' => $field]));
+      return;
+    }
+    // Store what was ACTUALLY applied, so the done item's diff shows the
+    // editor's text, not the AI's; keep the AI original alongside.
+    if ($value !== $this->rawValue($suggestion['suggested'])) {
+      foreach ($suggestions as $delta => $candidate) {
+        if (is_array($candidate) && ($candidate['field'] ?? NULL) === $field) {
+          $parsed['suggestions'][$delta]['ai_suggested'] = $candidate['suggested'];
+          $parsed['suggestions'][$delta]['suggested'] = $value;
+          break;
+        }
+      }
+    }
+    $node->setNewRevision(TRUE);
+    if ($node instanceof RevisionLogInterface) {
+      $node->setRevisionLogMessage('Applied AI suggestion (' . ($suggestion['label'] ?? $field) . ') from validation #' . $validation_id);
+      $node->setRevisionUserId((int) $this->currentUser()->id());
+      $node->setRevisionCreationTime($this->time->getRequestTime());
+    }
+    $node->save();
+
+    $applied_fields = is_array($parsed['applied_fields'] ?? NULL) ? $parsed['applied_fields'] : [];
+    $applied_fields[] = $field;
+    $parsed['applied_fields'] = array_values(array_unique($applied_fields));
+    $all_fields = array_values(array_filter(array_map(
+      fn ($sug) => is_array($sug) ? ($sug['field'] ?? NULL) : NULL,
+      $suggestions,
+    )));
+    $done = array_diff($all_fields, $parsed['applied_fields']) === [];
+    if ($done) {
+      $parsed['done_by'] = (int) $this->currentUser()->id();
+      $parsed['done_at'] = $this->time->getRequestTime();
+      $validation->set('field_validation_status', 'done');
+    }
+    $validation->set('field_validation_result', json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    $validation->save();
+    $this->messenger()->addStatus($this->t('Applied the suggestion to %field as a new revision.', ['%field' => $suggestion['label'] ?? $field]));
+    // One re-validation per review session, when the last suggestion is
+    // resolved — not one 30-second model call per field.
+    if ($done) {
+      $this->revalidateAfterApply($node);
+    }
+    // No setRebuild(): the default redirect reloads the page from scratch,
+    // so this field shows its new state and the rest rebuilds from storage.
+  }
+
+  /**
+   * Dismisses one field's pending suggestion from the inline panel.
+   *
+   * The suggestion is removed from the item (kept under
+   * ignored_suggestions for inspection). When nothing is left to review
+   * the item leaves the pending state: done if something was applied
+   * earlier, ignored otherwise.
+   */
+  public function ignoreFieldSuggestion(array &$form, FormStateInterface $form_state): void {
+    [, $validation_id, $field] = explode(':', $form_state->getTriggeringElement()['#name'], 3);
+    $validation = $this->entityTypeManager->getStorage('ai_content_validation_item')->load($validation_id);
+    if ($validation === NULL) {
+      return;
+    }
+    $parsed = $this->parseResult((string) $validation->get('field_validation_result')->value) ?? [];
+    $suggestions = is_array($parsed['suggestions'] ?? NULL) ? $parsed['suggestions'] : [];
+    $kept = [];
+    $ignored = is_array($parsed['ignored_suggestions'] ?? NULL) ? $parsed['ignored_suggestions'] : [];
+    $label = $field;
+    foreach ($suggestions as $suggestion) {
+      if (is_array($suggestion) && ($suggestion['field'] ?? NULL) === $field) {
+        $ignored[] = $suggestion;
+        $label = $suggestion['label'] ?? $field;
+        continue;
+      }
+      $kept[] = $suggestion;
+    }
+    $parsed['suggestions'] = $kept;
+    $parsed['ignored_suggestions'] = $ignored;
+    $closing_with_applies = FALSE;
+    // An applied suggestion stays in the list (only recorded in
+    // applied_fields), so "nothing left to review" means every kept
+    // suggestion was already applied — not that the list is empty.
+    // Without this, rejecting LAST left the item pending forever.
+    $applied = is_array($parsed['applied_fields'] ?? NULL) ? $parsed['applied_fields'] : [];
+    $unresolved = array_filter(
+      $kept,
+      fn ($s) => !is_array($s) || !in_array($s['field'] ?? NULL, $applied, TRUE),
+    );
+    if ($unresolved === []) {
+      $closing_with_applies = $applied !== [];
+      if ($closing_with_applies) {
+        $parsed['done_by'] = (int) $this->currentUser()->id();
+        $parsed['done_at'] = $this->time->getRequestTime();
+      }
+      $validation->set('field_validation_status', $closing_with_applies ? 'done' : 'ignored');
+    }
+    $validation->set('field_validation_result', json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    $validation->save();
+    $this->messenger()->addStatus($this->t('Dismissed the suggestion for %field. The content was not changed.', ['%field' => $label]));
+    // The session ended with earlier applied changes still unvalidated —
+    // run the one closing validation now.
+    if ($closing_with_applies) {
+      $node = $this->loadNode($form_state);
+      if ($node !== NULL) {
+        $this->revalidateAfterApply($node);
+      }
+    }
+  }
+
+  /**
+   * Re-validates the changed content right after suggestions were applied.
+   *
+   * Without this, the page comes back with a stale report: the remaining
+   * Review fields lose their Fix with AI buttons (revision mismatch) and
+   * the header warns about a score from a previous version. One immediate
+   * manual-stamped, auto-accepted run keeps everything current — fields
+   * that still fail stay on Review with their button, the fixed field
+   * turns Passed on a fresh verdict, and the score updates.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node that was just changed.
+   */
+  private function revalidateAfterApply(NodeInterface $node): void {
+    $operations = $this->configFactory()->get('flowdrop_node_session.settings')->get('entity_operations') ?: [];
+    if ($operations === []) {
+      return;
+    }
+    $this->runAndAccept($node, $operations[0]['workflow_id']);
+  }
+
+  /**
    * Builds the inline AI spark icon HTML.
    *
    * @return string
@@ -418,18 +747,41 @@ final class AiReviewForm extends FormBase {
    *   The decoded validation result, or NULL when there is none.
    * @param \Drupal\Core\Entity\ContentEntityInterface|null $report
    *   The report the findings came from, for cache metadata.
+   * @param int|null $improve_report_id
+   *   When set, Review rows get a "Fix with AI" button that runs the
+   *   improve workflow scoped to that single field of this report.
+   * @param array<string, array{id: int, suggestion: array<string, mixed>}> $pending
+   *   Pending improve suggestions keyed by field name; each is rendered
+   *   inline right under its field's row so the editor sees the proposed
+   *   change without scrolling to the pending list.
+   * @param array<string, string> $decisions
+   *   Per-field accept/reject decisions of the open review session; a
+   *   decided field's badge shows the outcome instead of the report's
+   *   now-stale Review/Passed verdict.
    *
    * @return array<string, mixed>
    *   Render array, empty when there are no per-field findings.
    */
-  private function buildFieldFindings(?array $result, ?ContentEntityInterface $report): array {
+  private function buildFieldFindings(?array $result, ?ContentEntityInterface $report, ?int $improve_report_id = NULL, array $pending = [], array $decisions = []): array {
     $labels = [
       'title' => $this->t('Title'),
       'field_body' => $this->t('Body'),
       'field_metatags' => $this->t('Meta tags'),
     ];
-    $findings = $result === NULL ? NULL : ($result['field_findings'] ?? NULL);
-    if (!is_array($findings)) {
+    $findings = is_array($result['field_findings'] ?? NULL) ? $result['field_findings'] : [];
+    $verdicts = is_array($result['field_verdicts'] ?? NULL) ? $result['field_verdicts'] : [];
+    // A suggestion or decision on a field outside the fixed list still
+    // needs its own row — the inline panel is the ONLY review path (the
+    // history never shows the bulk table for the newest pending item).
+    // The label comes from the suggestion itself; model-supplied, so it
+    // is escaped here before it lands in an html_tag #value.
+    foreach ($pending as $field => $info) {
+      $labels[$field] ??= Html::escape((string) ($info['suggestion']['label'] ?? $field));
+    }
+    foreach ($decisions as $field => $outcome) {
+      $labels[$field] ??= Html::escape($field);
+    }
+    if ($findings === [] && $pending === [] && $decisions === []) {
       return [];
     }
 
@@ -437,16 +789,36 @@ final class AiReviewForm extends FormBase {
     $all_passed = TRUE;
     foreach ($labels as $field => $label) {
       $text = $findings[$field] ?? NULL;
+      $text = is_string($text) ? trim($text) : '';
       // An affirmative finding ("Accurate and specific.") is still a
-      // finding: only an absent or empty value hides the row.
-      if (!is_string($text) || trim($text) === '') {
+      // finding: only an absent or empty value hides the row — unless the
+      // field carries a pending suggestion or a session decision, which
+      // must render inline here (otherwise the pending item falls back to
+      // the bulk table in the history, duplicating the review).
+      if ($text === '' && !isset($pending[$field]) && !isset($decisions[$field])) {
         continue;
       }
-      // A finding that names a guideline is a problem to act on; anything
-      // else is a pass. Icon and badge tell the editor at a glance which
-      // fields need attention.
-      $issue = (bool) preg_match('/guideline\\s*\\d/i', $text);
+      // The report's explicit per-field verdict is authoritative: the
+      // model states "pass" or "review" per field, so the badge never
+      // depends on parsing prose. Reports from before field_verdicts
+      // existed fall back to the guideline-number heuristic, and a
+      // findingless row only exists because of a suggestion — by
+      // definition something to review.
+      $verdict = $verdicts[$field] ?? NULL;
+      $issue = match (TRUE) {
+        is_string($verdict) => strtolower(trim($verdict)) !== 'pass',
+        $text === '' => TRUE,
+        default => (bool) preg_match('/guidelines?\\s*(?:no\\.?\\s*|#\\s*)?\\d/i', $text),
+      };
       $all_passed = $all_passed && !$issue;
+      $decision = $decisions[$field] ?? NULL;
+      [$badge_text, $badge_class] = match ($decision) {
+        'accepted' => [$this->t('Change accepted'), 'ai-review-badge--passed'],
+        'rejected' => [$this->t('Change rejected'), 'ai-review-badge--neutral'],
+        default => $issue
+          ? [$this->t('Review'), 'ai-review-badge--review']
+          : [$this->t('Passed'), 'ai-review-badge--passed'],
+      };
       $rows[$field] = [
         '#type' => 'container',
         '#attributes' => [
@@ -469,21 +841,43 @@ final class AiReviewForm extends FormBase {
           ],
           // The finding text comes from the model and is untrusted:
           // #plain_text is escaped by the renderer, #markup would not be.
-          'text' => [
+          'text' => $text === '' ? [] : [
             '#type' => 'html_tag',
             '#tag' => 'p',
             '#attributes' => ['class' => ['ai-review-finding__text']],
-            'value' => ['#plain_text' => trim($text)],
+            'value' => ['#plain_text' => $text],
           ],
         ],
         'badge' => [
           '#type' => 'html_tag',
           '#tag' => 'span',
-          '#value' => $issue ? $this->t('Review') : $this->t('Passed'),
+          '#value' => $badge_text,
           '#attributes' => [
-            'class' => ['ai-review-badge', $issue ? 'ai-review-badge--review' : 'ai-review-badge--passed'],
+            'class' => ['ai-review-badge', $badge_class],
           ],
         ],
+        // The spark is a separate masked span overlaid on the button:
+        // <input> cannot carry pseudo-elements, and a background image
+        // cannot follow the text color on hover.
+        'fix' => !$issue || $improve_report_id === NULL || isset($pending[$field]) || $decision !== NULL ? [] : [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['ai-review-fix-wrap']],
+          'button' => [
+            '#type' => 'submit',
+            '#value' => $this->t('Fix with AI'),
+            '#name' => 'improvefield:' . $improve_report_id . ':' . $field,
+            '#submit' => ['::improveField'],
+            '#attributes' => ['class' => ['button--small', 'ai-review-finding__fix']],
+            '#ajax' => $this->ajaxAction($this->aiProgressMessage($this->t('Rewriting the @field based on its findings… (~1 min)', ['@field' => $label]))),
+          ],
+          'icon' => [
+            '#type' => 'html_tag',
+            '#tag' => 'span',
+            '#value' => '',
+            '#attributes' => ['class' => ['ai-review-fix-icon'], 'aria-hidden' => 'true'],
+          ],
+        ],
+        'suggestion' => !isset($pending[$field]) ? [] : $this->buildInlineSuggestion($pending[$field]['id'], $pending[$field]['suggestion'], $label),
       ];
     }
     if ($rows === []) {
@@ -610,7 +1004,7 @@ final class AiReviewForm extends FormBase {
    * Loads the newest validation report (pending or done) for the node.
    *
    * Improvements are always based on an existing report's findings, so
-   * this decides whether the Improve article button exists at all.
+   * this decides whether the per-field Fix with AI buttons exist at all.
    */
   private function latestReport(NodeInterface $node): ?ContentEntityInterface {
     $storage = $this->entityTypeManager->getStorage('ai_content_validation_item');
@@ -637,34 +1031,9 @@ final class AiReviewForm extends FormBase {
     [, $workflow_id] = explode(':', $form_state->getTriggeringElement()['#name'], 2);
     $node = $this->loadNode($form_state);
     if ($node !== NULL) {
-      $cached = $this->cachedReport($node, $workflow_id);
-      if ($cached !== NULL) {
-        // A hit does no work at all: no run is dispatched, the run lock is
-        // never taken, and the existing item is left exactly as it is —
-        // stamping manual_run here would flip the primary button without
-        // a fresh verdict behind it.
-        $parsed = $this->parseResult((string) ($cached->get('field_validation_result')->value ?? '')) ?? [];
-        $this->messenger()->addStatus($this->t('The validated content has not changed since the last validation, so the score of @score/100 still applies and no new AI validation was run. Use "Re-validate anyway" to force a fresh run.', [
-          '@score' => (int) ($parsed['score'] ?? 0),
-        ]));
-        $form_state->setRebuild();
-        return;
-      }
-      $this->runAndAccept($node, $workflow_id);
-    }
-    $form_state->setRebuild();
-  }
-
-  /**
-   * Runs the validation workflow unconditionally, bypassing the cache.
-   *
-   * The editor asked for a fresh verdict on content the memoization
-   * considers unchanged, so no lookup happens here.
-   */
-  public function forceRerunValidation(array &$form, FormStateInterface $form_state): void {
-    [, $workflow_id] = explode(':', $form_state->getTriggeringElement()['#name'], 2);
-    $node = $this->loadNode($form_state);
-    if ($node !== NULL) {
+      // The button reads "Re-run validation" — clicking it always runs,
+      // cached report or not. The cache still spares the model on runs the
+      // editor did NOT ask for explicitly (entity triggers).
       $this->runAndAccept($node, $workflow_id);
     }
     $form_state->setRebuild();
@@ -732,7 +1101,7 @@ final class AiReviewForm extends FormBase {
     [$previous_score] = $this->acceptedScore($node);
     $this->startRun($node, $workflow_id);
     // Stamp the report this run just produced as an explicit manual run:
-    // that flag is what unlocks the Improve content button. Reports from
+    // that flag is what unlocks the per-field Fix with AI buttons. Reports from
     // entity-save triggers or the post-apply re-validation are never
     // stamped, so any content change falls back to Run validation.
     $report = $this->latestReport($node);
@@ -744,21 +1113,20 @@ final class AiReviewForm extends FormBase {
       $parsed['manual_run'] = TRUE;
       $report->set('field_validation_result', json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
       $new_score = is_numeric($parsed['score'] ?? NULL) ? (int) $parsed['score'] : NULL;
-      // No-regression guard: a re-validation may never silently replace
-      // an accepted score with a lower one (typical after applying AI
-      // improvements). The report stays pending — the editor sees why
-      // and can still accept the lower score deliberately.
-      if ($new_score !== NULL && $previous_score !== NULL && $new_score < $previous_score
-        && (string) $report->get('field_validation_status')->value === 'pending'
-      ) {
-        $report->save();
-        $this->messenger()->addWarning($this->t('The new validation scored @new/100, lower than the current @old/100 — the current content could not reach a better quality score, so the previous score is kept. You can still accept the lower score below.', [
-          '@new' => $new_score,
-          '@old' => $previous_score,
-        ]));
-      }
-      elseif ((string) $report->get('field_validation_status')->value === 'pending') {
+      // A fresh validation of the CURRENT content is the truth about the
+      // current content, so it is always accepted — the editor never has
+      // to click Accept score. A drop against the previously accepted
+      // score is still called out loudly (typical after a manual edit
+      // made things worse); the non-regression duty for AI improvements
+      // lives in the improve gate, not here.
+      if ((string) $report->get('field_validation_status')->value === 'pending') {
         $this->acceptValidation($report);
+        if ($new_score !== NULL && $previous_score !== NULL && $new_score < $previous_score) {
+          $this->messenger()->addWarning($this->t('The new score is @new/100, down from @old/100 — the current version of the content scores lower than the previously validated one.', [
+            '@new' => $new_score,
+            '@old' => $previous_score,
+          ]));
+        }
       }
       else {
         $report->save();
@@ -775,10 +1143,16 @@ final class AiReviewForm extends FormBase {
    * `#weight`) so the suggestion table value paths remain
    * `validations][<id>][suggestions`.
    *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node being reviewed.
+   * @param int|null $skip_id
+   *   A validation item to omit because its suggestions render inline
+   *   under the field rows above.
+   *
    * @return array<string, mixed>
    *   Render/form array of validations, newest first.
    */
-  private function buildValidations(NodeInterface $node): array {
+  private function buildValidations(NodeInterface $node, ?int $skip_id = NULL): array {
     $storage = $this->entityTypeManager->getStorage('ai_content_validation_item');
     $ids = $storage->getQuery()
       ->accessCheck(TRUE)
@@ -787,9 +1161,20 @@ final class AiReviewForm extends FormBase {
       ->range(0, 30)
       ->execute();
 
-    $build = ['#tree' => TRUE];
+    $build = [
+      '#tree' => TRUE,
+      '#type' => 'container',
+      '#attributes' => ['class' => ['ai-review-history']],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Validation history'),
+        '#attributes' => ['class' => ['ai-review-history__heading']],
+        '#weight' => -1,
+      ],
+    ];
     if (!$ids) {
-      return $build;
+      return ['#tree' => TRUE];
     }
 
     $items = $storage->loadMultiple($ids);
@@ -798,7 +1183,9 @@ final class AiReviewForm extends FormBase {
     // $ids is ordered newest first; loadMultiple() is not.
     foreach ($ids as $id) {
       $validation = $items[$id] ?? NULL;
-      if ($validation === NULL) {
+      // $skip_id renders inline under its field rows above — listing it
+      // here again would duplicate the whole suggestion table.
+      if ($validation === NULL || (int) $id === $skip_id) {
         continue;
       }
       $status = (string) ($validation->get('field_validation_status')->value ?? 'pending');
@@ -820,11 +1207,12 @@ final class AiReviewForm extends FormBase {
       }
       $build['heading_' . $group] = [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        '#tag' => 'h4',
         '#value' => $this->t('@heading (@count)', [
           '@heading' => $heading,
           '@count' => count($grouped[$group]),
         ]),
+        '#attributes' => ['class' => ['ai-review-history__group', 'ai-review-history__group--' . $group]],
         '#weight' => $weight++,
       ];
       foreach ($grouped[$group] as $id => $element) {
@@ -837,7 +1225,8 @@ final class AiReviewForm extends FormBase {
       $build['superseded'] = [
         '#type' => 'details',
         '#title' => $this->t('Score history (@count)', ['@count' => count($grouped['superseded'])]),
-        '#open' => TRUE,
+        // Collapsed: superseded scores are an audit trail, not daily work.
+        '#open' => FALSE,
         '#weight' => $weight++,
       ] + $grouped['superseded'];
     }
@@ -885,7 +1274,19 @@ final class AiReviewForm extends FormBase {
 
     $suggestions = is_array($parsed['suggestions'] ?? NULL) ? $parsed['suggestions'] : [];
     $applied = is_array($parsed['applied_fields'] ?? NULL) ? $parsed['applied_fields'] : NULL;
-    $prepared = $this->prepareSuggestions($suggestions, $node);
+    // Rejected suggestions live under ignored_suggestions — a closed item
+    // must still list them (with a Rejected status), otherwise the record
+    // only shows what was accepted. A pending item keeps them out: its
+    // table is for open decisions only.
+    $ignored_list = is_array($parsed['ignored_suggestions'] ?? NULL) ? $parsed['ignored_suggestions'] : [];
+    $rejected_fields = array_values(array_filter(array_map(
+      fn ($s) => is_array($s) ? ($s['field'] ?? NULL) : NULL,
+      $ignored_list,
+    )));
+    $prepared = $this->prepareSuggestions(
+      $group === 'pending' ? $suggestions : array_merge($suggestions, $ignored_list),
+      $node,
+    );
     $summary = $parsed !== NULL && is_scalar($parsed['summary'] ?? NULL) ? trim((string) $parsed['summary']) : '';
 
     // Attribution: who moved this item to done (applied the changes or
@@ -1006,7 +1407,7 @@ final class AiReviewForm extends FormBase {
         '#submit' => ['::applySuggestions'],
         '#button_type' => 'primary',
         // Deliberately NOT AJAX: applying changes the node revision, which
-        // flips the primary button from Improve content to Run validation.
+        // flips the hero back to Run validation.
         // A full submit + redirect guarantees a fresh page state; the AJAX
         // rebuild proved unreliable for that switch (same-second changed
         // time comparisons).
@@ -1024,7 +1425,8 @@ final class AiReviewForm extends FormBase {
         $this->t('Change'),
         $this->t('Reason'),
       ];
-      if ($applied !== NULL) {
+      $has_status = $applied !== NULL || $rejected_fields !== [];
+      if ($has_status) {
         $header[] = $this->t('Status');
       }
       $rows = [];
@@ -1034,15 +1436,19 @@ final class AiReviewForm extends FormBase {
           'change' => ['data' => $this->diffMarkup($s['current'], $s['suggested_display'])],
           'reason' => $s['reason'],
         ];
-        if ($applied !== NULL) {
-          $is_applied = in_array($s['field'], $applied, TRUE);
+        if ($has_status) {
+          $is_applied = in_array($s['field'], $applied ?? [], TRUE);
           // Same pill styling as the per-field Passed/Review badges, so
           // "Applied" reads like a pass everywhere on the page.
           $row['status'] = [
             'data' => [
               '#type' => 'html_tag',
               '#tag' => 'span',
-              '#value' => $is_applied ? $this->t('Applied') : $this->t('Not applied'),
+              '#value' => match (TRUE) {
+                $is_applied => $this->t('Applied'),
+                in_array($s['field'], $rejected_fields, TRUE) => $this->t('Rejected'),
+                default => $this->t('Not applied'),
+              },
               '#attributes' => [
                 'class' => ['ai-review-badge', $is_applied ? 'ai-review-badge--passed' : 'ai-review-badge--neutral'],
               ],
@@ -1059,7 +1465,7 @@ final class AiReviewForm extends FormBase {
     }
 
     // A validation report diagnoses only; the human decides: improve the
-    // content (top-level Improve article button), accept the score as-is,
+    // content (per-field Fix with AI buttons), accept the score as-is,
     // or ignore the run entirely.
     $is_report = $workflow?->id() === self::REPORT_WORKFLOW;
     if ($group === 'pending') {
@@ -1134,16 +1540,53 @@ final class AiReviewForm extends FormBase {
   }
 
   /**
-   * Runs the improve workflow using a validation's findings.
+   * Runs the improve workflow scoped to one field of a validation.
+   *
+   * Triggered by the per-field "Fix with AI" button on a Review row.
    */
-  public function improveArticle(array &$form, FormStateInterface $form_state): void {
-    [, $validation_id] = explode(':', $form_state->getTriggeringElement()['#name'], 2);
+  public function improveField(array &$form, FormStateInterface $form_state): void {
+    [, $validation_id, $field] = explode(':', $form_state->getTriggeringElement()['#name'], 3);
+    $this->runImprove($form_state, (int) $validation_id, $field);
+  }
+
+  /**
+   * Starts a content_improve run from a validation's findings.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param int $validation_id
+   *   The validation report to improve from.
+   * @param string|null $only_field
+   *   Restrict the rewrite to this field, or NULL for all flagged fields.
+   */
+  private function runImprove(FormStateInterface $form_state, int $validation_id, ?string $only_field): void {
     $validation = $this->entityTypeManager->getStorage('ai_content_validation_item')->load($validation_id);
     $node = $this->loadNode($form_state);
     if ($validation === NULL || $node === NULL) {
       return;
     }
     $parsed = $this->parseResult((string) $validation->get('field_validation_result')->value);
+    $findings = $this->improveFindings($parsed ?? [], $only_field);
+    $form_state->setRebuild();
+    if ($findings === '') {
+      $this->messenger()->addWarning($this->t('This validation has no findings to improve from.'));
+      return;
+    }
+    $this->startRun($node, 'content_improve', $findings);
+  }
+
+  /**
+   * Assembles the findings prompt string the improve workflow receives.
+   *
+   * @param array<string, mixed> $parsed
+   *   The parsed validation result.
+   * @param string|null $only_field
+   *   Restrict the rewrite to this field, or NULL for all flagged fields.
+   *
+   * @return string
+   *   The findings string, empty when the report carries nothing usable.
+   */
+  private function improveFindings(array $parsed, ?string $only_field = NULL): string {
     $findings = is_scalar($parsed['summary'] ?? NULL) ? trim((string) $parsed['summary']) : '';
     $score = $parsed['score'] ?? NULL;
     if (is_numeric($score)) {
@@ -1180,14 +1623,17 @@ final class AiReviewForm extends FormBase {
     // them the improver only sees the overall prose summary and rewrites
     // whatever it feels like; with them each suggestion targets its own
     // field's named guideline.
+    $labels = [
+      'title' => 'Title (field "title")',
+      'field_body' => 'Body (field "field_body")',
+      'field_metatags' => 'Meta Tags (field "field_metatags")',
+    ];
     if (is_array($parsed['field_findings'] ?? NULL)) {
-      $labels = [
-        'title' => 'Title (field "title")',
-        'field_body' => 'Body (field "field_body")',
-        'field_metatags' => 'Meta Tags (field "field_metatags")',
-      ];
       $lines = [];
       foreach ($labels as $field => $label) {
+        if ($only_field !== NULL && $field !== $only_field) {
+          continue;
+        }
         $text = $parsed['field_findings'][$field] ?? NULL;
         if (is_scalar($text) && trim((string) $text) !== '') {
           $lines[] = $label . ' → ' . trim((string) $text);
@@ -1197,12 +1643,14 @@ final class AiReviewForm extends FormBase {
         $findings .= ' Per-field findings (each line is the ONLY reason that field may be changed): ' . implode(' | ', $lines);
       }
     }
-    $form_state->setRebuild();
-    if ($findings === '') {
-      $this->messenger()->addWarning($this->t('This validation has no findings to improve from.'));
-      return;
+    if ($only_field !== NULL && isset($labels[$only_field]) && $findings !== '') {
+      // The [only_field:x] marker is machine-read by the improve gate,
+      // which deterministically drops suggestions for any other field —
+      // the sentence around it is for the model.
+      $findings .= ' THE EDITOR ASKED TO FIX ONLY ' . $labels[$only_field]
+        . ': emit EXACTLY ONE suggestion, for that field alone, and OMIT every other field from "suggestions". [only_field:' . $only_field . ']';
     }
-    $this->startRun($node, 'content_improve', $findings);
+    return $findings;
   }
 
   /**
@@ -1252,6 +1700,41 @@ final class AiReviewForm extends FormBase {
       ];
     }
     return $prepared;
+  }
+
+  /**
+   * Resolves the value to apply from an edit control's submitted values.
+   *
+   * An edited suggestion wins over the AI's; an emptied field falls back
+   * to the AI suggestion so a stray clear never wipes a value. JSON
+   * suggestions come back as per-key fields and are re-encoded here, so
+   * the serialized value can never be malformed. HTML suggestions come
+   * back from a text_format element as {value, format} — only the value
+   * is applied (the field keeps its stored format).
+   *
+   * @param array<string, mixed> $edit
+   *   The submitted edit-control values ('json' map or 'value').
+   * @param string $suggested_raw
+   *   The AI's raw suggested value, the fallback.
+   *
+   * @return string
+   *   The value to apply.
+   */
+  private function editedValue(array $edit, string $suggested_raw): string {
+    if (is_array($edit['json'] ?? NULL)) {
+      $decoded = json_decode($suggested_raw, TRUE) ?: [];
+      foreach ($edit['json'] as $json_key => $json_value) {
+        if (isset($decoded[$json_key]) && trim((string) $json_value) !== '') {
+          $decoded[$json_key] = (string) $json_value;
+        }
+      }
+      return (string) json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+    $edited = $edit['value'] ?? '';
+    if (is_array($edited)) {
+      $edited = $edited['value'] ?? '';
+    }
+    return trim((string) $edited) !== '' ? trim((string) $edited) : $suggested_raw;
   }
 
   /**
@@ -1599,26 +2082,7 @@ final class AiReviewForm extends FormBase {
       // {value, format} — only the value is applied (the field keeps its
       // stored format).
       $suggested_raw = $this->rawValue($suggestion['suggested']);
-      $value = $suggested_raw;
-      $edit = $row['change']['edit'] ?? [];
-      if (is_array($edit['json'] ?? NULL)) {
-        $decoded = json_decode($suggested_raw, TRUE) ?: [];
-        foreach ($edit['json'] as $json_key => $json_value) {
-          if (isset($decoded[$json_key]) && trim((string) $json_value) !== '') {
-            $decoded[$json_key] = (string) $json_value;
-          }
-        }
-        $value = (string) json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-      }
-      else {
-        $edited = $edit['value'] ?? '';
-        if (is_array($edited)) {
-          $edited = $edited['value'] ?? '';
-        }
-        if (trim((string) $edited) !== '') {
-          $value = trim((string) $edited);
-        }
-      }
+      $value = $this->editedValue(is_array($row['change']['edit'] ?? NULL) ? $row['change']['edit'] : [], $suggested_raw);
       // Never blank a field: an empty replacement value is a model
       // mistake (skipped-field contract), not an instruction to clear.
       if ($this->plainText($value) === '') {
@@ -1659,15 +2123,11 @@ final class AiReviewForm extends FormBase {
       $parsed['done_at'] = $this->time->getRequestTime();
       $validation->set('field_validation_result', json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
       $validation->set('field_validation_status', 'done')->save();
-      $this->messenger()->addStatus($this->t('Applied @count change(s) to %title as a new revision. The quality score still refers to the previous version — run validation again for a fresh score.', [
+      $this->messenger()->addStatus($this->t('Applied @count change(s) to %title as a new revision.', [
         '@count' => count($applied),
         '%title' => $node->label(),
       ]));
-      // Applying suggestions deliberately does NOT re-validate or touch
-      // the quality score: the new node revision no longer matches the
-      // scored one, so the score header switches to "score from a previous
-      // version — the content has changed since" and the editor decides
-      // when to run a fresh validation.
+      $this->revalidateAfterApply($node);
     }
     else {
       $this->messenger()->addWarning($this->t('No changes were applied.'));

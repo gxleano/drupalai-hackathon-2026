@@ -40,35 +40,52 @@ final class AiQualityScore extends FieldPluginBase {
     }
     $nid = (int) $entity->id();
     $scores = drupal_static('ai_content_validation_latest_scores', []);
-    $score = $scores[$nid] ?? NULL;
+    $record = $scores[$nid] ?? NULL;
+    $stale = FALSE;
 
-    if ($score === NULL) {
+    if ($record === NULL) {
       $fill = 'var(--gin-border-color, #d4d4d8)';
       $percent = 100;
       $text = '–';
       $info = $this->t('No AI quality score yet — click to run a validation.');
     }
     else {
-      $score = max(0, min(100, (int) $score));
+      $score = max(0, min(100, (int) $record['score']));
+      // The score describes one revision at one moment: a newer revision
+      // or a later edit (same-revision saves included) makes it stale.
+      $stale = $record['vid'] !== (int) $entity->getRevisionId()
+        || (int) $entity->getChangedTime() > $record['created'];
       $fill = $score >= 80
         ? 'var(--gin-color-green, #26a769)'
         : ($score >= 50 ? 'var(--gin-color-warning, #e29700)' : 'var(--gin-color-danger, #dc2323)');
       $percent = $score;
       $text = $score . '%';
-      $info = $this->t('Quality score @score/100 from the latest AI validation.', ['@score' => $score]);
+      $info = $stale
+        ? $this->t('Quality score @score/100 — the content has changed since this validation. Click to re-validate.', ['@score' => $score])
+        : $this->t('Quality score @score/100 from the latest AI validation.', ['@score' => $score]);
     }
 
     $url = Url::fromRoute('ai_content_validation.node_review', ['node' => $nid])->toString();
     $ring = 'conic-gradient(' . $fill . ' 0 ' . $percent . '%, var(--gin-border-color, #e5e5e5) ' . $percent . '% 100%)';
+    // Stale scores carry a small amber "!" badge on the donut so the list
+    // shows at a glance which content needs re-validation.
+    $badge = $stale
+      ? '<span aria-hidden="true" style="position: absolute; top: -2px; right: -4px;'
+        . ' display: inline-flex; align-items: center; justify-content: center;'
+        . ' width: 16px; height: 16px; border-radius: 50%;'
+        . ' background: var(--gin-color-warning, #e29700); color: #fff;'
+        . ' font-size: 11px; font-weight: 700; line-height: 1;'
+        . ' border: 2px solid var(--gin-bg-layer, #fff);">!</span>'
+      : '';
     return Markup::create(
       '<a href="' . Html::escape($url) . '" title="' . Html::escape((string) $info) . '"'
       . ' aria-label="' . Html::escape((string) $info) . '" style="text-decoration: none;">'
-      . '<span style="display: inline-flex; align-items: center; justify-content: center;'
+      . '<span style="position: relative; display: inline-flex; align-items: center; justify-content: center;'
       . ' width: 44px; height: 44px; border-radius: 50%; background: ' . $ring . ';">'
       . '<span style="display: inline-flex; align-items: center; justify-content: center;'
       . ' width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #222;'
       . ' font-size: 11px; font-weight: 600; line-height: 1;">'
-      . Html::escape($text) . '</span></span></a>'
+      . Html::escape($text) . '</span>' . $badge . '</span></a>'
     );
   }
 

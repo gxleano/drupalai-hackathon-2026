@@ -213,7 +213,20 @@ function ai_content_validation_views_pre_render(ViewExecutable $view): void {
       }
       $score = is_array($decoded) ? ($decoded['score'] ?? NULL) : NULL;
       if (is_numeric($score)) {
-        $scores[$nid] = (int) $score;
+        // Revision id and timestamp travel along so the donut can flag a
+        // score whose content has changed since it was validated.
+        $verdicts = is_array($decoded['scores'] ?? NULL) ? $decoded['scores'] : [];
+        $scores[$nid] = [
+          'score' => (int) $score,
+          'vid' => (int) ($item->get('field_content_revision')->target_revision_id ?? 0),
+          'created' => (int) $item->get('created')->value,
+          // Any verdict below a full pass means the report suggests
+          // improvements — the content list flags it.
+          'weak' => (bool) array_filter(
+            $verdicts,
+            fn ($v) => is_numeric($v) ? (int) $v < 10 : strtolower(trim((string) $v)) !== 'pass',
+          ),
+        ];
       }
     }
   }
@@ -253,15 +266,25 @@ function ai_content_validation_preprocess_views_view_field(array &$variables): v
   }
   $counts = drupal_static('ai_content_validation_pending_counts', []);
   $count = $counts[(int) $entity->id()] ?? 0;
-  if ($count === 0) {
+  // Manual validations auto-accept, so pending items alone no longer cover
+  // the "needs attention" cases: a current report whose verdicts are not
+  // all pass ("Improvements suggested") warrants the icon too.
+  $record = drupal_static('ai_content_validation_latest_scores', [])[(int) $entity->id()] ?? NULL;
+  $current = $record !== NULL
+    && $record['vid'] === (int) $entity->getRevisionId()
+    && (int) $entity->getChangedTime() <= $record['created'];
+  $weak = $current && !empty($record['weak']);
+  if ($count === 0 && !$weak) {
     return;
   }
 
-  $info = \Drupal::translation()->formatPlural(
-    $count,
-    '1 pending AI validation needs your attention — click to review.',
-    '@count pending AI validations need your attention — click to review.'
-  );
+  $info = $count > 0
+    ? \Drupal::translation()->formatPlural(
+      $count,
+      '1 pending AI validation needs your attention — click to review.',
+      '@count pending AI validations need your attention — click to review.'
+    )
+    : t('The AI validation suggested improvements for this content — click to review.');
   $url = Url::fromRoute('ai_content_validation.node_review', ['node' => $entity->id()])->toString();
   // The Gin status-report warning octagon: its sprite masked over the theme
   // warning color, mirroring .system-status-report__status-icon--warning.

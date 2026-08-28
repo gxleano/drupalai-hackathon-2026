@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ai_content_validation\ContentHasher;
+use Drupal\ai_content_validation\JsonRepair;
 use Drupal\ai_content_validation\ValidationScorer;
 use Drupal\flowdrop\Attribute\FlowDropNodeProcessor;
 use Drupal\flowdrop\DTO\ParameterBagInterface;
@@ -92,8 +93,12 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
           'type' => 'object',
           'description' => 'The parsed validation entity values from the AI.',
         ],
+        'json' => [
+          'type' => 'string',
+          'description' => 'The raw model response, used to repair-parse when the upstream JSON parse delivered nothing (e.g. a dropped closing brace).',
+          'default' => '',
+        ],
       ],
-      'required' => ['data'],
     ];
   }
 
@@ -117,6 +122,16 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
    */
   public function process(ParameterBagInterface $params): array {
     $data = $params->getArray('data');
+    // The upstream json_to_data node delivers NULL when the model's JSON
+    // is mechanically broken (typically a dropped final brace). The raw
+    // response is wired in as a fallback and repaired deterministically —
+    // failing the whole 30-second run over one missing brace is worse.
+    if ($data === []) {
+      $data = JsonRepair::parse($params->getString('json')) ?? [];
+    }
+    if ($data === []) {
+      throw new \RuntimeException('The validator response could not be parsed as JSON, even after repair.');
+    }
     if (isset($data['field_validation_result']) && is_array($data['field_validation_result'])) {
       $result = $data['field_validation_result'];
       // The numeric score is derived mechanically from the model's ten
@@ -136,8 +151,18 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
     }
     // Every AI result awaits a human decision: a score report is accepted
     // or ignored, a proposal is applied or ignored. Done is always a
-    // UI-driven transition, never set by the model.
-    $data['field_validation_status'] = 'pending';
+    // UI-driven transition, never set by the model. The one exception is
+    // a proposal the improve gate itself discarded (rejected, or empty):
+    // there is nothing left for a human to decide, so it is filed as
+    // ignored right away instead of sitting in Pending forever.
+    $stored_result = $data['field_validation_result'] ?? NULL;
+    if (is_string($stored_result)) {
+      $stored_result = json_decode($stored_result, TRUE);
+    }
+    $outcome = is_array($stored_result) ? ($stored_result['outcome'] ?? NULL) : NULL;
+    $data['field_validation_status'] = in_array($outcome, ['improve_rejected', 'improve_no_suggestions'], TRUE)
+      ? 'ignored'
+      : 'pending';
     return ['values' => $data];
   }
 

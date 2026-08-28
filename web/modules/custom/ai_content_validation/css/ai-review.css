@@ -56,36 +56,59 @@
   position: relative;
 }
 
-.ai-review-hero--passed .ai-review-hero__icon::after {
-  /* Checkmark. */
+.ai-review-hero__icon::after {
   content: "";
   position: absolute;
-  left: 0.95em;
-  top: 0.78em;
-  width: 0.8em;
-  height: 0.45em;
-  border-left: 3px solid #fff;
-  border-bottom: 3px solid #fff;
-  transform: rotate(-45deg);
+  inset: 0;
+  margin: auto;
+  width: 1.5em;
+  height: 1.5em;
+  background-color: #fff;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 .ai-review-hero--issues .ai-review-hero__icon::after,
-.ai-review-hero--stale .ai-review-hero__icon::after,
-.ai-review-hero--none .ai-review-hero__icon::after {
-  /* Exclamation / question. */
-  content: "!";
+.ai-review-hero--stale .ai-review-hero__icon::after {
+  content: "";
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 1.5em;
-  font-weight: 700;
+  margin: auto;
+  width: 1.5em;
+  height: 1.5em;
+  background-color: #fff;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 6h2v8h-2zm0 10h2v2h-2z'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 6h2v8h-2zm0 10h2v2h-2z'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 .ai-review-hero--none .ai-review-hero__icon::after {
-  content: "?";
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1.4em;
+  height: 1.4em;
+  background-color: #fff;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11.07 12.85c.77-1.39 2.25-2.21 3.11-3.44.91-1.29.4-3.7-2.18-3.7-1.69 0-2.52 1.28-2.87 2.34L6.54 6.96C7.25 4.83 9.18 3 11.99 3c2.35 0 3.96 1.07 4.78 2.41.7 1.15 1.11 3.3.03 4.9-1.2 1.77-2.35 2.31-2.97 3.45-.25.46-.35.76-.35 2.24h-2.89c-.01-.78-.13-2.05.48-3.15zM14 20a2 2 0 1 1-4 0 2 2 0 0 1 4 0z'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11.07 12.85c.77-1.39 2.25-2.21 3.11-3.44.91-1.29.4-3.7-2.18-3.7-1.69 0-2.52 1.28-2.87 2.34L6.54 6.96C7.25 4.83 9.18 3 11.99 3c2.35 0 3.96 1.07 4.78 2.41.7 1.15 1.11 3.3.03 4.9-1.2 1.77-2.35 2.31-2.97 3.45-.25.46-.35.76-.35 2.24h-2.89c-.01-.78-.13-2.05.48-3.15zM14 20a2 2 0 1 1-4 0 2 2 0 0 1 4 0z'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 .ai-review-hero__body {
@@ -190,7 +213,12 @@
   background: var(--ai-surface);
   border: 1px solid var(--ai-border);
   border-radius: var(--gin-border-m, 8px);
+  /* Anchor for the in-flight progress strip, same as the hero — and clip
+     it to the rounded corners so it never pokes past the card border. */
+  position: relative;
+  overflow: hidden;
 }
+
 
 /* Row status icon: small filled circle, check or "!". */
 .ai-review-finding__icon {
@@ -206,13 +234,19 @@
 .ai-review-finding__icon::after {
   content: "";
   position: absolute;
-  left: 0.45em;
-  top: 0.38em;
-  width: 0.5em;
-  height: 0.28em;
-  border-left: 2px solid #fff;
-  border-bottom: 2px solid #fff;
-  transform: rotate(-45deg);
+  inset: 0;
+  margin: auto;
+  width: 0.95em;
+  height: 0.95em;
+  background-color: #fff;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 .ai-review-finding--issue .ai-review-finding__icon {
@@ -220,18 +254,21 @@
 }
 
 .ai-review-finding--issue .ai-review-finding__icon::after {
-  content: "!";
-  border: 0;
+  content: "";
+  position: absolute;
   inset: 0;
-  width: auto;
-  height: auto;
-  transform: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 0.9em;
-  font-weight: 700;
+  margin: auto;
+  width: 0.95em;
+  height: 0.95em;
+  background-color: #fff;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 6h2v8h-2zm0 10h2v2h-2z'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 6h2v8h-2zm0 10h2v2h-2z'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 .ai-review-finding__body {
@@ -286,25 +323,21 @@
   background: color-mix(in srgb, var(--ai-blue) 6%, var(--ai-surface));
 }
 
-/* Document-ish icon: rounded square with lines. */
+/* Document icon, masked so it follows the info blue. */
 .ai-review-summary__icon {
   flex: none;
-  width: 1.6em;
+  width: 1.75em;
   height: 1.9em;
   margin-top: 0.1em;
-  border: 2px solid var(--ai-blue);
-  border-radius: 3px;
-  position: relative;
-}
-
-.ai-review-summary__icon::after {
-  content: "";
-  position: absolute;
-  left: 0.25em;
-  right: 0.25em;
-  top: 0.35em;
-  height: 0.75em;
-  background: repeating-linear-gradient(to bottom, var(--ai-blue), var(--ai-blue) 2px, transparent 2px, transparent 6px);
+  background-color: var(--ai-blue);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 .ai-review-summary__heading {
@@ -452,8 +485,222 @@
   text-align: center;
 }
 
+/* Per-field Fix with AI progress: same in-card bottom strip as the hero.
+   The icon wrapper is an (unpositioned) grid, so the strip anchors to the
+   finding card, which is position: relative. */
+.ai-review-finding .ajax-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  padding: 0.55em 1.25em;
+  background: color-mix(in srgb, var(--ai-blue) 8%, var(--ai-surface));
+  border-top: 1px solid color-mix(in srgb, var(--ai-blue) 25%, transparent);
+  border-radius: 0 0 var(--gin-border-m, 8px) var(--gin-border-m, 8px);
+  font-size: 0.85em;
+  white-space: normal;
+  text-align: center;
+}
+
+/* Reserve room for the strip while a run is in flight. */
+.ai-review-finding:has(.ajax-progress) {
+  padding-bottom: 3em;
+}
+
 .ai-review-hero__actions .ajax-progress .message,
-.ai-review-hero__actions .ajax-progress__message {
+.ai-review-hero__actions .ajax-progress__message,
+.ai-review-finding .ajax-progress .message {
   white-space: normal;
   overflow-wrap: anywhere;
+}
+
+/* Per-field "Fix with AI" action on Review rows: sits after the status
+   badge, with the AI spark drawn as a mask so it follows the text color. */
+.ai-review-fix-wrap {
+  flex: none;
+  align-self: center;
+  display: inline-grid;
+  margin: 0 0 0 0.5em;
+}
+
+.ai-review-fix-wrap > * {
+  grid-area: 1 / 1;
+}
+
+/* Out-specifies Gin's .button.button--small padding without !important. */
+.ai-review-finding .ai-review-finding__fix.ai-review-finding__fix {
+  margin: 0;
+  white-space: nowrap;
+  /* Room for the spark span overlaid on the left. */
+  padding-left: 2.8em;
+  padding-inline-start: 2.8em;
+}
+
+/* The AI spark: a masked span so it renders in the button's text color —
+   Gin primary at rest, white while the button is hovered or focused. */
+.ai-review-fix-icon {
+  justify-self: start;
+  align-self: center;
+  margin-left: 1em;
+  width: 1em;
+  height: 1em;
+  pointer-events: none;
+  background-color: var(--gin-color-primary, #cf5d00);
+  mask-image: url(/modules/contrib/ai/icons/ai_spark.svg);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url(/modules/contrib/ai/icons/ai_spark.svg);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+.ai-review-finding__fix:hover ~ .ai-review-fix-icon,
+.ai-review-finding__fix:focus ~ .ai-review-fix-icon,
+.ai-review-finding__fix:active ~ .ai-review-fix-icon {
+  background-color: var(--gin-color-button-text, #fff);
+}
+
+
+/* ---------------------------------------------------------------------
+ * Inline AI suggestion panel under a field's finding row.
+ * ------------------------------------------------------------------ */
+.ai-review-finding {
+  flex-wrap: wrap;
+}
+
+.ai-review-suggestion {
+  /* Full row width below the icon/label/badge line. */
+  flex-basis: 100%;
+  margin-top: 0.75em;
+  padding: 0.9em 1em;
+  border: 1px solid color-mix(in srgb, var(--ai-blue) 30%, transparent);
+  border-radius: var(--gin-border-m, 8px);
+  background: color-mix(in srgb, var(--ai-blue) 5%, var(--ai-surface));
+}
+
+.ai-review-suggestion__heading {
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ai-blue);
+  margin: 0 0 0.6em;
+}
+
+.ai-review-suggestion__diff {
+  margin: 0 0 0.6em;
+  font-size: 0.9em;
+}
+
+.ai-review-suggestion__reason {
+  margin: 0 0 0.6em;
+  font-size: 0.85em;
+  color: var(--gin-color-text-light, #55565b);
+}
+
+.ai-review-suggestion__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  flex-wrap: wrap;
+}
+
+.ai-review-suggestion__actions .ai-review-hint {
+  margin: 0;
+}
+
+.ai-review-suggestion__actions .button {
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------
+ * Polish pass: rhythm, hover states, history section.
+ * ------------------------------------------------------------------ */
+
+/* Consistent section headings ("Validation results" already has one). */
+.ai-review-history__heading {
+  margin: 1.75em 0 0.75em;
+  font-size: 1.1em;
+}
+
+.ai-review-history__group {
+  margin: 1.25em 0 0.5em;
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ai-neutral);
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+/* Status dot in front of each group heading. */
+.ai-review-history__group::before {
+  content: "";
+  width: 0.55em;
+  height: 0.55em;
+  border-radius: 50%;
+  background: var(--ai-neutral);
+}
+
+.ai-review-history__group--pending::before {
+  background: var(--ai-amber);
+}
+
+.ai-review-history__group--done::before {
+  background: var(--ai-green);
+}
+
+/* History items: same card language as the results rows. */
+.ai-review-history details {
+  border: 1px solid var(--ai-border);
+  border-radius: var(--gin-border-m, 8px);
+  background: var(--ai-surface);
+  margin: 0 0 0.75em;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ai-review-history details:hover {
+  border-color: color-mix(in srgb, var(--ai-neutral) 45%, transparent);
+  box-shadow: var(--gin-shadow-level-1, 0 1px 3px rgba(0, 0, 0, 0.08));
+}
+
+/* Gentle hover lift on the results cards too. */
+.ai-review-finding {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ai-review-finding:hover {
+  border-color: color-mix(in srgb, var(--ai-neutral) 45%, transparent);
+  box-shadow: var(--gin-shadow-level-1, 0 1px 3px rgba(0, 0, 0, 0.08));
+}
+
+/* Hero typography refinement. */
+.ai-review-hero__title {
+  letter-spacing: -0.01em;
+}
+
+.ai-review-hero__stat-value {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Detailed-changes table: quieter header, roomier cells. */
+.ai-review-history details table th {
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ai-neutral);
+}
+
+.ai-review-history details table td {
+  vertical-align: top;
+  padding-top: 0.9em;
+  padding-bottom: 0.9em;
 }

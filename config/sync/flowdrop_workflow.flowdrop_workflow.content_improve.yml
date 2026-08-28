@@ -311,11 +311,23 @@ edges:
     sourceHandle: flowdrop_ai_provider_chat.1-output-response
     targetHandle: json_to_data.1-input-json
   -
+    id: e-findings-gate
+    source: chat_input.1
+    target: ai_content_validation_improve_gate.1
+    sourceHandle: chat_input.1-output-message
+    targetHandle: ai_content_validation_improve_gate.1-input-findings
+  -
     id: e-json-gate
     source: json_to_data.1
     target: ai_content_validation_improve_gate.1
     sourceHandle: json_to_data.1-output-data
     targetHandle: ai_content_validation_improve_gate.1-input-data
+  -
+    id: e-chat-gate-rawjson
+    source: flowdrop_ai_provider_chat.1
+    target: ai_content_validation_improve_gate.1
+    sourceHandle: flowdrop_ai_provider_chat.1-output-response
+    targetHandle: ai_content_validation_improve_gate.1-input-json
   -
     id: e-gate-normalize
     source: ai_content_validation_improve_gate.1

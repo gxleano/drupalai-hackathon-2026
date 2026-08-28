@@ -192,8 +192,19 @@ final class ImproveGate extends AbstractFlowDropNodeProcessor {
           'description' => 'The workflow whose report is the baseline and whose chat node supplies the validator prompt. Must be the workflow the editor\'s score comes from.',
           'default' => self::DEFAULT_VALIDATION_WORKFLOW,
         ],
+        'findings' => [
+          'type' => 'string',
+          'title' => 'Findings',
+          'description' => 'The findings string the improver received. When it carries an [only_field:...] marker (per-field "Fix with AI"), suggestions for any other field are discarded deterministically — prompt obedience is not trusted.',
+          'default' => '',
+        ],
+        'json' => [
+          'type' => 'string',
+          'title' => 'Raw response',
+          'description' => 'The raw improver response, used to repair-parse when the upstream JSON parse delivered nothing (e.g. a dropped closing brace).',
+          'default' => '',
+        ],
       ],
-      'required' => ['data'],
     ];
   }
 
@@ -246,6 +257,15 @@ final class ImproveGate extends AbstractFlowDropNodeProcessor {
    */
   public function process(ParameterBagInterface $params): array {
     $data = $params->getArray('data');
+    // Upstream json_to_data delivers NULL when the improver's JSON is
+    // mechanically broken (typically a dropped final brace); the raw
+    // response is wired in as a fallback and repaired deterministically.
+    if ($data === []) {
+      $data = JsonRepair::parse($params->getString('json')) ?? [];
+    }
+    if ($data === []) {
+      throw new EntityProcessingException('The improver response could not be parsed as JSON, even after repair.');
+    }
     $workflow_id = trim($params->getString('validation_workflow', self::DEFAULT_VALIDATION_WORKFLOW));
     if ($workflow_id === '') {
       $workflow_id = self::DEFAULT_VALIDATION_WORKFLOW;
@@ -256,6 +276,19 @@ final class ImproveGate extends AbstractFlowDropNodeProcessor {
     $report = $this->baselineReport($nid, $workflow_id);
     $baseline = $this->reportScore($report);
     $suggestions = $this->improverSuggestions($result);
+
+    // A per-field "Fix with AI" click stamps [only_field:x] into the
+    // findings. The prompt already tells the model to emit only that
+    // field, but the guarantee is enforced HERE: any stray suggestion for
+    // another field is dropped before it is scored, stored or offered.
+    $only_field = NULL;
+    if (preg_match('/\[only_field:([a-z0-9_]+)\]/', $params->getString('findings', ''), $m)) {
+      $only_field = $m[1];
+      $suggestions = array_values(array_filter(
+        $suggestions,
+        fn (array $sug) => ($sug['field'] ?? NULL) === $only_field,
+      ));
+    }
 
     // The baseline score describes one specific revision, so the candidate
     // must differ from that revision by the suggestions and nothing else.
@@ -277,6 +310,29 @@ final class ImproveGate extends AbstractFlowDropNodeProcessor {
         $baseline,
         self::OUTCOME_NO_SUGGESTIONS,
         'The improver proposed no applicable change, so there is nothing to offer.',
+        $nid,
+      );
+    }
+
+    // A single-field fix is reviewed by the editor before anything is
+    // applied (inline diff with Accept/Reject), and the post-apply
+    // re-validation still measures the real result. Re-scoring the whole
+    // article for a one-field change proved to be noise, not signal: the
+    // model's per-guideline verdicts wobble across near-identical inputs
+    // (measured: the same candidate scored 78, 78 and 88 at temperature
+    // 0, flipping guidelines the changed field cannot affect), so the
+    // comparison rejected almost every legitimate fix. The score gate
+    // therefore only arbitrates whole-article improve runs, where a
+    // regression can hide inside a large rewrite no human reads in full.
+    if ($only_field !== NULL) {
+      return $this->decide(
+        $data,
+        $result,
+        $suggestions,
+        $baseline,
+        $baseline,
+        self::OUTCOME_ACCEPTED,
+        sprintf('Single-field fix for "%s" offered for editor review; the post-apply validation measures the result.', $only_field),
         $nid,
       );
     }
@@ -644,6 +700,11 @@ final class ImproveGate extends AbstractFlowDropNodeProcessor {
     ]);
 
     $data = $parsed['data'] ?? NULL;
+    // Repair mechanically broken model JSON (dropped closing brace)
+    // before giving up on the candidate score.
+    if (!is_array($data)) {
+      $data = JsonRepair::parse((string) ($response['response'] ?? ''));
+    }
     $result = is_array($data) ? ($data['field_validation_result'] ?? NULL) : NULL;
     if (!is_array($result)) {
       throw new EntityProcessingException('The candidate re-validation returned no result object, so the improvement cannot be gated.');
