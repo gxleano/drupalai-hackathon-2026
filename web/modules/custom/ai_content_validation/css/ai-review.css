@@ -5,107 +5,311 @@
  * follows the active admin color scheme, including dark mode.
  */
 
-/* --- Report card: score + per-field findings + overall assessment. --- */
-.ai-review-card {
-  margin: 0 0 1.5em;
-  padding: 1.25em 1.5em;
-  background: var(--gin-bg-layer, #fff);
-  border: 1px solid var(--gin-border-color-layer, #d4d4d8);
-  border-radius: var(--gin-border-m, 8px);
-  box-shadow: var(--gin-shadow-level-1, 0 1px 2px rgba(0, 0, 0, 0.05));
+/* --- State palette. --- */
+.ai-review {
+  --ai-green: var(--gin-color-green, #058260);
+  --ai-amber: #b28400;
+  --ai-blue: #0b6cbd;
+  --ai-neutral: var(--gin-color-text-light, #55565b);
+  --ai-border: var(--gin-border-color-layer, #d4d4d8);
+  --ai-surface: var(--gin-bg-layer, #fff);
 }
 
-.ai-review-score {
+/* ---------------------------------------------------------------------
+ * Status hero.
+ * ------------------------------------------------------------------ */
+.ai-review-hero {
   display: flex;
-  align-items: baseline;
-  gap: 0.75em;
-  flex-wrap: wrap;
-  padding-bottom: 1em;
-  margin-bottom: 1em;
-  border-bottom: 1px solid var(--gin-border-color-layer, #d4d4d8);
+  gap: 1.25em;
+  align-items: flex-start;
+  margin: 0 0 1.5em;
+  padding: 1.5em;
+  border: 1px solid var(--ai-state-border, var(--ai-border));
+  border-radius: var(--gin-border-m, 8px);
+  background: var(--ai-state-bg, var(--ai-surface));
 }
 
-.ai-review-score__value {
-  font-size: 2.75em;
+.ai-review-hero--passed {
+  --ai-state: var(--ai-green);
+  --ai-state-border: color-mix(in srgb, var(--ai-green) 30%, transparent);
+  --ai-state-bg: color-mix(in srgb, var(--ai-green) 6%, var(--ai-surface));
+}
+
+.ai-review-hero--issues {
+  --ai-state: var(--ai-amber);
+  --ai-state-border: color-mix(in srgb, var(--ai-amber) 35%, transparent);
+  --ai-state-bg: color-mix(in srgb, var(--ai-amber) 7%, var(--ai-surface));
+}
+
+.ai-review-hero--stale,
+.ai-review-hero--none {
+  --ai-state: var(--ai-neutral);
+}
+
+/* State icon: a filled circle with a CSS-drawn glyph. */
+.ai-review-hero__icon {
+  flex: none;
+  width: 2.75em;
+  height: 2.75em;
+  border-radius: 50%;
+  background: var(--ai-state);
+  position: relative;
+}
+
+.ai-review-hero--passed .ai-review-hero__icon::after {
+  /* Checkmark. */
+  content: "";
+  position: absolute;
+  left: 0.95em;
+  top: 0.78em;
+  width: 0.8em;
+  height: 0.45em;
+  border-left: 3px solid #fff;
+  border-bottom: 3px solid #fff;
+  transform: rotate(-45deg);
+}
+
+.ai-review-hero--issues .ai-review-hero__icon::after,
+.ai-review-hero--stale .ai-review-hero__icon::after,
+.ai-review-hero--none .ai-review-hero__icon::after {
+  /* Exclamation / question. */
+  content: "!";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.5em;
   font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.02em;
 }
 
-.ai-review-score__meta {
+.ai-review-hero--none .ai-review-hero__icon::after {
+  content: "?";
+}
+
+.ai-review-hero__body {
+  flex: 1;
+  min-width: 16em;
+}
+
+.ai-review-hero__title {
+  margin: 0.1em 0 0.15em;
+  font-size: 1.35em;
+  color: var(--ai-state);
+}
+
+.ai-review-hero__subtitle {
+  margin: 0 0 0;
+  max-width: 46em;
+  color: var(--gin-color-text, #232429);
+}
+
+.ai-review-hero__stats {
+  display: flex;
+  gap: 2.5em;
+  flex-wrap: wrap;
+  margin: 1em 0 0;
+}
+
+.ai-review-hero__stat {
   display: flex;
   flex-direction: column;
-  gap: 0.15em;
 }
 
-.ai-review-score__word {
-  font-weight: 600;
-  font-size: 1em;
+.ai-review-hero__stat-value {
+  font-size: 1.5em;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
-.ai-review-score__date {
+.ai-review-hero__stat-label {
   font-size: 0.8em;
-  color: var(--gin-color-text-light, #55565b);
+  color: var(--ai-neutral);
 }
 
-/* --- Findings list. --- */
-.ai-review-findings__heading,
-.ai-review-summary__heading {
+.ai-review-hero__date {
+  margin: 1em 0 0;
+  font-size: 0.8em;
+  color: var(--ai-neutral);
+}
+
+.ai-review-hero__actions {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5em;
+  max-width: 18em;
+}
+
+.ai-review-hero__actions .button {
+  margin: 0;
+}
+
+.ai-review-hint {
+  margin: 0.25em 0 0;
+  font-size: 0.75em;
+  color: var(--ai-neutral);
+}
+
+@media (max-width: 48em) {
+  .ai-review-hero {
+    flex-direction: column;
+  }
+}
+
+/* ---------------------------------------------------------------------
+ * Validation results.
+ * ------------------------------------------------------------------ */
+.ai-review-findings__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em;
   margin: 0 0 0.75em;
-  font-size: 0.8em;
+}
+
+.ai-review-findings__heading {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+.ai-review-findings__all-passed {
+  font-size: 0.85em;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--gin-color-text-light, #55565b);
+  color: var(--ai-green);
 }
 
 .ai-review-finding {
-  display: grid;
-  grid-template-columns: 9em 1fr;
-  gap: 0.75em;
-  align-items: start;
-  padding: 0.6em 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9em;
+  padding: 1em 1.25em;
+  margin: 0 0 0.75em;
+  background: var(--ai-surface);
+  border: 1px solid var(--ai-border);
+  border-radius: var(--gin-border-m, 8px);
 }
 
-.ai-review-finding + .ai-review-finding {
-  border-top: 1px solid var(--gin-border-color-layer, #ececef);
+/* Row status icon: small filled circle, check or "!". */
+.ai-review-finding__icon {
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+  margin-top: 0.1em;
+  border-radius: 50%;
+  background: var(--ai-green);
+  position: relative;
+}
+
+.ai-review-finding__icon::after {
+  content: "";
+  position: absolute;
+  left: 0.45em;
+  top: 0.38em;
+  width: 0.5em;
+  height: 0.28em;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg);
+}
+
+.ai-review-finding--issue .ai-review-finding__icon {
+  background: var(--ai-amber);
+}
+
+.ai-review-finding--issue .ai-review-finding__icon::after {
+  content: "!";
+  border: 0;
+  inset: 0;
+  width: auto;
+  height: auto;
+  transform: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.9em;
+  font-weight: 700;
+}
+
+.ai-review-finding__body {
+  flex: 1;
 }
 
 .ai-review-finding__label {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
   font-weight: 600;
-  font-size: 0.9em;
-}
-
-/* Status dot: green = compliant, amber = a guideline is named. */
-.ai-review-finding__label::before {
-  content: "";
-  flex: none;
-  width: 0.6em;
-  height: 0.6em;
-  border-radius: 50%;
-  background: var(--gin-color-green, #058260);
-}
-
-.ai-review-finding--issue .ai-review-finding__label::before {
-  background: var(--gin-color-warning, #d8a800);
+  margin: 0 0 0.15em;
 }
 
 .ai-review-finding__text {
   margin: 0;
-  font-size: 0.95em;
+  font-size: 0.9em;
   line-height: 1.5;
+  color: var(--gin-color-text-light, #55565b);
 }
 
-/* --- Overall assessment strip inside the card. --- */
+.ai-review-badge {
+  flex: none;
+  display: inline-block;
+  align-self: center;
+  padding: 0.25em 0.9em;
+  border-radius: 999px;
+  font-size: 0.75em;
+  font-weight: 600;
+  /* A pill must never wrap mid-label in a narrow table column. */
+  white-space: nowrap;
+}
+
+.ai-review-badge--passed {
+  color: #fff;
+  background: var(--ai-green);
+}
+
+.ai-review-badge--review {
+  color: #fff;
+  background: var(--ai-amber);
+}
+
+/* ---------------------------------------------------------------------
+ * Overall assessment.
+ * ------------------------------------------------------------------ */
 .ai-review-summary {
-  margin-top: 1em;
-  padding: 0.75em 1em;
-  border-left: 4px solid var(--ai-review-grade, var(--gin-color-green, #058260));
-  background: color-mix(in srgb, var(--ai-review-grade, #058260) 7%, transparent);
-  border-radius: 0 4px 4px 0;
+  display: flex;
+  gap: 0.9em;
+  align-items: flex-start;
+  margin: 1.25em 0 1.5em;
+  padding: 1em 1.25em;
+  border: 1px solid color-mix(in srgb, var(--ai-blue) 30%, transparent);
+  border-radius: var(--gin-border-m, 8px);
+  background: color-mix(in srgb, var(--ai-blue) 6%, var(--ai-surface));
+}
+
+/* Document-ish icon: rounded square with lines. */
+.ai-review-summary__icon {
+  flex: none;
+  width: 1.6em;
+  height: 1.9em;
+  margin-top: 0.1em;
+  border: 2px solid var(--ai-blue);
+  border-radius: 3px;
+  position: relative;
+}
+
+.ai-review-summary__icon::after {
+  content: "";
+  position: absolute;
+  left: 0.25em;
+  right: 0.25em;
+  top: 0.35em;
+  height: 0.75em;
+  background: repeating-linear-gradient(to bottom, var(--ai-blue), var(--ai-blue) 2px, transparent 2px, transparent 6px);
+}
+
+.ai-review-summary__heading {
+  font-weight: 600;
+  margin: 0 0 0.25em;
 }
 
 .ai-review-summary__text {
@@ -113,17 +317,143 @@
   line-height: 1.55;
 }
 
-/* --- Actions. --- */
-.ai-review-actions {
+/* ---------------------------------------------------------------------
+ * Applied-improvement banner (inside a done AI Improve item).
+ * ------------------------------------------------------------------ */
+.ai-review-applied {
   display: flex;
-  align-items: center;
-  gap: 0.75em;
+  gap: 1.25em;
+  align-items: flex-start;
   flex-wrap: wrap;
+  margin: 0.5em 0 1.25em;
+  padding: 1.25em;
+  border: 1px solid color-mix(in srgb, var(--ai-green) 30%, transparent);
+  border-radius: var(--gin-border-m, 8px);
+  background: color-mix(in srgb, var(--ai-green) 6%, var(--ai-surface));
+}
+
+.ai-review-applied__icon {
+  flex: none;
+  width: 2.5em;
+  height: 2.5em;
+  border-radius: 50%;
+  background: var(--ai-green);
+  position: relative;
+}
+
+.ai-review-applied__icon::after {
+  content: "";
+  position: absolute;
+  left: 0.8em;
+  top: 0.68em;
+  width: 0.8em;
+  height: 0.45em;
+  border-left: 3px solid #fff;
+  border-bottom: 3px solid #fff;
+  transform: rotate(-45deg);
+}
+
+.ai-review-applied__body {
+  flex: 1;
+  min-width: 16em;
+}
+
+.ai-review-applied__title {
+  margin: 0.1em 0 0.15em;
+  font-size: 1.1em;
+  color: var(--ai-green);
+}
+
+.ai-review-applied__subtitle {
+  margin: 0;
+  max-width: 46em;
+}
+
+.ai-review-applied__reviewed {
+  margin: 0.5em 0 0;
+  font-size: 0.8em;
+  color: var(--ai-neutral);
+}
+
+.ai-review-applied__stats {
+  display: flex;
+  gap: 2em;
+  align-self: center;
+}
+
+.ai-review-applied__view {
+  align-self: center;
+}
+
+.ai-review-detailed-heading {
   margin: 0 0 0.5em;
 }
 
-.ai-review-hint {
-  margin: 0 0 1.5em;
+.ai-review-badge--neutral {
+  color: var(--gin-color-text, #232429);
+  background: color-mix(in srgb, var(--ai-neutral) 18%, transparent);
+}
+
+/* ---------------------------------------------------------------------
+ * Word-level diff (Change column), theme-aware.
+ * ------------------------------------------------------------------ */
+.ai-diff {
+  padding: 0.25em 0.5em;
+  border-radius: 4px;
+}
+
+.ai-diff--del {
+  background: color-mix(in srgb, #d73a49 10%, var(--ai-surface));
+  border-radius: 4px 4px 0 0;
+}
+
+.ai-diff--ins {
+  background: color-mix(in srgb, var(--ai-green) 10%, var(--ai-surface));
+}
+
+.ai-diff--del + .ai-diff--ins,
+.ai-diff--del ~ .ai-diff--ins {
+  border-radius: 0 0 4px 4px;
+}
+
+.ai-diff__change--del {
+  background: color-mix(in srgb, #d73a49 30%, var(--ai-surface));
+  text-decoration: line-through;
+}
+
+.ai-diff__change--ins {
+  background: color-mix(in srgb, var(--ai-green) 30%, var(--ai-surface));
+}
+
+/* While a run is in flight, the AJAX throbber (injected right after the
+   triggering button) is re-homed as a progress strip spanning the bottom
+   of the hero card: full-width, calm, nothing squeezed or overlapping. */
+.ai-review-hero {
+  position: relative;
+  /* Room for the strip so it never covers the hint text. */
+  padding-bottom: 2.5em;
+}
+
+.ai-review-hero__actions .ajax-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  padding: 0.55em 1.25em;
+  background: color-mix(in srgb, var(--ai-blue) 8%, var(--ai-surface));
+  border-top: 1px solid color-mix(in srgb, var(--ai-blue) 25%, transparent);
+  border-radius: 0 0 var(--gin-border-m, 8px) var(--gin-border-m, 8px);
   font-size: 0.85em;
-  color: var(--gin-color-text-light, #55565b);
+  white-space: normal;
+  text-align: center;
+}
+
+.ai-review-hero__actions .ajax-progress .message,
+.ai-review-hero__actions .ajax-progress__message {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }

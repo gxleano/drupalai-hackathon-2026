@@ -15,6 +15,7 @@ use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Lock\LockBackendInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\ai_content_validation\ContentHasher;
 use Drupal\flowdrop_node_session\Service\NodeSessionService;
@@ -132,47 +133,118 @@ final class AiReviewForm extends FormBase {
     $nothing_to_improve = $show_improve && !$this->hasWeakGuideline($report_parsed);
     $show_improve = $show_improve && !$nothing_to_improve;
 
-    // One card holds the whole report: score, per-field findings, overall
-    // assessment. The editor reads a single panel top to bottom instead of
-    // loose fragments floating on the page background.
-    $form['report'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['ai-review-card']],
-      'current_score' => $this->buildCurrentScore($node, $revision_match),
-      'field_findings' => $this->buildFieldFindings($report_parsed, $latest_report),
-      'overall_summary' => $this->buildOverallSummary($report_parsed, $latest_report),
-    ];
+    // ---- Status hero -----------------------------------------------------
+    // One banner answers the editor's first question — "is this content OK?"
+    // — with a state color, a plain-words verdict, the three key numbers and
+    // the actions, before any detail below.
+    [$score, $date] = $this->acceptedScore($node);
+    $scores_map = $revision_match && is_array($report_parsed['scores'] ?? NULL) && $report_parsed['scores'] !== []
+      ? $report_parsed['scores']
+      : NULL;
+    $pass_count = $scores_map === NULL ? NULL : count(array_filter(
+      $scores_map,
+      fn ($v) => is_numeric($v) ? (int) $v >= 10 : strtolower(trim((string) $v)) === 'pass',
+    ));
+    $state = match (TRUE) {
+      $score === NULL => 'none',
+      !$revision_match => 'stale',
+      $scores_map !== NULL && !$this->hasWeakGuideline($report_parsed) => 'passed',
+      default => 'issues',
+    };
+    [$title, $subtitle] = match ($state) {
+      'passed' => [
+        $this->t('Validation passed'),
+        $this->t('All 10 content guidelines have been met.'),
+      ],
+      'issues' => [
+        $this->t('Improvements suggested'),
+        $pass_count === NULL
+          ? $this->t('Some guidelines need attention — see the results below.')
+          : $this->t('@count of 10 guidelines need attention — see the results below.', ['@count' => 10 - $pass_count]),
+      ],
+      'stale' => [
+        $this->t('Content has changed'),
+        $this->t('These results are from a previous version. Re-run the validation for a current verdict.'),
+      ],
+      default => [
+        $this->t('Not validated yet'),
+        $this->t('AI validation checks this content against the 10 EU content guidelines (accuracy, clarity, neutrality, completeness, …) and produces a quality score with concrete improvement suggestions.'),
+      ],
+    };
+    $word = match (TRUE) {
+      $score === NULL => NULL,
+      $score >= 90 => $this->t('Excellent'),
+      $score >= 80 => $this->t('Good'),
+      $score >= 50 => $this->t('Needs work'),
+      default => $this->t('Poor'),
+    };
 
-    if ($latest_report === NULL) {
-      $form['intro'] = [
-        '#markup' => '<p>' . $this->t('AI validation checks this content against the 10 EU content guidelines (accuracy, clarity, neutrality, completeness, …) and produces a quality score with concrete improvement suggestions.') . '</p>',
-      ];
-    }
-    // All primary/secondary actions sit on one row, with a single short
-    // hint underneath — not a stack of message boxes competing for
-    // attention.
-    $form['actions'] = [
+    $form['hero'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['ai-review-actions']],
+      '#attributes' => ['class' => ['ai-review-hero', 'ai-review-hero--' . $state]],
+      'icon' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#attributes' => ['class' => ['ai-review-hero__icon'], 'aria-hidden' => 'true'],
+        '#value' => '',
+      ],
+      'body' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-review-hero__body']],
+        'title' => [
+          '#type' => 'html_tag',
+          '#tag' => 'h2',
+          '#value' => $title,
+          '#attributes' => ['class' => ['ai-review-hero__title']],
+        ],
+        'subtitle' => [
+          '#type' => 'html_tag',
+          '#tag' => 'p',
+          '#value' => $subtitle,
+          '#attributes' => ['class' => ['ai-review-hero__subtitle']],
+        ],
+        'stats' => $score === NULL ? [] : [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['ai-review-hero__stats']],
+          'guidelines' => $pass_count === NULL ? [] : $this->heroStat($this->t('@count / 10', ['@count' => $pass_count]), $this->t('Guidelines satisfied')),
+          'score' => $this->heroStat($this->t('@score / 100', ['@score' => $score]), $this->t('Quality score')),
+          'word' => $this->heroStat($word, $this->t('AI assessment')),
+        ],
+        'validated' => $date === NULL ? [] : [
+          '#type' => 'html_tag',
+          '#tag' => 'p',
+          '#value' => $this->t('Last validated @date', ['@date' => date('d M Y \\a\\t H:i', $date)]),
+          '#attributes' => ['class' => ['ai-review-hero__date']],
+        ],
+      ],
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-review-hero__actions']],
+      ],
     ];
+    // A cached report means a plain re-run would only replay the stored
+    // score — offering it NEXT TO "Re-validate anyway" is two buttons for
+    // one action. So there is exactly one validate button: forced-fresh
+    // when a cached report exists, the normal run otherwise.
+    $cached = $operations !== [] ? $this->cachedReport($node, $operations[0]['workflow_id']) : NULL;
     if (!$show_improve && $operations !== []) {
-      $form['actions']['rerun'] = [
+      $form['hero']['actions']['rerun'] = [
         '#type' => 'submit',
-        // On a fully compliant, current report the content has NOT changed
-        // — "on the new version" would be a lie there.
         '#value' => match (TRUE) {
-          $nothing_to_improve => $this->t('Re-run validation'),
+          $cached !== NULL, $state === 'passed' => $this->t('Re-run validation'),
           $latest_report !== NULL => $this->t('Re-run validation on the new version'),
           default => $this->t('Run validation'),
         },
-        '#name' => 'rerun:' . $operations[0]['workflow_id'],
-        '#submit' => ['::rerunValidation'],
-        '#button_type' => $nothing_to_improve ? NULL : 'primary',
+        '#name' => ($cached !== NULL ? 'revalidate:' : 'rerun:') . $operations[0]['workflow_id'],
+        '#submit' => [$cached !== NULL ? '::forceRerunValidation' : '::rerunValidation'],
+        // A passed report needs no urgent action — the button stays
+        // secondary so the green banner remains the loudest element.
+        '#button_type' => $state === 'passed' ? NULL : 'primary',
         '#ajax' => $this->ajaxAction($this->aiProgressMessage($this->t('Analyzing the content against the 10 EU guidelines… (~30s)'))),
       ];
     }
     if ($show_improve) {
-      $form['actions']['improve'] = [
+      $form['hero']['actions']['improve'] = [
         '#type' => 'submit',
         '#value' => $this->t('Improve content'),
         '#name' => 'improve:' . $latest_report->id(),
@@ -181,12 +253,11 @@ final class AiReviewForm extends FormBase {
         '#ajax' => $this->ajaxAction($this->aiProgressMessage($this->t('Rewriting the content based on the findings… (~1 min)'))),
       ];
     }
-    // Clicking Run validation on content that has not changed reuses the
-    // stored score instead of asking the model again, so the editor needs
-    // a way out when they want a fresh verdict anyway. Only offered while
-    // such a report actually exists — otherwise the normal run is fresh.
-    if ($operations !== [] && $this->cachedReport($node, $operations[0]['workflow_id']) !== NULL) {
-      $form['actions']['revalidate_anyway'] = [
+    // Next to Improve content, a fresh verdict is still one click away —
+    // but only while a cached report exists (otherwise a run is fresh by
+    // definition and the single rerun button above covers it).
+    if ($show_improve && $cached !== NULL) {
+      $form['hero']['actions']['revalidate_anyway'] = [
         '#type' => 'submit',
         '#value' => $this->t('Re-validate anyway'),
         '#name' => 'revalidate:' . $operations[0]['workflow_id'],
@@ -194,20 +265,59 @@ final class AiReviewForm extends FormBase {
         '#ajax' => $this->ajaxAction($this->aiProgressMessage($this->t('Re-analyzing the content against the 10 EU guidelines… (~30s)'))),
       ];
     }
-    if ($form['actions'] === ['#type' => 'container', '#attributes' => ['class' => ['ai-review-actions']]]) {
-      unset($form['actions']);
-    }
-    else {
-      $form['actions_hint'] = [
+    if (count(Element::children($form['hero']['actions'])) > 0) {
+      $form['hero']['actions']['hint'] = [
         '#type' => 'html_tag',
         '#tag' => 'p',
         '#attributes' => ['class' => ['ai-review-hint']],
-        '#value' => $this->t('A run takes 30–60 seconds. Nothing is changed on your content until you apply a suggestion.'),
+        '#value' => $this->t('A run takes 30–60 seconds. Nothing is changed until you apply a suggestion.'),
       ];
     }
+
+    // ---- Validation results ------------------------------------------------
+    $form['report'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['ai-review-results']],
+      'field_findings' => $this->buildFieldFindings($report_parsed, $latest_report),
+      'overall_summary' => $this->buildOverallSummary($report_parsed, $latest_report),
+    ];
+
     $form['validations'] = $this->buildValidations($node);
 
     return $form;
+  }
+
+  /**
+   * Builds one stat block (value over label) for the status hero.
+   *
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup|string|null $value
+   *   The stat value.
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup $label
+   *   The stat label.
+   *
+   * @return array<string, mixed>
+   *   The render array, empty when there is no value.
+   */
+  private function heroStat($value, $label): array {
+    if ($value === NULL) {
+      return [];
+    }
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['ai-review-hero__stat']],
+      'value' => [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#value' => $value,
+        '#attributes' => ['class' => ['ai-review-hero__stat-value']],
+      ],
+      'label' => [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#value' => $label,
+        '#attributes' => ['class' => ['ai-review-hero__stat-label']],
+      ],
+    ];
   }
 
   /**
@@ -296,103 +406,6 @@ final class AiReviewForm extends FormBase {
   }
 
   /**
-   * Builds an inline warning icon in the Gin warning color.
-   *
-   * Core's warning triangle, masked so it follows the admin theme's
-   * warning color — same technique as the AI spark icon.
-   *
-   * @return string
-   *   A warning icon span.
-   */
-  private function warningIcon(): string {
-    $mask = 'mask-image: url(/core/misc/icons/e29700/warning.svg); mask-repeat: no-repeat; mask-position: center; mask-size: 14px;';
-    return '<span style="display: inline-block; width: 14px; height: 14px; vertical-align: text-bottom;'
-      . ' background-color: var(--gin-color-warning, #e29700);'
-      . ' -webkit-' . $mask . ' ' . $mask . '"></span>';
-  }
-
-  /**
-   * Builds the current quality score header for the node.
-   *
-   * The authoritative score is the newest accepted (done) validation with
-   * a numeric score — the same rule the content overview donut uses.
-   *
-   * @return array<string, mixed>
-   *   Render array with the big score (or a hint when unscored).
-   */
-  private function buildCurrentScore(NodeInterface $node, bool $validated_current = TRUE): array {
-    [$score, $date] = $this->acceptedScore($node);
-
-    // Same grade colors and thresholds as the content overview donut, so
-    // the number carries meaning without cross-referencing the list.
-    $color = $this->scoreColor($score);
-    $word = match (TRUE) {
-      $score === NULL => $this->t('Not validated yet'),
-      $score >= 80 => $this->t('Good'),
-      $score >= 50 => $this->t('Needs work'),
-      default => $this->t('Poor'),
-    };
-
-    return [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['ai-review-score']],
-      'value' => [
-        '#type' => 'html_tag',
-        '#tag' => 'span',
-        '#value' => $score !== NULL
-          ? $this->t('@score / 100', ['@score' => $score])
-          : $this->t('– / 100'),
-        '#attributes' => [
-          'class' => ['ai-review-score__value'],
-          'style' => 'color: ' . $color . ';',
-        ],
-      ],
-      'meta' => [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['ai-review-score__meta']],
-        'word' => [
-          '#type' => 'html_tag',
-          '#tag' => 'span',
-          '#value' => $word,
-          '#attributes' => ['class' => ['ai-review-score__word']],
-        ],
-        'date' => [
-          '#type' => 'html_tag',
-          '#tag' => 'span',
-          // Markup::create(): the stale variant embeds the core warning
-          // icon and t() output is already safe.
-          '#value' => $score !== NULL
-            ? ($validated_current
-              ? $this->t('Quality score, validated @date', ['@date' => date('d.m.Y H:i', $date)])
-              : Markup::create($this->warningIcon() . ' ' . $this->t('Score from a previous version (@date) — the content has changed since', ['@date' => date('d.m.Y H:i', $date)])))
-            : $this->t('Run a validation to get a quality score'),
-          '#attributes' => ['class' => ['ai-review-score__date']],
-        ],
-      ],
-    ];
-  }
-
-  /**
-   * Maps a quality score to its grade color.
-   *
-   * Same grade colors and thresholds as the content overview donut.
-   *
-   * @param int|null $score
-   *   The score, or NULL when the node was never validated.
-   *
-   * @return string
-   *   A CSS color value.
-   */
-  private function scoreColor(?int $score): string {
-    return match (TRUE) {
-      $score === NULL => 'var(--gin-color-disabled, #8f939a)',
-      $score >= 80 => 'var(--gin-color-green, #26a769)',
-      $score >= 50 => 'var(--gin-color-warning, #e29700)',
-      default => 'var(--gin-color-danger, #dc2323)',
-    };
-  }
-
-  /**
    * Builds the per-field findings of a validation report.
    *
    * The validator reports one finding per validated field. Only the three
@@ -413,47 +426,67 @@ final class AiReviewForm extends FormBase {
     $labels = [
       'title' => $this->t('Title'),
       'field_body' => $this->t('Body'),
-      'field_metatags' => $this->t('Meta Tags'),
+      'field_metatags' => $this->t('Meta tags'),
     ];
     $findings = $result === NULL ? NULL : ($result['field_findings'] ?? NULL);
     if (!is_array($findings)) {
       return [];
     }
 
-    $sections = [];
+    $rows = [];
+    $all_passed = TRUE;
     foreach ($labels as $field => $label) {
       $text = $findings[$field] ?? NULL;
       // An affirmative finding ("Accurate and specific.") is still a
-      // finding: only an absent or empty value hides the section.
+      // finding: only an absent or empty value hides the row.
       if (!is_string($text) || trim($text) === '') {
         continue;
       }
       // A finding that names a guideline is a problem to act on; anything
-      // else is a pass. The dot color in front of the label tells the
-      // editor at a glance which fields need attention.
-      $issue = (bool) preg_match('/guideline\s*\d/i', $text);
-      $sections[$field] = [
+      // else is a pass. Icon and badge tell the editor at a glance which
+      // fields need attention.
+      $issue = (bool) preg_match('/guideline\\s*\\d/i', $text);
+      $all_passed = $all_passed && !$issue;
+      $rows[$field] = [
         '#type' => 'container',
         '#attributes' => [
           'class' => array_merge(['ai-review-finding'], $issue ? ['ai-review-finding--issue'] : []),
         ],
-        'label' => [
+        'icon' => [
           '#type' => 'html_tag',
-          '#tag' => 'div',
-          '#value' => $label,
-          '#attributes' => ['class' => ['ai-review-finding__label']],
+          '#tag' => 'span',
+          '#value' => '',
+          '#attributes' => ['class' => ['ai-review-finding__icon'], 'aria-hidden' => 'true'],
         ],
-        // The finding text comes from the model and is untrusted:
-        // #plain_text is escaped by the renderer, #markup would not be.
-        'text' => [
+        'body' => [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['ai-review-finding__body']],
+          'label' => [
+            '#type' => 'html_tag',
+            '#tag' => 'div',
+            '#value' => $label,
+            '#attributes' => ['class' => ['ai-review-finding__label']],
+          ],
+          // The finding text comes from the model and is untrusted:
+          // #plain_text is escaped by the renderer, #markup would not be.
+          'text' => [
+            '#type' => 'html_tag',
+            '#tag' => 'p',
+            '#attributes' => ['class' => ['ai-review-finding__text']],
+            'value' => ['#plain_text' => trim($text)],
+          ],
+        ],
+        'badge' => [
           '#type' => 'html_tag',
-          '#tag' => 'p',
-          '#attributes' => ['class' => ['ai-review-finding__text']],
-          'value' => ['#plain_text' => trim($text)],
+          '#tag' => 'span',
+          '#value' => $issue ? $this->t('Review') : $this->t('Passed'),
+          '#attributes' => [
+            'class' => ['ai-review-badge', $issue ? 'ai-review-badge--review' : 'ai-review-badge--passed'],
+          ],
         ],
       ];
     }
-    if ($sections === []) {
+    if ($rows === []) {
       return [];
     }
 
@@ -463,13 +496,23 @@ final class AiReviewForm extends FormBase {
       '#cache' => [
         'tags' => $report === NULL ? [] : $report->getCacheTags(),
       ],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $this->t('Findings per field'),
-        '#attributes' => ['class' => ['ai-review-findings__heading']],
+      'header' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-review-findings__header']],
+        'heading' => [
+          '#type' => 'html_tag',
+          '#tag' => 'h3',
+          '#value' => $this->t('Validation results'),
+          '#attributes' => ['class' => ['ai-review-findings__heading']],
+        ],
+        'all_passed' => !$all_passed ? [] : [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#value' => $this->t('All fields passed'),
+          '#attributes' => ['class' => ['ai-review-findings__all-passed']],
+        ],
       ],
-    ] + $sections;
+    ] + $rows;
   }
 
   /**
@@ -491,33 +534,35 @@ final class AiReviewForm extends FormBase {
     if ($summary === '') {
       return [];
     }
-    $score = is_numeric($result['score'] ?? NULL) ? (int) $result['score'] : NULL;
 
     return [
       '#type' => 'container',
-      '#attributes' => [
-        'class' => ['ai-review-summary'],
-        // The grade color goes on the border and a faint background tint
-        // (via the --ai-review-grade custom property the stylesheet
-        // reads), never on the text itself: green/yellow body text on
-        // white fails WCAG contrast, inherited text color does not.
-        'style' => '--ai-review-grade: ' . $this->scoreColor($score) . ';',
-      ],
+      '#attributes' => ['class' => ['ai-review-summary']],
       '#cache' => [
         'tags' => $report === NULL ? [] : $report->getCacheTags(),
       ],
-      'heading' => [
+      'icon' => [
         '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Overall assessment'),
-        '#attributes' => ['class' => ['ai-review-summary__heading']],
+        '#tag' => 'span',
+        '#value' => '',
+        '#attributes' => ['class' => ['ai-review-summary__icon'], 'aria-hidden' => 'true'],
       ],
-      // Untrusted model output: escaped by the renderer, never #markup.
-      'text' => [
-        '#type' => 'html_tag',
-        '#tag' => 'p',
-        '#attributes' => ['class' => ['ai-review-summary__text']],
-        'value' => ['#plain_text' => $summary],
+      'body' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-review-summary__body']],
+        'heading' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => $this->t('Overall assessment'),
+          '#attributes' => ['class' => ['ai-review-summary__heading']],
+        ],
+        // Untrusted model output: escaped by the renderer, never #markup.
+        'text' => [
+          '#type' => 'html_tag',
+          '#tag' => 'p',
+          '#attributes' => ['class' => ['ai-review-summary__text']],
+          'value' => ['#plain_text' => $summary],
+        ],
       ],
     ];
   }
@@ -838,42 +883,95 @@ final class AiReviewForm extends FormBase {
       '#open' => $open,
     ];
 
-    // Never print the stored JSON: only the parsed summary is shown, and
-    // the raw value only when it is not JSON at all (legacy plain text).
-    if ($parsed !== NULL) {
-      $summary = is_scalar($parsed['summary'] ?? NULL) ? trim((string) $parsed['summary']) : '';
+    $suggestions = is_array($parsed['suggestions'] ?? NULL) ? $parsed['suggestions'] : [];
+    $applied = is_array($parsed['applied_fields'] ?? NULL) ? $parsed['applied_fields'] : NULL;
+    $prepared = $this->prepareSuggestions($suggestions, $node);
+    $summary = $parsed !== NULL && is_scalar($parsed['summary'] ?? NULL) ? trim((string) $parsed['summary']) : '';
+
+    // Attribution: who moved this item to done (applied the changes or
+    // accepted the score), stamped in the result JSON at that moment.
+    $reviewed_by = NULL;
+    if ($group === 'done' && is_numeric($parsed['done_by'] ?? NULL)) {
+      $account = $this->entityTypeManager->getStorage('user')->load((int) $parsed['done_by']);
+      $reviewed_by = $this->t('Reviewed and accepted by @user@date', [
+        '@user' => $account?->getDisplayName() ?? $this->t('unknown user (@uid)', ['@uid' => $parsed['done_by']]),
+        '@date' => is_numeric($parsed['done_at'] ?? NULL)
+          ? ' — ' . date('d.m.Y H:i', (int) $parsed['done_at'])
+          : '',
+      ]);
+    }
+
+    // An applied improvement gets the celebratory banner: what happened,
+    // who accepted it, how many fields changed, and a jump to the result.
+    // Everything else keeps the plain summary paragraph.
+    if ($group === 'done' && $applied !== NULL) {
+      $element['applied_banner'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-review-applied']],
+        'icon' => [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#value' => '',
+          '#attributes' => ['class' => ['ai-review-applied__icon'], 'aria-hidden' => 'true'],
+        ],
+        'body' => [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['ai-review-applied__body']],
+          'title' => [
+            '#type' => 'html_tag',
+            '#tag' => 'h4',
+            '#value' => $this->t('AI improvements applied'),
+            '#attributes' => ['class' => ['ai-review-applied__title']],
+          ],
+          'subtitle' => [
+            '#type' => 'html_tag',
+            '#tag' => 'p',
+            '#attributes' => ['class' => ['ai-review-applied__subtitle']],
+            'value' => ['#plain_text' => $summary !== '' ? $summary : (string) $this->t('The content has been improved to better comply with the EU content guidelines.')],
+          ],
+          'reviewed' => $reviewed_by === NULL ? [] : [
+            '#type' => 'html_tag',
+            '#tag' => 'p',
+            '#value' => $reviewed_by,
+            '#attributes' => ['class' => ['ai-review-applied__reviewed']],
+          ],
+        ],
+        'stats' => [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['ai-review-applied__stats']],
+          'fields' => $this->heroStat((string) count($applied), $this->t('Fields updated')),
+          'reviewed' => $this->heroStat((string) count($prepared), $this->t('Suggestions reviewed')),
+        ],
+        'view' => [
+          '#type' => 'link',
+          '#title' => $this->t('View updated content'),
+          '#url' => $node->toUrl(),
+          '#attributes' => ['class' => ['button', 'button--small', 'ai-review-applied__view']],
+        ],
+      ];
+    }
+    elseif ($parsed !== NULL) {
+      // Never print the stored JSON: only the parsed summary is shown, and
+      // the raw value only when it is not JSON at all (legacy plain text).
       $element['summary'] = [
         '#markup' => '<p>' . ($summary !== ''
           ? nl2br($this->escapeText($summary))
           : $this->t('No summary provided.')) . '</p>',
       ];
+      if ($reviewed_by !== NULL) {
+        $element['done_by'] = [
+          '#type' => 'html_tag',
+          '#tag' => 'p',
+          '#value' => $reviewed_by,
+          '#attributes' => ['class' => ['ai-review-applied__reviewed']],
+        ];
+      }
     }
     else {
       $element['summary'] = [
         '#markup' => '<p>' . nl2br($this->escapeText($result_raw)) . '</p>',
       ];
     }
-
-    // Attribution: who moved this item to done (applied the changes or
-    // accepted the score), stamped in the result JSON at that moment.
-    if ($group === 'done' && is_numeric($parsed['done_by'] ?? NULL)) {
-      $account = $this->entityTypeManager->getStorage('user')->load((int) $parsed['done_by']);
-      $element['done_by'] = [
-        '#type' => 'html_tag',
-        '#tag' => 'p',
-        '#value' => $this->t('Reviewed and accepted by @user@date', [
-          '@user' => $account?->getDisplayName() ?? $this->t('unknown user (@uid)', ['@uid' => $parsed['done_by']]),
-          '@date' => is_numeric($parsed['done_at'] ?? NULL)
-            ? ' — ' . date('d.m.Y H:i', (int) $parsed['done_at'])
-            : '',
-        ]),
-        '#attributes' => ['style' => 'font-size: 0.85em; color: var(--gin-color-text-light, #55565b);'],
-      ];
-    }
-
-    $suggestions = is_array($parsed['suggestions'] ?? NULL) ? $parsed['suggestions'] : [];
-    $applied = is_array($parsed['applied_fields'] ?? NULL) ? $parsed['applied_fields'] : NULL;
-    $prepared = $this->prepareSuggestions($suggestions, $node);
 
     if ($prepared !== [] && $group === 'pending') {
       $element['suggestions'] = [
@@ -915,6 +1013,12 @@ final class AiReviewForm extends FormBase {
       ];
     }
     elseif ($prepared !== []) {
+      $element['detailed_heading'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'h4',
+        '#value' => $this->t('Detailed changes'),
+        '#attributes' => ['class' => ['ai-review-detailed-heading']],
+      ];
       $header = [
         $this->t('Field'),
         $this->t('Change'),
@@ -932,15 +1036,15 @@ final class AiReviewForm extends FormBase {
         ];
         if ($applied !== NULL) {
           $is_applied = in_array($s['field'], $applied, TRUE);
-          // Same marker styling the node status uses, so applied/not
-          // applied reads exactly like published/unpublished elsewhere.
+          // Same pill styling as the per-field Passed/Review badges, so
+          // "Applied" reads like a pass everywhere on the page.
           $row['status'] = [
             'data' => [
               '#type' => 'html_tag',
               '#tag' => 'span',
               '#value' => $is_applied ? $this->t('Applied') : $this->t('Not applied'),
               '#attributes' => [
-                'class' => array_filter(['marker', $is_applied ? 'marker--published' : NULL]),
+                'class' => ['ai-review-badge', $is_applied ? 'ai-review-badge--passed' : 'ai-review-badge--neutral'],
               ],
             ],
           ];
@@ -1252,32 +1356,31 @@ final class AiReviewForm extends FormBase {
    *   Render array for the change cell.
    */
   private function diffMarkup(string $current, string $suggested): array {
-    $line = 'padding: 0.25em 0.5em; color: #1f2328; border-radius: ';
     if ($current === $suggested) {
       return ['#plain_text' => $suggested];
     }
     if ($current === '') {
-      // Markup::create() instead of #markup: Xss::filterAdmin() would strip
-      // the inline styles. Safe — all text is escaped above.
+      // Markup::create() instead of #markup: all text is escaped above and
+      // the class names must survive Xss::filterAdmin().
       return [
-        '#markup' => Markup::create('<div style="background: #e6ffec; ' . $line . '4px;">+ '
+        '#markup' => Markup::create('<div class="ai-diff ai-diff--ins">+ '
           . $this->escapeText($suggested) . '</div>'),
       ];
     }
     $diff = new WordLevelDiff([$this->escapeText($current)], [$this->escapeText($suggested)]);
     $del = str_replace(
       '<span class="diffchange">',
-      '<span style="background: #ffb3ad; text-decoration: line-through;">',
+      '<span class="ai-diff__change ai-diff__change--del">',
       implode('<br>', $diff->orig()),
     );
     $ins = str_replace(
       '<span class="diffchange">',
-      '<span style="background: #abf2bc;">',
+      '<span class="ai-diff__change ai-diff__change--ins">',
       implode('<br>', $diff->closing()),
     );
     return [
-      '#markup' => Markup::create('<div style="background: #ffebe9; ' . $line . '4px 4px 0 0;">− ' . $del . '</div>'
-        . '<div style="background: #e6ffec; ' . $line . '0 0 4px 4px;">+ ' . $ins . '</div>'),
+      '#markup' => Markup::create('<div class="ai-diff ai-diff--del">− ' . $del . '</div>'
+        . '<div class="ai-diff ai-diff--ins">+ ' . $ins . '</div>'),
     ];
   }
 
