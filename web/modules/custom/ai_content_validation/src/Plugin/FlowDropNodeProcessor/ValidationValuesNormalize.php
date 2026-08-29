@@ -98,9 +98,45 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
           'description' => 'The raw model response, used to repair-parse when the upstream JSON parse delivered nothing (e.g. a dropped closing brace).',
           'default' => '',
         ],
+        // Declared as strings: the Content Context node emits entity ids
+        // as strings, and FlowDrop type-checks the wire, not the intent.
+        'entity_id' => [
+          'type' => 'string',
+          'description' => 'The validated node id, from the run\'s own entity context. Overrides whatever the model reported.',
+          'default' => '',
+        ],
+        'revision_id' => [
+          'type' => 'string',
+          'description' => 'The validated node revision id, from the run\'s own entity context.',
+          'default' => '',
+        ],
+        'workflow_id' => [
+          'type' => 'string',
+          'description' => 'The workflow this report belongs to. Overrides the model.',
+          'default' => '',
+        ],
       ],
     ];
   }
+
+  /**
+   * The only entity values a validation report may carry.
+   *
+   * The model's JSON is untrusted input — an article body can instruct it
+   * to emit anything — and entity_save writes every key it is handed when
+   * its own allowed_fields is empty. Whitelisting here means the report
+   * shape is defined by this module, not by the model output, whatever a
+   * downstream node's configuration happens to be.
+   */
+  private const ALLOWED_FIELDS = [
+    'label',
+    'description',
+    'status',
+    'field_flowdrop_workflow',
+    'field_content_revision',
+    'field_validation_status',
+    'field_validation_result',
+  ];
 
   /**
    * {@inheritdoc}
@@ -131,6 +167,21 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
     }
     if ($data === []) {
       throw new \RuntimeException('The validator response could not be parsed as JSON, even after repair.');
+    }
+    // The entity this report is about is decided by the run, never by the
+    // model: a misread or injected id would attach the report to another
+    // node, and the supersede rule keys off exactly this reference.
+    $entity_id = (int) $params->getString('entity_id');
+    $revision_id = (int) $params->getString('revision_id');
+    if ($entity_id > 0) {
+      $data['field_content_revision'] = [
+        'target_id' => $entity_id,
+        'target_revision_id' => $revision_id > 0 ? $revision_id : NULL,
+      ];
+    }
+    $workflow_id = $params->getString('workflow_id');
+    if ($workflow_id !== '') {
+      $data['field_flowdrop_workflow'] = $workflow_id;
     }
     if (isset($data['field_validation_result']) && is_array($data['field_validation_result'])) {
       $result = $data['field_validation_result'];
@@ -163,7 +214,7 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
     $data['field_validation_status'] = in_array($outcome, ['improve_rejected', 'improve_no_suggestions'], TRUE)
       ? 'ignored'
       : 'pending';
-    return ['values' => $data];
+    return ['values' => array_intersect_key($data, array_flip(self::ALLOWED_FIELDS))];
   }
 
   /**

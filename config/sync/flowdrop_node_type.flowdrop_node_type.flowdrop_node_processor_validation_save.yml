@@ -14,10 +14,17 @@ plugin_version: 1.0.0
 enabled: true
 parameters:
   allowed_fields:
-    configurable: false
+    configurable: true
     connectable: false
     required: false
-    default: {  }
+    default:
+      - label
+      - description
+      - status
+      - field_flowdrop_workflow
+      - field_content_revision
+      - field_validation_status
+      - field_validation_result
   bundle:
     configurable: false
     connectable: false

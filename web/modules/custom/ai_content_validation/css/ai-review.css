@@ -704,3 +704,990 @@
   padding-top: 0.9em;
   padding-bottom: 0.9em;
 }
+
+/* ---- Node edit form integration ---------------------------------------- */
+
+.ai-nodeform-field {
+  position: relative;
+}
+
+.ai-nodeform-status {
+  margin: 0;
+}
+
+/* Icon-only status: a clickable circle pinned to the field's top-right
+   corner — green with a white check when the field passed, yellow with
+   a white exclamation when it needs attention. Clicking it opens the
+   AI Validation Assistant drawer. */
+.ai-nodeform-status__dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 2px solid var(--gin-bg-layer, #fff);
+  border-radius: 50%;
+  background: var(--gin-border-color, #d4d4d8);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.1s ease-in-out;
+}
+
+.ai-nodeform-status__dot:hover,
+.ai-nodeform-status__dot:focus {
+  transform: scale(1.2);
+}
+
+.ai-nodeform-status__dot--pass {
+  background: var(--gin-color-green, #26a769);
+}
+
+.ai-nodeform-status__dot--pass::after {
+  content: '\2713';
+}
+
+.ai-nodeform-status__dot--issue {
+  background: var(--gin-color-warning, #e29700);
+}
+
+.ai-nodeform-status__dot--issue::after {
+  content: '!';
+}
+
+/* ---------------------------------------------------------------------
+ * AI dialogs (finding popover + suggestion modal).
+ *
+ * Icons are inline SVG data URIs on pseudo-elements: no sprite, no
+ * extra markup, and they follow the dialog's own color tokens.
+ * ------------------------------------------------------------------ */
+.ai-nodeform-popover.ui-dialog,
+.ai-nodeform-modal.ui-dialog {
+  --ai-dlg-accent: #d9480f;
+  --ai-dlg-accent-soft: #fff4ec;
+  --ai-dlg-surface: #fff;
+  --ai-dlg-footer: #fdf7f3;
+  --ai-dlg-border: #e9e4df;
+  --ai-dlg-text: #1f2329;
+  --ai-dlg-muted: #5b6270;
+  --ai-icon-sparkle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d9480f'%3E%3Cpath d='M10 2l1.7 5.1L16.8 8.8 11.7 10.5 10 15.6 8.3 10.5 3.2 8.8 8.3 7.1z'/%3E%3Cpath d='M18 13.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z'/%3E%3C/svg%3E");
+  --ai-icon-info: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='%231971c2'/%3E%3Cpath d='M11 10.5h2V17h-2zM11 6.8h2v2.1h-2z' fill='%23fff'/%3E%3C/svg%3E");
+  --ai-icon-bulb: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9480f' stroke-width='1.7' stroke-linecap='round'%3E%3Cpath d='M9.5 20h5M10 17h4v-1.6a6 6 0 10-4 0z'/%3E%3C/svg%3E");
+  --ai-icon-del: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='%23e03131'/%3E%3Cpath d='M8.5 8.5l7 7M15.5 8.5l-7 7' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  --ai-icon-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f9e44' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12.5l5 5L20 6.5'/%3E%3C/svg%3E");
+  --ai-icon-check-ring: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f9e44' stroke-width='1.9'%3E%3Ccircle cx='12' cy='12' r='9.2'/%3E%3Cpath d='M7.8 12.3l3 3 5.4-6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --ai-icon-bang: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9480f' stroke-width='1.9'%3E%3Ccircle cx='12' cy='12' r='9.2'/%3E%3Cpath d='M12 7v6.2M12 16.2v1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+  --ai-icon-shield: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f9e44' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l7 2.6v5.6c0 4.2-2.9 7.8-7 9-4.1-1.2-7-4.8-7-9V5.6z'/%3E%3Cpath d='M9 12l2.2 2.2L15.4 10'/%3E%3C/svg%3E");
+  --ai-icon-ins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='%232f9e44'/%3E%3Cpath d='M7.5 12.5l3 3 6-6.5' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* Shared chrome. */
+.ai-nodeform-popover.ui-dialog,
+.ai-nodeform-modal.ui-dialog {
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--ai-dlg-surface);
+  color: var(--ai-dlg-text);
+  box-shadow: 0 24px 64px rgba(15, 18, 25, 0.28);
+}
+
+.ui-dialog.ai-nodeform-popover .ui-dialog-titlebar,
+.ui-dialog.ai-nodeform-modal .ui-dialog-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border: 0;
+  border-bottom: 1px solid var(--ai-dlg-border);
+  border-radius: 0;
+  background: var(--ai-dlg-surface);
+  color: var(--ai-dlg-text);
+}
+
+.ai-nodeform-popover .ui-dialog-titlebar::before,
+.ai-nodeform-modal .ui-dialog-titlebar::before {
+  content: "";
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background:
+    var(--ai-icon-sparkle) center / 1.15rem no-repeat,
+    var(--ai-dlg-accent-soft);
+}
+
+.ui-dialog.ai-nodeform-popover .ui-dialog-title,
+.ui-dialog.ai-nodeform-modal .ui-dialog-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  white-space: normal;
+  color: var(--ai-dlg-text);
+}
+
+.ui-dialog.ai-nodeform-popover .ui-dialog-titlebar-close,
+.ui-dialog.ai-nodeform-modal .ui-dialog-titlebar-close {
+  position: static;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0;
+  inset: auto;
+  transform: none;
+  border: 0;
+  border-radius: 8px;
+  filter: none;
+  opacity: 0.75;
+  font-size: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f2329' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") center / 1.05rem no-repeat;
+}
+
+.ui-dialog.ai-nodeform-popover .ui-dialog-titlebar-close span,
+.ui-dialog.ai-nodeform-modal .ui-dialog-titlebar-close span,
+.ui-dialog.ai-nodeform-popover .ui-dialog-titlebar-close::before,
+.ui-dialog.ai-nodeform-modal .ui-dialog-titlebar-close::before {
+  display: none;
+}
+
+.ui-dialog.ai-nodeform-popover .ui-dialog-titlebar-close:hover,
+.ui-dialog.ai-nodeform-modal .ui-dialog-titlebar-close:hover {
+  background-color: var(--ai-dlg-footer);
+  opacity: 1;
+}
+
+/* Every interactive element in the dialogs keeps a visible focus ring. */
+.ai-nodeform-popover :focus-visible,
+.ai-nodeform-modal :focus-visible {
+  outline: 2px solid var(--ai-dlg-accent);
+  outline-offset: 2px;
+}
+
+.ai-nodeform-popover .ui-dialog-content,
+.ai-nodeform-modal .ui-dialog-content {
+  background: var(--ai-dlg-surface);
+  color: var(--ai-dlg-text);
+}
+
+/* Footer: warm strip, orange primary, orange-outlined secondaries. */
+.ai-nodeform-popover .ui-dialog-buttonpane,
+.ai-nodeform-modal .ui-dialog-buttonpane {
+  margin: 0;
+  border-top: 1px solid var(--ai-dlg-border);
+  background: var(--ai-dlg-footer);
+}
+
+.ai-nodeform-popover .ui-dialog-buttonpane .ui-dialog-buttonset,
+.ai-nodeform-modal .ui-dialog-buttonpane .ui-dialog-buttonset {
+  display: flex;
+  gap: 0.625rem;
+  float: none;
+}
+
+.ai-nodeform-popover .ui-dialog-buttonpane .button,
+.ai-nodeform-modal .ui-dialog-buttonpane .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--ai-dlg-accent);
+  border-radius: 8px;
+  background: var(--ai-dlg-surface);
+  color: var(--ai-dlg-accent);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.ui-dialog.ai-nodeform-popover .ui-dialog-buttonpane .button:hover,
+.ui-dialog.ai-nodeform-modal .ui-dialog-buttonpane .button:hover,
+.ui-dialog.ai-nodeform-popover .ui-dialog-buttonpane .button:focus,
+.ui-dialog.ai-nodeform-modal .ui-dialog-buttonpane .button:focus {
+  background: var(--ai-dlg-accent-soft);
+  border-color: #b93c0a;
+  color: #9c3608;
+}
+
+.ai-nodeform-popover .ui-dialog-buttonpane .button:active,
+.ai-nodeform-modal .ui-dialog-buttonpane .button:active {
+  transform: translateY(1px);
+}
+
+.ai-nodeform-popover .ui-dialog-buttonpane .button[disabled],
+.ai-nodeform-modal .ui-dialog-buttonpane .button[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ai-nodeform-popover .ui-dialog-buttonpane .button--primary,
+.ai-nodeform-modal .ui-dialog-buttonpane .button--primary {
+  background: var(--ai-dlg-accent);
+  color: #fff;
+}
+
+.ui-dialog.ai-nodeform-popover .ui-dialog-buttonpane .button--primary:hover,
+.ui-dialog.ai-nodeform-modal .ui-dialog-buttonpane .button--primary:hover,
+.ui-dialog.ai-nodeform-popover .ui-dialog-buttonpane .button--primary:focus,
+.ui-dialog.ai-nodeform-modal .ui-dialog-buttonpane .button--primary:focus {
+  background: #a83606;
+  border-color: #a83606;
+  color: #fff;
+}
+
+/* Button glyphs, keyed off the class the JS puts on each button. */
+.ai-nodeform-popover .ui-dialog-buttonpane .button::before,
+.ai-nodeform-modal .ui-dialog-buttonpane .button::before {
+  content: "";
+  width: 1.05rem;
+  height: 1.05rem;
+  background: var(--ai-btn-icon) center / contain no-repeat;
+}
+
+.ai-nodeform-popover .ui-dialog-buttonpane .button:not([class*="ai-btn--"])::before,
+.ai-nodeform-modal .ui-dialog-buttonpane .button:not([class*="ai-btn--"])::before {
+  display: none;
+}
+
+.ai-btn--fix {
+  --ai-btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M10 2l1.7 5.1L16.8 8.8 11.7 10.5 10 15.6 8.3 10.5 3.2 8.8 8.3 7.1z'/%3E%3Cpath d='M18 13.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z'/%3E%3C/svg%3E");
+}
+
+.ai-btn--apply {
+  --ai-btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E");
+}
+
+.ai-btn--reject {
+  --ai-btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9480f' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
+}
+
+.ai-btn--field {
+  --ai-btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9480f' stroke-width='1.9' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9a2.1 2.1 0 10-3-3L5 17z'/%3E%3C/svg%3E");
+}
+
+.ai-btn--edit {
+  --ai-btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9480f' stroke-width='1.9' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9a2.1 2.1 0 10-3-3L5 17z'/%3E%3C/svg%3E");
+}
+
+/* Finding popover: a compact card anchored to the clicked status dot. */
+.ai-nodeform-popover.ui-dialog {
+  max-width: 380px;
+}
+
+.ai-nodeform-popover .ui-dialog-content {
+  padding: 1.25rem 1.25rem 1.35rem;
+}
+
+.ai-nodeform-popover .ui-dialog-buttonpane {
+  padding: 0.9rem 1.25rem;
+}
+
+.ai-nodeform-popover__text {
+  margin: 0;
+  padding: 0;
+  background: none;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--ai-dlg-muted);
+}
+
+/* Field report: verdict card, per-field note and guideline breakdown. */
+.ai-nodeform-popover--report.ui-dialog {
+  max-width: min(520px, calc(100vw - 2rem));
+}
+
+/* The report scrolls inside the dialog so the footer stays reachable. */
+.ai-nodeform-popover--report .ui-dialog-content {
+  max-height: 70vh !important;
+  overflow: auto;
+}
+
+.ai-nodeform-report--ok {
+  --ai-report-bg: #f1f9f4;
+  --ai-report-rule: #cfe9d9;
+  --ai-report-strong: #17692f;
+  --ai-report-soft: #4a6a56;
+  --ai-report-chip-bg: #d8f0e1;
+  --ai-report-icon: var(--ai-icon-check);
+  --ai-report-note-icon: var(--ai-icon-shield);
+}
+
+.ai-nodeform-report--issue {
+  --ai-report-bg: var(--ai-dlg-accent-soft);
+  --ai-report-rule: #f6d9c6;
+  --ai-report-strong: #9c3608;
+  --ai-report-soft: #7d5744;
+  --ai-report-chip-bg: #fbe1d2;
+  --ai-report-icon: var(--ai-icon-bang);
+  --ai-report-note-icon: var(--ai-icon-bulb);
+}
+
+/* Verdict card: ringed state glyph, label + chip, plain-words verdict. */
+.ai-nodeform-report__hero {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin: 0 0 1rem;
+  padding: 1.25rem 1.25rem 1.25rem 1rem;
+  border-inline-start: 4px solid var(--ai-report-strong);
+  border-radius: 4px 12px 12px 4px;
+  background: var(--ai-report-bg);
+}
+
+.ai-nodeform-report__hero::before {
+  content: "";
+  width: 3rem;
+  height: 3rem;
+  background: var(--ai-report-icon) center / contain no-repeat;
+}
+
+.ai-nodeform-report__line {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+}
+
+.ai-nodeform-report__verdict {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ai-dlg-text);
+}
+
+/* Verdict chip: the field's own state, never a number. */
+.ai-nodeform-report__chip {
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: var(--ai-report-chip-bg);
+  color: var(--ai-report-strong);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.ai-nodeform-report__sub {
+  display: block;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ai-report-soft);
+}
+
+/* The per-field note: why it passes, or what to fix. */
+.ai-nodeform-report__note {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--ai-dlg-border);
+  border-inline-start: 4px solid var(--ai-report-strong);
+  border-radius: 4px 10px 10px 4px;
+  background: #fcfdfc;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--ai-dlg-text);
+}
+
+.ai-nodeform-report__note--empty {
+  --ai-report-note-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b6270' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z'/%3E%3Cpath d='M14 3v5h5'/%3E%3C/svg%3E");
+  border-inline-start-color: var(--ai-dlg-muted);
+  color: var(--ai-dlg-muted);
+}
+
+.ai-nodeform-report__note::before {
+  content: "";
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-top: 0.05rem;
+  background: var(--ai-report-note-icon) center / contain no-repeat;
+}
+
+.ai-nodeform-report__heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ai-dlg-muted);
+}
+
+.ai-nodeform-report__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--ai-dlg-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ai-nodeform-report__item {
+  display: grid;
+  grid-template-columns: 1.25rem 1fr auto;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.9375rem;
+  background: var(--ai-dlg-surface);
+}
+
+.ai-nodeform-report__item-text {
+  display: block;
+}
+
+.ai-nodeform-report__item-name {
+  display: block;
+  font-weight: 600;
+}
+
+.ai-nodeform-report__item-desc {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ai-dlg-muted);
+}
+
+.ai-nodeform-report__item + .ai-nodeform-report__item {
+  border-top: 1px solid var(--ai-dlg-border);
+}
+
+.ai-nodeform-report__item::before {
+  content: "";
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.05rem;
+  background: center / contain no-repeat;
+}
+
+.ai-nodeform-report__item--ok::before {
+  background-image: var(--ai-icon-check-ring);
+}
+
+.ai-nodeform-report__item--weak {
+  background: #fffaf5;
+}
+
+.ai-nodeform-report__item--weak::before {
+  background-image: var(--ai-icon-bang);
+}
+
+.ai-nodeform-report__item-value {
+  margin-top: 0.05rem;
+  white-space: nowrap;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: #eef2f5;
+  color: var(--ai-dlg-muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ai-nodeform-report__item--ok .ai-nodeform-report__item-value {
+  background: #d8f0e1;
+  color: #17692f;
+}
+
+.ai-nodeform-report__item--weak .ai-nodeform-report__item-value {
+  background: #fbe1d2;
+  color: #9c3608;
+}
+
+/* Suggestion modal: centered, with the BEFORE / AFTER review. */
+.ai-nodeform-modal.ui-dialog {
+  max-width: min(640px, calc(100vw - 2rem));
+}
+
+.ai-nodeform-modal .ui-dialog-content {
+  max-height: 68vh !important;
+  overflow: auto;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.ai-nodeform-modal .ui-dialog-buttonpane {
+  padding: 1rem 1.5rem;
+}
+
+.ai-nodeform-drawer__intro {
+  margin: 0 0 1rem;
+  color: var(--ai-dlg-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Field card: blue-tinted "what this is about" note. */
+.ai-nodeform-drawer__card {
+  display: grid;
+  grid-template-columns: 1.35rem 1fr;
+  gap: 0.25rem 0.75rem;
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #d3e3f7;
+  border-radius: 10px;
+  background: #f3f8fe;
+}
+
+.ai-nodeform-drawer__card::before {
+  content: "";
+  grid-row: span 2;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-top: 0.1rem;
+  background: var(--ai-icon-info) center / contain no-repeat;
+}
+
+.ai-nodeform-drawer__card-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.ai-nodeform-drawer__card-text {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ai-dlg-muted);
+}
+
+.ai-nodeform-drawer__heading {
+  margin: 0 0 0.75rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.ai-nodeform-drawer__reason {
+  display: grid;
+  grid-template-columns: 1.35rem 1fr;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  border: 0;
+  border-inline-start: 3px solid var(--ai-dlg-accent);
+  border-radius: 0 8px 8px 0;
+  background: var(--ai-dlg-accent-soft);
+  color: var(--ai-dlg-text);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.ai-nodeform-drawer__reason::before {
+  content: "";
+  width: 1.35rem;
+  height: 1.35rem;
+  background: var(--ai-icon-bulb) center / contain no-repeat;
+}
+
+/* BEFORE / AFTER cards built from the panel's word-level diff rows. */
+.ai-nodeform-drawer__diff .ai-diff {
+  position: relative;
+  margin: 0 0 0.75rem;
+  padding: 2.6rem 1rem 0.9rem 3.1rem;
+  border: 0;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  max-height: 30vh;
+  overflow: auto;
+}
+
+.ai-nodeform-drawer__diff .ai-diff::before {
+  position: absolute;
+  top: 0.95rem;
+  left: 1rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border-radius: 50%;
+  background: center / contain no-repeat;
+  content: "";
+}
+
+.ai-nodeform-drawer__diff .ai-diff::after {
+  position: absolute;
+  top: 1rem;
+  left: 3.1rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 5px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+.ai-nodeform-drawer__diff .ai-diff--del {
+  background: #fdeded;
+}
+
+.ai-nodeform-drawer__diff .ai-diff--del::before {
+  background-image: var(--ai-icon-del);
+}
+
+.ai-nodeform-drawer__diff .ai-diff--del::after {
+  content: "BEFORE";
+  background: #fbd7d7;
+  color: #b02525;
+}
+
+.ai-nodeform-drawer__diff .ai-diff--ins {
+  background: #e9f7ee;
+}
+
+.ai-nodeform-drawer__diff .ai-diff--ins::before {
+  background-image: var(--ai-icon-ins);
+}
+
+.ai-nodeform-drawer__diff .ai-diff--ins::after {
+  content: "AFTER";
+  background: #c9edd6;
+  color: #1d7a37;
+}
+
+.ai-nodeform-drawer__edit {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border: 1px solid var(--ai-dlg-border);
+  border-radius: 10px;
+  background: var(--ai-dlg-footer);
+}
+
+.ai-nodeform-drawer__edit-label {
+  display: block;
+  margin: 0.5rem 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ai-dlg-muted);
+}
+
+.ai-nodeform-drawer__edit-label:first-child {
+  margin-top: 0;
+}
+
+.ai-nodeform-drawer__edit-input {
+  display: block;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--ai-dlg-border);
+  border-radius: 8px;
+  background: var(--ai-dlg-surface);
+  color: var(--ai-dlg-text);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* The body suggestion is HTML source: give it room and a code face. */
+.ai-nodeform-drawer__edit-input--code {
+  min-height: 16rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  tab-size: 2;
+}
+
+.ai-nodeform-drawer__hint {
+  display: grid;
+  grid-template-columns: 1.2rem 1fr;
+  gap: 0.6rem;
+  margin: 1rem 0 0;
+  font-size: 0.875rem;
+  color: #1971c2;
+  line-height: 1.5;
+}
+
+.ai-nodeform-drawer__hint::before {
+  content: "";
+  width: 1.2rem;
+  height: 1.2rem;
+  background: var(--ai-icon-info) center / contain no-repeat;
+}
+
+.ai-nodeform-drawer__progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  background: var(--ai-dlg-accent-soft);
+  color: var(--ai-dlg-accent);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.ai-nodeform-sidebar__score {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.875rem;
+}
+
+.ai-nodeform-sidebar__score-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+  flex: 1 1 auto;
+}
+
+.ai-nodeform-sidebar__label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.ai-nodeform-sidebar__label b {
+  color: var(--ai-tone-color);
+}
+
+.ai-nodeform-sidebar__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1875rem 0.625rem;
+  border: 1px solid var(--ai-tone-border);
+  border-radius: 999px;
+  background: var(--ai-tone-bg);
+  color: var(--ai-tone-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ai-nodeform-sidebar__rating::before {
+  content: "✓";
+}
+
+.ai-nodeform-sidebar__date {
+  display: flex;
+  flex-direction: column;
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.5rem;
+  background: var(--gin-bg-app, #f4f4f6);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.ai-nodeform-sidebar__date-title {
+  color: var(--gin-color-text-light, #565656);
+}
+
+.ai-nodeform-sidebar__date-value {
+  font-weight: 600;
+}
+
+.ai-nodeform-sidebar__box {
+  padding: 0.75rem;
+  border: 1px solid var(--ai-tone-border);
+  border-radius: 0.5rem;
+  background: var(--ai-tone-bg);
+}
+
+.ai-nodeform-sidebar__auto,
+.ai-nodeform-sidebar__status {
+  position: relative;
+  margin: 0;
+  padding-inline-start: 1.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.ai-nodeform-sidebar__status {
+  padding-inline-start: 0;
+  margin-bottom: 0.75rem;
+  color: var(--gin-color-text-light, #565656);
+}
+
+.ai-nodeform-sidebar__summary {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.ai-nodeform-sidebar__auto::before {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.0625rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.ai-nodeform-sidebar__auto::before {
+  content: "";
+  top: 0.1875rem;
+  width: 1rem;
+  height: 1rem;
+  background: var(--ai-tone-color);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 2l1.8 5.2L18 9l-5.2 1.8L11 16l-1.8-5.2L4 9l5.2-1.8L11 2z'/%3E%3Cpath d='M18 14l.85 2.15L21 17l-2.15.85L18 20l-.85-2.15L15 17l2.15-.85L18 14z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 2l1.8 5.2L18 9l-5.2 1.8L11 16l-1.8-5.2L4 9l5.2-1.8L11 2z'/%3E%3Cpath d='M18 14l.85 2.15L21 17l-2.15.85L18 20l-.85-2.15L15 17l2.15-.85L18 14z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Divider only when a summary sits above the automatic-run note. */
+.ai-nodeform-sidebar__summary + .ai-nodeform-sidebar__auto {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--ai-tone-border);
+}
+
+.ai-nodeform-sidebar__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.ai-nodeform-sidebar__link::after {
+  content: "›";
+}
+
+/* Score donut: conic ring with the score punched out of the middle. */
+.ai-donut {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--ai-tone-color) 0 calc(var(--ai-donut-percent, 0) * 1%),
+    var(--gin-border-color, #e5e5e5) 0
+  );
+}
+
+.ai-donut__value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--gin-bg-layer, #fff);
+  color: var(--gin-color-text, #222);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.ai-donut__badge {
+  position: absolute;
+  top: -2px;
+  inset-inline-end: -4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--gin-bg-layer, #fff);
+  border-radius: 50%;
+  background: var(--gin-color-warning, #e29700);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Tone tokens: the score band colours the chip, summary box and score. */
+.ai-nodeform-sidebar {
+  --ai-tone-color: var(--gin-color-text-light, #565656);
+  --ai-tone-bg: var(--gin-bg-app, #f4f4f6);
+  --ai-tone-border: var(--gin-border-color, #e5e5e5);
+}
+
+.ai-nodeform-sidebar--good {
+  --ai-tone-color: var(--gin-color-green, #1f9254);
+  --ai-tone-bg: #f0f9f3;
+  --ai-tone-border: #cbe8d6;
+}
+
+.ai-nodeform-sidebar--warn {
+  --ai-tone-color: var(--gin-color-warning, #a56b00);
+  --ai-tone-bg: #fdf6e8;
+  --ai-tone-border: #f0dfb5;
+}
+
+.ai-nodeform-sidebar--bad {
+  --ai-tone-color: var(--gin-color-danger, #c62828);
+  --ai-tone-bg: #fdf1f1;
+  --ai-tone-border: #f2cfcf;
+}
+
+/* Dot moved into a sidebar details summary (meta tags): flows inline
+   right after the group title. */
+.ai-nodeform-field--group summary .ai-nodeform-status {
+  display: inline-flex;
+  margin-inline-start: 0.5rem;
+  vertical-align: middle;
+}
+
+.ai-nodeform-field--group summary .ai-nodeform-status__dot {
+  position: static;
+}
+
+/* While a post-save validation is in flight, the score on the page is the
+   previous one — pulse it instead of letting it read as final. */
+.ai-validation-pending .ai-donut,
+.ai-validation-pending .ai-quality-score {
+  animation: ai-validation-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ai-validation-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-validation-pending .ai-donut,
+  .ai-validation-pending .ai-quality-score {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* Live "Validating…" badge, shown while a post-save run is in flight. */
+.ai-validating {
+  position: fixed;
+  z-index: 1000;
+  inset-block-end: 1.25rem;
+  inset-inline-start: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.95rem;
+  border: 1px solid #f0e0d4;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 18, 25, 0.16);
+  color: #9c3608;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.ai-validating__icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d9480f'%3E%3Cpath d='M10 2l1.7 5.1L16.8 8.8 11.7 10.5 10 15.6 8.3 10.5 3.2 8.8 8.3 7.1z'/%3E%3Cpath d='M18 13.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z'/%3E%3C/svg%3E") center / contain no-repeat;
+  animation: ai-validation-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-validating__icon {
+    animation: none;
+  }
+}

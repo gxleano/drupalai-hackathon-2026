@@ -2,3 +2,17 @@ ai_review:
   css:
     component:
       css/ai-review.css: {}
+node_form:
+  js:
+    js/ai-node-form.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.dialog
+    - core/once
+validation_poll:
+  js:
+    js/ai-validation-poll.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once

@@ -3,11 +3,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    # Runtime dependency, not expressible here: the gate node reads
-    # flowdrop_workflow.flowdrop_workflow.content_validation_fixer at
-    # execution time — that workflow supplies both the baseline report and
-    # the validator prompt the candidate is re-scored with. Renaming or
-    # deleting content_validation_fixer breaks AI Improve.
     - flowdrop_node_type.flowdrop_node_type.ai_content_validation_improve_gate
     - flowdrop_node_type.flowdrop_node_type.ai_content_validation_normalize
     - flowdrop_node_type.flowdrop_node_type.chat_input
@@ -51,10 +46,6 @@ nodes:
         ui:
           hideUnconnectedHandles: true
   -
-    # The findings arrive as one prose string (AiReviewForm assembles it),
-    # but the improver needs the baseline number as its own value, not
-    # buried mid-sentence. These two nodes lift it out again so the prompt
-    # can state it on its own line. Twig only, no model call.
     id: prompt_template.2
     position:
       x: 0
@@ -168,8 +159,6 @@ nodes:
     data:
       label: Chat
       config:
-        # Medium, not large: with the full body in the prompt the large
-        # model regularly exceeds the provider's 60s HTTP timeout.
         model: mistral-medium-latest
         temperature: 0.3
         maxTokens: 4000
@@ -198,7 +187,7 @@ nodes:
           CRITICAL rules:
           - field_validation_result MUST be a JSON OBJECT with exactly three keys: "score", "summary" and "suggestions".
           - "score" MUST be null (scoring only happens in validation).
-          - EXACTLY ONE suggestion per field, never two suggestions for the same field. Allowed fields: "title", "field_body", "field_metatags". Only include a field when the findings require changing it.
+          - EXACTLY ONE suggestion per field, never two suggestions for the same field. Allowed fields: ONLY the field names appearing in the per-field findings you were given — never invent a field name and never touch a field the findings do not mention. Only include a field when the findings require changing it.
           - FIELD-SCOPED EDITS: the findings list a "Per-field findings" section naming, per field, the exact guidelines that failed on that field. A field's suggestion MUST fix every guideline named for THAT field and nothing else. A field with no line in that section is already compliant — OMIT it from "suggestions" entirely, never "polish" it.
           - "reason" MUST name the guideline number(s) it addresses and state, in one sentence, how the NEW value satisfies them — e.g. "Guideline 3 (Neutrality): the promotional wording is replaced with a factual description of the programme." Never restate the problem alone, never write a vague reason like "improved clarity", and never cite a guideline that was not named for that field.
           - NEVER emit a suggestion whose "suggested" value is empty or identical to "current". When you cannot edit a field without inventing content (e.g. the body is missing), OMIT that field from "suggestions" entirely — an empty "suggestions" array is a valid answer — and explain in "summary" what the editor must write.
@@ -226,10 +215,6 @@ nodes:
       metadata:
         node_type_id: json_to_data
   -
-    # The non-regression guarantee. The prompt's NON-REGRESSION RULE is a
-    # hint; this node is the enforcement: it re-scores the candidate the
-    # suggestions would produce with the validator's own prompt and drops
-    # the proposal when it scores below the baseline report.
     id: ai_content_validation_improve_gate.1
     position:
       x: 1600
@@ -247,7 +232,8 @@ nodes:
       'y': 0
     data:
       label: 'Normalize Values'
-      config: {  }
+      config:
+        workflow_id: content_improve
       metadata:
         node_type_id: ai_content_validation_normalize
   -
@@ -259,9 +245,29 @@ nodes:
       label: 'Save Improvement'
       config:
         entity_type: ai_content_validation_item
+        allowed_fields:
+          - label
+          - description
+          - status
+          - field_flowdrop_workflow
+          - field_content_revision
+          - field_validation_status
+          - field_validation_result
       metadata:
         node_type_id: flowdrop_node_processor_validation_save
 edges:
+  -
+    id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-entity_id-ai_content_validation_normalize.1ai_content_validation_normalize.1-input-entity_id
+    source: echack_flowdrop_node_session_content_context.1
+    target: ai_content_validation_normalize.1
+    sourceHandle: echack_flowdrop_node_session_content_context.1-output-entity_id
+    targetHandle: ai_content_validation_normalize.1-input-entity_id
+  -
+    id: xy-edge__echack_flowdrop_node_session_content_context.1echack_flowdrop_node_session_content_context.1-output-revision_id-ai_content_validation_normalize.1ai_content_validation_normalize.1-input-revision_id
+    source: echack_flowdrop_node_session_content_context.1
+    target: ai_content_validation_normalize.1
+    sourceHandle: echack_flowdrop_node_session_content_context.1-output-revision_id
+    targetHandle: ai_content_validation_normalize.1-input-revision_id
   -
     id: e-context-prompt
     source: echack_flowdrop_node_session_content_context.1

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_validation\Plugin\views\field;
 
+use Drupal\ai_content_validation\ValidationFreshness;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
@@ -51,10 +52,9 @@ final class AiQualityScore extends FieldPluginBase {
     }
     else {
       $score = max(0, min(100, (int) $record['score']));
-      // The score describes one revision at one moment: a newer revision
-      // or a later edit (same-revision saves included) makes it stale.
-      $stale = $record['vid'] !== (int) $entity->getRevisionId()
-        || (int) $entity->getChangedTime() > $record['created'];
+      // The score describes the content it was computed from: only a
+      // change to a validated value makes it stale.
+      $stale = !ValidationFreshness::isCurrent($entity, $record);
       $fill = $score >= 80
         ? 'var(--gin-color-green, #26a769)'
         : ($score >= 50 ? 'var(--gin-color-warning, #e29700)' : 'var(--gin-color-danger, #dc2323)');

@@ -16,9 +16,21 @@ parameters:
     configurable: false
     connectable: true
     required: false
+  entity_id:
+    configurable: false
+    connectable: true
+    required: false
   json:
     configurable: false
     connectable: true
+    required: false
+  revision_id:
+    configurable: false
+    connectable: true
+    required: false
+  workflow_id:
+    configurable: true
+    connectable: false
     required: false
 outputs:
   values:
@@ -32,4 +44,5 @@ supported_visual_types:
 unified_input_exposed: false
 unified_output_exposed: false
 tool_exposed: false
+confirmation: {  }
 reserved_port_exposure: {  }

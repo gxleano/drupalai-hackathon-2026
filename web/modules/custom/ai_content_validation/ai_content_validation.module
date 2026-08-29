@@ -7,24 +7,9 @@
 
 declare(strict_types=1);
 
-use Drupal\Component\Utility\Html;
-use Drupal\Core\Entity\EntityInterface;
+use Drupal\ai_content_validation\Hook\FormHooks;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Markup;
-use Drupal\Core\Url;
-use Drupal\node\NodeInterface;
-use Drupal\user\UserInterface;
-use Drupal\views\ViewExecutable;
-
-/**
- * Implements hook_theme().
- */
-function ai_content_validation_theme(): array {
-  return [
-    'ai_content_validation_item' => ['render element' => 'elements'],
-  ];
-}
 
 /**
  * Prepares variables for ai validations templates.
@@ -45,257 +30,25 @@ function template_preprocess_ai_content_validation_item(array &$variables): void
 }
 
 /**
- * Implements hook_entity_operation_alter().
+ * Submit handler: accepts one field's pending AI suggestion.
  *
- * Replaces the per-workflow playground operations added by
- * flowdrop_node_session with a single "AI Validation" link to the review page,
- * where workflows are run and their suggestions can be applied.
+ * Form submit handlers are referenced by name in the cached form array, so
+ * these stay procedural and delegate to the hook class.
  */
-function ai_content_validation_entity_operation_alter(array &$operations, EntityInterface $entity): void {
-  if ($entity->getEntityTypeId() !== 'node') {
-    return;
-  }
-  $replaced = FALSE;
-  foreach (array_keys($operations) as $key) {
-    if (str_starts_with((string) $key, 'flowdrop_')) {
-      unset($operations[$key]);
-      $replaced = TRUE;
-    }
-  }
-  if ($replaced) {
-    $operations['ai_review'] = [
-      'title' => t('AI Validation'),
-      'url' => Url::fromRoute('ai_content_validation.node_review', ['node' => $entity->id()]),
-      'weight' => 50,
-    ];
-  }
+function ai_content_validation_node_form_apply_submit(array &$form, FormStateInterface $form_state): void {
+  \Drupal::classResolver(FormHooks::class)->applySubmit($form, $form_state);
 }
 
 /**
- * Implements hook_form_FORM_ID_alter() for flowdrop_interrupt_resolve.
- *
- * Prepends the latest assistant message of the interrupt's session so the
- * user sees the AI's proposal (normally shown in the playground chat) while
- * answering the human-in-the-loop question.
+ * Submit handler: rejects one field's pending AI suggestion.
  */
-function ai_content_validation_form_flowdrop_interrupt_resolve_alter(array &$form, FormStateInterface $form_state): void {
-  $interrupt_id = $form_state->get('interrupt_id');
-  if (!$interrupt_id) {
-    return;
-  }
-  /** @var \Drupal\flowdrop_interrupt\Service\InterruptManagerInterface $interrupt_manager */
-  $interrupt_manager = \Drupal::service('flowdrop_interrupt.manager');
-  $interrupt = $interrupt_manager->getInterrupt($interrupt_id);
-  $session_id = $interrupt?->getSessionId();
-  if (!$session_id) {
-    return;
-  }
-  /** @var \Drupal\flowdrop_session\Service\SessionService $session_service */
-  $session_service = \Drupal::service('flowdrop_session.service');
-  foreach (array_reverse($session_service->getMessages($session_id, NULL, 50, NULL, TRUE)) as $message) {
-    if ($message->getRole() === 'assistant' && $message->getContent() !== '') {
-      $form['ai_proposal'] = [
-        '#markup' => '<blockquote><p>' . nl2br(Html::escape($message->getContent())) . '</p></blockquote>',
-        '#weight' => -10,
-      ];
-      break;
-    }
-  }
+function ai_content_validation_node_form_reject_submit(array &$form, FormStateInterface $form_state): void {
+  \Drupal::classResolver(FormHooks::class)->rejectSubmit($form, $form_state);
 }
 
 /**
- * Implements hook_user_cancel().
+ * Submit handler: runs the improve workflow for one flagged field.
  */
-function ai_content_validation_user_cancel($edit, UserInterface $account, $method): void {
-  switch ($method) {
-    case 'user_cancel_block_unpublish':
-      // Unpublish ai validations.
-      $storage = \Drupal::entityTypeManager()->getStorage('ai_content_validation_item');
-      $ai_content_validation_item_ids = $storage->getQuery()
-        ->condition('uid', $account->id())
-        ->condition('status', 1)
-        ->accessCheck(FALSE)
-        ->execute();
-      foreach ($storage->loadMultiple($ai_content_validation_item_ids) as $ai_content_validation_item) {
-        $ai_content_validation_item->set('status', FALSE)->save();
-      }
-      break;
-
-    case 'user_cancel_reassign':
-      // Anonymize ai validations.
-      $storage = \Drupal::entityTypeManager()->getStorage('ai_content_validation_item');
-      $ai_content_validation_item_ids = $storage->getQuery()
-        ->condition('uid', $account->id())
-        ->accessCheck(FALSE)
-        ->execute();
-      foreach ($storage->loadMultiple($ai_content_validation_item_ids) as $ai_content_validation_item) {
-        $ai_content_validation_item->setOwnerId(0)->save();
-      }
-      break;
-  }
-}
-
-/**
- * Implements hook_ENTITY_TYPE_predelete() for user entities.
- */
-function ai_content_validation_user_predelete(UserInterface $account): void {
-  // Delete ai validations that belong to this account.
-  $storage = \Drupal::entityTypeManager()->getStorage('ai_content_validation_item');
-  $ai_content_validation_item_ids = $storage->getQuery()
-    ->condition('uid', $account->id())
-    ->accessCheck(FALSE)
-    ->execute();
-  $storage->delete(
-    $storage->loadMultiple($ai_content_validation_item_ids)
-  );
-}
-
-/**
- * Implements hook_views_pre_render().
- *
- * Looks up pending AI validation counts for all nodes in the content
- * overview in one aggregated query, and attaches the validation list cache
- * tag so the view refreshes when validations change.
- */
-function ai_content_validation_views_pre_render(ViewExecutable $view): void {
-  if ($view->id() !== 'content') {
-    return;
-  }
-  $nids = [];
-  foreach ($view->result as $row) {
-    $entity = $row->_entity ?? NULL;
-    if ($entity instanceof NodeInterface) {
-      $nids[] = (int) $entity->id();
-    }
-  }
-  $counts = &drupal_static('ai_content_validation_pending_counts', []);
-  $scores = &drupal_static('ai_content_validation_latest_scores', []);
-  if ($nids !== []) {
-    $storage = \Drupal::entityTypeManager()->getStorage('ai_content_validation_item');
-    $results = $storage->getAggregateQuery()
-      // System-wide indicator, not user-scoped data.
-      ->accessCheck(FALSE)
-      ->condition('field_content_revision.target_id', $nids, 'IN')
-      ->condition('field_validation_status', 'pending')
-      ->groupBy('field_content_revision.target_id')
-      ->aggregate('id', 'COUNT')
-      ->execute();
-    foreach ($results as $result) {
-      $nid = (int) ($result['field_content_revision_target_id'] ?? 0);
-      $counts[$nid] = (int) ($result['id_count'] ?? 0);
-    }
-
-    // Newest accepted quality score per node: only done items count — a
-    // pending score is provisional until the editor accepts it, ignored
-    // and superseded ones never apply. The score lives inside the JSON
-    // result field, so items are loaded and parsed; newest-first order
-    // means the first parsable score per node wins.
-    $ids = $storage->getQuery()
-      ->accessCheck(FALSE)
-      ->condition('field_content_revision.target_id', $nids, 'IN')
-      ->condition('field_validation_status', 'done')
-      ->sort('created', 'DESC')
-      ->range(0, 200)
-      ->execute();
-    $items = $storage->loadMultiple($ids);
-    foreach ($ids as $id) {
-      $item = $items[$id] ?? NULL;
-      if ($item === NULL) {
-        continue;
-      }
-      $nid = (int) ($item->get('field_content_revision')->target_id ?? 0);
-      if ($nid === 0 || isset($scores[$nid])) {
-        continue;
-      }
-      $decoded = json_decode((string) ($item->get('field_validation_result')->value ?? ''), TRUE);
-      if (is_string($decoded)) {
-        $decoded = json_decode($decoded, TRUE);
-      }
-      $score = is_array($decoded) ? ($decoded['score'] ?? NULL) : NULL;
-      if (is_numeric($score)) {
-        // Revision id and timestamp travel along so the donut can flag a
-        // score whose content has changed since it was validated.
-        $verdicts = is_array($decoded['scores'] ?? NULL) ? $decoded['scores'] : [];
-        $scores[$nid] = [
-          'score' => (int) $score,
-          'vid' => (int) ($item->get('field_content_revision')->target_revision_id ?? 0),
-          'created' => (int) $item->get('created')->value,
-          // Any verdict below a full pass means the report suggests
-          // improvements — the content list flags it.
-          'weak' => (bool) array_filter(
-            $verdicts,
-            fn ($v) => is_numeric($v) ? (int) $v < 10 : strtolower(trim((string) $v)) !== 'pass',
-          ),
-        ];
-      }
-    }
-  }
-  $view->element['#cache']['tags'][] = 'ai_content_validation_item_list';
-}
-
-/**
- * Implements hook_views_data_alter().
- *
- * Exposes the AI quality score donut as a views field on nodes, used by
- * the Quality Score column in the content overview.
- */
-function ai_content_validation_views_data_alter(array &$data): void {
-  $data['node_field_data']['ai_quality_score'] = [
-    'title' => t('AI Quality Score'),
-    'help' => t('Latest AI validation quality score as a colored donut ring.'),
-    'field' => [
-      'id' => 'ai_quality_score',
-    ],
-  ];
-}
-
-/**
- * Implements hook_preprocess_HOOK() for views-view-field.html.twig.
- *
- * Appends a warning icon after the title in the content overview when the
- * node has pending AI validations. Hovering shows the count, clicking goes
- * to the node's AI Validation page.
- */
-function ai_content_validation_preprocess_views_view_field(array &$variables): void {
-  if ($variables['view']->id() !== 'content' || $variables['field']->field !== 'title') {
-    return;
-  }
-  $entity = $variables['row']->_entity ?? NULL;
-  if (!$entity instanceof NodeInterface) {
-    return;
-  }
-  $counts = drupal_static('ai_content_validation_pending_counts', []);
-  $count = $counts[(int) $entity->id()] ?? 0;
-  // Manual validations auto-accept, so pending items alone no longer cover
-  // the "needs attention" cases: a current report whose verdicts are not
-  // all pass ("Improvements suggested") warrants the icon too.
-  $record = drupal_static('ai_content_validation_latest_scores', [])[(int) $entity->id()] ?? NULL;
-  $current = $record !== NULL
-    && $record['vid'] === (int) $entity->getRevisionId()
-    && (int) $entity->getChangedTime() <= $record['created'];
-  $weak = $current && !empty($record['weak']);
-  if ($count === 0 && !$weak) {
-    return;
-  }
-
-  $info = $count > 0
-    ? \Drupal::translation()->formatPlural(
-      $count,
-      '1 pending AI validation needs your attention — click to review.',
-      '@count pending AI validations need your attention — click to review.'
-    )
-    : t('The AI validation suggested improvements for this content — click to review.');
-  $url = Url::fromRoute('ai_content_validation.node_review', ['node' => $entity->id()])->toString();
-  // The Gin status-report warning octagon: its sprite masked over the theme
-  // warning color, mirroring .system-status-report__status-icon--warning.
-  $sprite = '/' . \Drupal::service('extension.list.theme')->getPath('gin') . '/dist/media/sprite.svg#warning-view';
-  $mask = 'mask-image: url(' . $sprite . '); mask-repeat: no-repeat; mask-position: center; mask-size: 16px;';
-  $icon = '<span style="display: inline-block; width: 16px; height: 16px; vertical-align: text-bottom;'
-    . ' background-color: var(--gin-color-warning, #e29700);'
-    . ' -webkit-' . $mask . ' ' . $mask . '"></span>';
-  $variables['output'] = Markup::create(
-    (string) $variables['output']
-    . ' <a href="' . Html::escape($url) . '" title="' . Html::escape((string) $info) . '"'
-    . ' aria-label="' . Html::escape((string) $info) . '" style="text-decoration: none;">' . $icon . '</a>'
-  );
+function ai_content_validation_node_form_improve_submit(array &$form, FormStateInterface $form_state): void {
+  \Drupal::classResolver(FormHooks::class)->improveSubmit($form, $form_state);
 }

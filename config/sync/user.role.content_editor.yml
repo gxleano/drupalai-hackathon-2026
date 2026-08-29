@@ -12,6 +12,7 @@ dependencies:
     - node.type.page
     - workflows.workflow.basic_editorial
   module:
+    - ai_content_validation
     - canvas
     - content_moderation
     - filter
@@ -60,6 +61,7 @@ permissions:
   - 'edit any video media'
   - 'edit canvas_page'
   - 'revert all revisions'
+  - 'run ai content validation'
   - 'schedule publishing of nodes'
   - 'use basic_editorial transition create_new_draft'
   - 'use basic_editorial transition publish'

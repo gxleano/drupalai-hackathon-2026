@@ -16,11 +16,6 @@ parameters:
     configurable: false
     connectable: true
     required: false
-  validation_workflow:
-    configurable: true
-    connectable: false
-    required: false
-    default: content_validation_fixer
   findings:
     configurable: false
     connectable: true
@@ -29,6 +24,11 @@ parameters:
     configurable: false
     connectable: true
     required: false
+  validation_workflow:
+    configurable: true
+    connectable: false
+    required: false
+    default: content_validation_fixer
 outputs:
   accepted:
     exposed: true

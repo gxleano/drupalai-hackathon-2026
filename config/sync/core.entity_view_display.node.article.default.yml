@@ -4,7 +4,9 @@ status: true
 dependencies:
   config:
     - field.field.node.article.field_body
+    - field.field.node.article.field_image
     - field.field.node.article.field_metatags
+    - field.field.node.article.field_summary
     - field.field.node.article.field_tags
     - node.type.article
   module:
@@ -21,6 +23,15 @@ content:
     label: hidden
     settings: {  }
     third_party_settings: {  }
+    weight: 1
+    region: content
+  field_image:
+    type: entity_reference_entity_view
+    label: hidden
+    settings:
+      view_mode: 16_9_large
+      link: false
+    third_party_settings: {  }
     weight: 0
     region: content
   field_metatags:
@@ -28,7 +39,7 @@ content:
     label: above
     settings: {  }
     third_party_settings: {  }
-    weight: 3
+    weight: 4
     region: content
   field_tags:
     type: entity_reference_label
@@ -36,11 +47,12 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: 1
+    weight: 2
     region: content
   links:
     settings: {  }
     third_party_settings: {  }
-    weight: 2
+    weight: 3
     region: content
-hidden: {  }
+hidden:
+  field_summary: true

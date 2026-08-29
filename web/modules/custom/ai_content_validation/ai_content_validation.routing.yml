@@ -34,3 +34,16 @@ ai_content_validation.main_dashboard:
     _controller: '\Drupal\ai_content_validation\Controller\MainDashboard'
   requirements:
     _permission: 'administer site configuration'
+
+ai_content_validation.node_validation_state:
+  path: '/node/{node}/ai-validation-state'
+  defaults:
+    _controller: '\Drupal\ai_content_validation\Controller\ValidationState::freshness'
+  requirements:
+    _permission: 'create flowdrop_session'
+    _entity_access: 'node.update'
+    node: \d+
+  options:
+    parameters:
+      node:
+        type: 'entity:node'

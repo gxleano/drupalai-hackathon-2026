@@ -18,6 +18,7 @@ use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\ai_content_validation\ContentHasher;
+use Drupal\ai_content_validation\ValidatedFields;
 use Drupal\flowdrop_node_session\Service\NodeSessionService;
 use Drupal\flowdrop_session\DTO\TurnOptions;
 use Drupal\flowdrop_session\DTO\TurnResult;
@@ -42,6 +43,44 @@ final class AiReviewForm extends FormBase {
    * hardcoded workflow ids once; every report query filters on this.
    */
   private const REPORT_WORKFLOW = 'content_validation_fixer';
+
+  /**
+   * The ten EU content guidelines, keyed by their number in the report.
+   *
+   * The model returns `scores` keyed by these numbers; both the improver
+   * prompt and the node form's pass popover name them from here.
+   */
+  public const GUIDELINES = [
+    1 => 'Accuracy & Evidence',
+    2 => 'Clarity & Plain Language',
+    3 => 'Neutrality & Objectivity',
+    4 => 'Source Transparency',
+    5 => 'Legal & Policy Consistency',
+    6 => 'Audience Relevance',
+    7 => 'Structure & Coherence',
+    8 => 'Completeness & Context',
+    9 => 'Inclusivity & Language Ethics',
+    10 => 'Practical Value',
+  ];
+
+  /**
+   * One-line description of each guideline, keyed as GUIDELINES.
+   *
+   * Shown under the guideline name in the node form's field report, so an
+   * editor reading a verdict knows what was actually checked.
+   */
+  public const GUIDELINE_DESCRIPTIONS = [
+    1 => 'Claims are factually correct and backed by verifiable evidence.',
+    2 => 'Written in plain language a non-expert can follow.',
+    3 => 'Neutral tone, free of promotional or one-sided wording.',
+    4 => 'Sources are named and linked so a reader can check them.',
+    5 => 'Consistent with current EU law and published policy.',
+    6 => 'Matches the needs and context of its intended readers.',
+    7 => 'Logical structure, with headings that guide the reader.',
+    8 => 'Gives the context a reader needs, with no critical gaps.',
+    9 => 'Inclusive, respectful language free of stereotypes.',
+    10 => 'Tells the reader what they can actually do next.',
+  ];
 
   /**
    * Constructs the form.
@@ -124,15 +163,10 @@ final class AiReviewForm extends FormBase {
     // revision and/or an unstamped report (entity triggers validate on
     // save too), so changed content gets validated first.
     $latest_report = $this->latestReport($node);
-    // The changed-time guard catches edits saved WITHOUT a new revision
-    // (content types with "Create new revision" off keep the same
-    // revision id, which the revision comparison alone cannot see).
-    $revision_match = $latest_report !== NULL
-      && (int) ($latest_report->get('field_content_revision')->target_revision_id ?? 0) === (int) $node->getRevisionId()
-      && (int) $node->getChangedTime() <= (int) $latest_report->get('created')->value;
     $report_parsed = $latest_report === NULL
       ? NULL
       : $this->parseResult((string) ($latest_report->get('field_validation_result')->value ?? ''));
+    $revision_match = $this->reportIsCurrent($node, $latest_report, $report_parsed);
     $report_current = $revision_match && !empty($report_parsed['manual_run']);
 
     // ---- Status hero -----------------------------------------------------
@@ -267,6 +301,7 @@ final class AiReviewForm extends FormBase {
       '#type' => 'container',
       '#attributes' => ['class' => ['ai-review-results']],
       'field_findings' => $this->buildFieldFindings(
+        $node,
         $report_parsed,
         $latest_report,
         $report_current ? (int) $latest_report->id() : NULL,
@@ -403,7 +438,7 @@ final class AiReviewForm extends FormBase {
    *   Prepared suggestions keyed by field name; empty when nothing is
    *   pending.
    */
-  private function pendingSuggestions(NodeInterface $node): array {
+  public function pendingSuggestions(NodeInterface $node): array {
     $item = $this->latestPendingImprove($node);
     if ($item === NULL) {
       return [];
@@ -476,7 +511,7 @@ final class AiReviewForm extends FormBase {
    * @return array<string, string>
    *   Field name to 'accepted' or 'rejected'.
    */
-  private function fieldDecisions(NodeInterface $node): array {
+  public function fieldDecisions(NodeInterface $node): array {
     $item = $this->latestPendingImprove($node);
     if ($item === NULL) {
       return [];
@@ -509,7 +544,7 @@ final class AiReviewForm extends FormBase {
    * @return array<string, mixed>
    *   The render array.
    */
-  private function buildInlineSuggestion(int $validation_id, array $s, $label): array {
+  public function buildInlineSuggestion(int $validation_id, array $s, $label): array {
     return [
       '#type' => 'container',
       '#attributes' => ['class' => ['ai-review-suggestion']],
@@ -565,6 +600,39 @@ final class AiReviewForm extends FormBase {
         ],
       ],
     ];
+  }
+
+  /**
+   * Whether a report still describes the node's current content.
+   *
+   * Freshness is measured by the same content hash the run gate uses, so
+   * the two can never disagree: a save that did not change any validated
+   * value keeps its report (no model call, no "content has changed"
+   * banner), and any real edit invalidates it immediately.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node being viewed.
+   * @param \Drupal\Core\Entity\ContentEntityInterface|null $report
+   *   The report to test, or NULL.
+   * @param array<string, mixed>|null $parsed
+   *   The already-parsed result, when the caller has it.
+   *
+   * @return bool
+   *   TRUE when the report describes the current content.
+   */
+  public function reportIsCurrent(NodeInterface $node, ?ContentEntityInterface $report, ?array $parsed = NULL): bool {
+    if ($report === NULL) {
+      return FALSE;
+    }
+    $parsed ??= $this->parseResult((string) ($report->get('field_validation_result')->value ?? ''));
+    $hash = is_array($parsed) && is_string($parsed['content_hash'] ?? NULL) ? $parsed['content_hash'] : NULL;
+    if ($hash !== NULL) {
+      return $hash === ContentHasher::hash($node);
+    }
+    // Reports written before the hash existed fall back to the old
+    // revision-and-timestamp comparison.
+    return (int) ($report->get('field_content_revision')->target_revision_id ?? 0) === (int) $node->getRevisionId()
+      && (int) $node->getChangedTime() <= (int) $report->get('created')->value;
   }
 
   /**
@@ -746,12 +814,14 @@ final class AiReviewForm extends FormBase {
   /**
    * Builds the per-field findings of a validation report.
    *
-   * The validator reports one finding per validated field. Only the three
-   * known fields are rendered, in a fixed order, so an unexpected extra
-   * key in the model's response can never inject a section of its own.
-   * Reports written before per-field findings existed simply render
-   * nothing here.
+   * The validator reports one finding per validated field. Only the
+   * fields ValidatedFields resolves for the node are rendered, in a fixed
+   * order, so an unexpected extra key in the model's response can never
+   * inject a section of its own. Reports written before per-field
+   * findings existed simply render nothing here.
    *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node whose fields are being reported on.
    * @param array<string, mixed>|null $result
    *   The decoded validation result, or NULL when there is none.
    * @param \Drupal\Core\Entity\ContentEntityInterface|null $report
@@ -771,12 +841,10 @@ final class AiReviewForm extends FormBase {
    * @return array<string, mixed>
    *   Render array, empty when there are no per-field findings.
    */
-  private function buildFieldFindings(?array $result, ?ContentEntityInterface $report, ?int $improve_report_id = NULL, array $pending = [], array $decisions = []): array {
-    $labels = [
-      'title' => $this->t('Title'),
-      'field_body' => $this->t('Body'),
-      'field_metatags' => $this->t('Meta tags'),
-    ];
+  private function buildFieldFindings(NodeInterface $node, ?array $result, ?ContentEntityInterface $report, ?int $improve_report_id = NULL, array $pending = [], array $decisions = []): array {
+    // Derived from the bundle's field definitions, so a field added to the
+    // content type later gets a findings row without a code change here.
+    $labels = ValidatedFields::labels($node);
     $findings = is_array($result['field_findings'] ?? NULL) ? $result['field_findings'] : [];
     $verdicts = is_array($result['field_verdicts'] ?? NULL) ? $result['field_verdicts'] : [];
     // A suggestion or decision on a field outside the fixed list still
@@ -868,7 +936,7 @@ final class AiReviewForm extends FormBase {
         // The spark is a separate masked span overlaid on the button:
         // <input> cannot carry pseudo-elements, and a background image
         // cannot follow the text color on hover.
-        'fix' => !$issue || $improve_report_id === NULL || isset($pending[$field]) || $decision !== NULL ? [] : [
+        'fix' => !$issue || $improve_report_id === NULL || isset($pending[$field]) || $decision !== NULL || !ValidatedFields::isFixable($node, $field) ? [] : [
           '#type' => 'container',
           '#attributes' => ['class' => ['ai-review-fix-wrap']],
           'button' => [
@@ -981,7 +1049,7 @@ final class AiReviewForm extends FormBase {
    * @return array{0: int|null, 1: int|null, 2: string}
    *   The score, its creation timestamp and the report's summary text.
    */
-  private function acceptedScore(NodeInterface $node): array {
+  public function acceptedScore(NodeInterface $node): array {
     $storage = $this->entityTypeManager->getStorage('ai_content_validation_item');
     // Only validation reports may carry the published score: without the
     // workflow filter one non-compliant model response from another
@@ -1015,7 +1083,7 @@ final class AiReviewForm extends FormBase {
    * Improvements are always based on an existing report's findings, so
    * this decides whether the per-field Fix with AI buttons exist at all.
    */
-  private function latestReport(NodeInterface $node): ?ContentEntityInterface {
+  public function latestReport(NodeInterface $node): ?ContentEntityInterface {
     $storage = $this->entityTypeManager->getStorage('ai_content_validation_item');
     $ids = $storage->getQuery()
       ->accessCheck(TRUE)
@@ -1065,7 +1133,7 @@ final class AiReviewForm extends FormBase {
    * @return \Drupal\Core\Entity\ContentEntityInterface|null
    *   The reusable report, or NULL when the model has to run.
    */
-  private function cachedReport(NodeInterface $node, string $workflow_id): ?ContentEntityInterface {
+  public function cachedReport(NodeInterface $node, string $workflow_id): ?ContentEntityInterface {
     $hash = ContentHasher::hash($node);
     $storage = $this->entityTypeManager->getStorage('ai_content_validation_item');
     // accessCheck(FALSE): an internal consistency lookup deciding whether
@@ -1110,7 +1178,7 @@ final class AiReviewForm extends FormBase {
    *   warnings and errors still surface. Used by the post-apply
    *   re-validation, whose outcome the refreshed page already shows.
    */
-  private function runAndAccept(NodeInterface $node, string $workflow_id, bool $quiet = FALSE): void {
+  public function runAndAccept(NodeInterface $node, string $workflow_id, bool $quiet = FALSE): void {
     [$previous_score] = $this->acceptedScore($node);
     $this->startRun($node, $workflow_id, 'Run', $quiet);
     // Stamp the report this run just produced as an explicit manual run:
@@ -1579,7 +1647,7 @@ final class AiReviewForm extends FormBase {
       return;
     }
     $parsed = $this->parseResult((string) $validation->get('field_validation_result')->value);
-    $findings = $this->improveFindings($parsed ?? [], $only_field);
+    $findings = $this->improveFindings($node, $parsed ?? [], $only_field);
     $form_state->setRebuild();
     if ($findings === '') {
       $this->messenger()->addWarning($this->t('This validation has no findings to improve from.'));
@@ -1591,6 +1659,8 @@ final class AiReviewForm extends FormBase {
   /**
    * Assembles the findings prompt string the improve workflow receives.
    *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node being improved, source of the rewritable field set.
    * @param array<string, mixed> $parsed
    *   The parsed validation result.
    * @param string|null $only_field
@@ -1599,7 +1669,7 @@ final class AiReviewForm extends FormBase {
    * @return string
    *   The findings string, empty when the report carries nothing usable.
    */
-  private function improveFindings(array $parsed, ?string $only_field = NULL): string {
+  private function improveFindings(NodeInterface $node, array $parsed, ?string $only_field = NULL): string {
     $findings = is_scalar($parsed['summary'] ?? NULL) ? trim((string) $parsed['summary']) : '';
     $score = $parsed['score'] ?? NULL;
     if (is_numeric($score)) {
@@ -1610,18 +1680,7 @@ final class AiReviewForm extends FormBase {
     // non-regression rule. Named explicitly so the model never has to
     // guess which number maps to which guideline.
     if (is_array($parsed['scores'] ?? NULL) && $parsed['scores'] !== []) {
-      $names = [
-        1 => 'Accuracy & Evidence',
-        2 => 'Clarity & Plain Language',
-        3 => 'Neutrality & Objectivity',
-        4 => 'Source Transparency',
-        5 => 'Legal & Policy Consistency',
-        6 => 'Audience Relevance',
-        7 => 'Structure & Coherence',
-        8 => 'Completeness & Context',
-        9 => 'Inclusivity & Language Ethics',
-        10 => 'Practical Value',
-      ];
+      $names = self::GUIDELINES;
       $lines = [];
       foreach ($parsed['scores'] as $key => $value) {
         if (isset($names[(int) $key]) && (is_numeric($value) || is_string($value))) {
@@ -1636,11 +1695,13 @@ final class AiReviewForm extends FormBase {
     // them the improver only sees the overall prose summary and rewrites
     // whatever it feels like; with them each suggestion targets its own
     // field's named guideline.
-    $labels = [
-      'title' => 'Title (field "title")',
-      'field_body' => 'Body (field "field_body")',
-      'field_metatags' => 'Meta Tags (field "field_metatags")',
-    ];
+    // Only rewritable fields are named to the improver: a field it cannot
+    // safely replace (a reference field, whose target ids it would have to
+    // invent) is validated but never offered for a fix.
+    $labels = [];
+    foreach (ValidatedFields::fixableLabels($node) as $field => $label) {
+      $labels[$field] = $label . ' (field "' . $field . '")';
+    }
     if (is_array($parsed['field_findings'] ?? NULL)) {
       $lines = [];
       foreach ($labels as $field => $label) {
@@ -1993,7 +2054,7 @@ final class AiReviewForm extends FormBase {
    * @return array<string, mixed>|null
    *   The decoded result, or NULL when the value is not JSON.
    */
-  private function parseResult(string $raw): ?array {
+  public function parseResult(string $raw): ?array {
     $decoded = json_decode($raw, TRUE);
     if (is_string($decoded)) {
       $decoded = json_decode($decoded, TRUE);

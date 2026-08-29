@@ -1,3 +1,6 @@
 administer ai_content_validation_item:
   title: 'Administer ai validations'
   restrict access: true
+'run ai content validation':
+  title: 'Run AI content validation'
+  description: 'Lets the post-save AI validation run for content this user saves.'

@@ -693,8 +693,17 @@ final class ImproveGate extends AbstractFlowDropNodeProcessor {
       'candidate_values' => $candidate_values,
     ]));
 
+    // The live validation run prefixes the assessed-field contract to the
+    // payload (ValidationPayload); the gate assembles its own message, so
+    // it must prefix the identical header or the candidate would be
+    // scored with a prompt whose field contract it never received.
+    $node = $this->entityTypeManager->getStorage('node')->load($nid);
+    $header = ValidationPayload::header(
+      $node instanceof FieldableEntityInterface ? $node : NULL,
+      is_array($serialized['data'] ?? NULL) ? $serialized['data'] : [],
+    );
     $response = $this->runWorkflowNode($workflow_id, self::CHAT_NODE_TYPE, [
-      'message' => (string) ($serialized['json'] ?? ''),
+      'message' => $header . "\n" . (string) ($serialized['json'] ?? ''),
     ]);
     $parsed = $this->runWorkflowNode($workflow_id, self::PARSE_NODE_TYPE, [
       'json' => (string) ($response['response'] ?? ''),
