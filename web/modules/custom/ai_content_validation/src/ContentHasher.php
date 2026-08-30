@@ -51,6 +51,28 @@ final class ContentHasher {
   }
 
   /**
+   * Hashes each validated field of an entity separately.
+   *
+   * The whole-entity hash answers "must this content be validated again";
+   * these per-field digests answer the narrower question "which fields
+   * changed", so a report can keep the verdicts of the fields nobody
+   * touched instead of re-rolling them on every run.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The node (or node revision) to hash.
+   *
+   * @return array<string, string>
+   *   Field machine name => sha256 digest of that field's value.
+   */
+  public static function fieldHashes(FieldableEntityInterface $entity): array {
+    $hashes = [];
+    foreach (array_keys(ValidatedFields::labels($entity)) as $field) {
+      $hashes[$field] = hash('sha256', self::fieldValue($entity, $field));
+    }
+    return $hashes;
+  }
+
+  /**
    * Reads one hashed field value as a plain string.
    *
    * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
@@ -69,7 +91,14 @@ final class ContentHasher {
       return '';
     }
     $items = self::withoutEmptyItems($entity->get($field)->getValue());
-    return $items === [] ? '' : json_encode($items, JSON_UNESCAPED_SLASHES);
+    if ($items === []) {
+      return '';
+    }
+    // A media reference's verdict also depends on the referenced image's
+    // alt/title (the validator judges them), so they must enter the hash
+    // — otherwise an alt-text fix would never invalidate the old verdict.
+    $items = MediaReferenceDetails::enrich($entity, [$field => $items])[$field];
+    return json_encode($items, JSON_UNESCAPED_SLASHES);
   }
 
   /**

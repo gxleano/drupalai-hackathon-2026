@@ -24,13 +24,22 @@
     const wrap = document.createElement('div');
     wrap.className = 'ai-validating';
     wrap.setAttribute('role', 'status');
+    const box = document.createElement('div');
+    box.className = 'ai-validating__box';
     const icon = document.createElement('span');
     icon.className = 'ai-validating__icon';
     icon.setAttribute('aria-hidden', 'true');
     const text = document.createElement('span');
     text.textContent = Drupal.t('Validating with AI…');
-    wrap.appendChild(icon);
-    wrap.appendChild(text);
+    const note = document.createElement('span');
+    note.className = 'ai-validating__note';
+    note.textContent = Drupal.t(
+      'The quality score appears here as soon as the report lands.',
+    );
+    text.appendChild(note);
+    box.appendChild(icon);
+    box.appendChild(text);
+    wrap.appendChild(box);
     return wrap;
   }
 

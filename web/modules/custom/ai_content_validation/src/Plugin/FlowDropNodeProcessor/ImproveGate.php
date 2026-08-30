@@ -11,6 +11,7 @@ use Drupal\Core\Entity\RevisionableStorageInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ai_content_validation\JsonRepair;
+use Drupal\ai_content_validation\ValidatedFields;
 use Drupal\ai_content_validation\ValidationScorer;
 use Drupal\flowdrop\Attribute\FlowDropNodeProcessor;
 use Drupal\flowdrop\DTO\ParameterBag;
@@ -642,6 +643,34 @@ final class ImproveGate extends AbstractFlowDropNodeProcessor {
     foreach ($suggestions as $suggestion) {
       $field = (string) ($suggestion['field'] ?? '');
       if ($field === '' || !$base->hasField($field)) {
+        continue;
+      }
+      // A media suggestion carries the new ALT TEXT: keep the current
+      // targets and override target_alt, so the candidate is scored on
+      // the alt the fix would produce — the media entity is untouched.
+      if (ValidatedFields::isMediaField($base, $field)) {
+        $alt = trim($this->plainText($this->rawValue($suggestion['suggested'] ?? '')));
+        $targets = array_map(
+          static fn (array $item): array => array_intersect_key($item, ['target_id' => TRUE]),
+          array_filter($base->get($field)->getValue(), 'is_array'),
+        );
+        if ($alt !== '' && $targets !== []) {
+          $targets[array_key_first($targets)]['target_alt'] = $alt;
+          $values[$field] = array_values($targets);
+        }
+        continue;
+      }
+      // A tags suggestion carries term NAMES: serialize them as
+      // label-only reference items so the candidate is scored on the
+      // labels, exactly what the validator reads — no term is created.
+      if (ValidatedFields::isTagsField($base, $field)) {
+        $names = ValidatedFields::parseTagNames($this->rawValue($suggestion['suggested'] ?? ''));
+        if ($names !== []) {
+          $values[$field] = array_map(
+            static fn (string $name): array => ['target_label' => $name],
+            $names,
+          );
+        }
         continue;
       }
       $item = $base->get($field);

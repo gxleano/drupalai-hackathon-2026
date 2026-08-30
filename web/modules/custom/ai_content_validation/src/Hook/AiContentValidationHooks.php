@@ -15,7 +15,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -44,7 +43,6 @@ final class AiContentValidationHooks {
     #[Autowire(service: 'extension.list.theme')]
     private readonly ThemeExtensionList $themeList,
     private readonly AccountProxyInterface $currentUser,
-    private readonly MessengerInterface $messenger,
     #[Autowire(service: 'tempstore.private')]
     private readonly PrivateTempStoreFactory $tempStoreFactory,
   ) {}
@@ -365,9 +363,6 @@ final class AiContentValidationHooks {
     // The run happens after the response: tell the editor, and flag the
     // next page so it polls and reloads when the report lands.
     $this->tempStoreFactory->get('ai_content_validation')->set('pending_nid', (int) $node->id());
-    $this->messenger->addStatus($this->t('AI validation is running for %label — the quality score updates on this page in a moment.', [
-      '%label' => $node->label(),
-    ]));
     $operations = $this->configFactory->get('flowdrop_node_session.settings')->get('entity_operations') ?: [];
     if ($operations === []) {
       return;

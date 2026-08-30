@@ -13,6 +13,7 @@ dependencies:
   module:
     - content_moderation
     - media_library
+    - media_library_edit
     - metatag
     - path
     - tagify
@@ -42,7 +43,10 @@ content:
     region: content
     settings:
       media_types: {  }
-    third_party_settings: {  }
+    third_party_settings:
+      media_library_edit:
+        show_edit: true
+        edit_form_mode: media_library
   field_metatags:
     type: metatag_firehose
     weight: 4

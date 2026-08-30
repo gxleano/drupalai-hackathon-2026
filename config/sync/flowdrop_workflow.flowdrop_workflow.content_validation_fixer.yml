@@ -111,6 +111,8 @@ nodes:
           - "score" MUST be null — the system derives the number from the verdicts.
           - "field_findings" MUST be an object keyed by the fields named in the "ASSESSED FIELDS" line, each a non-empty string. Every one of them MUST be present on every run, even a field with no problems.
           - "field_verdicts" MUST be an object keyed by the fields named in the "ASSESSED FIELDS" line, each the string "pass" or "review". Every one of them MUST be present on every run. Any problem stated in a field's finding makes that field's verdict "review".
+          - EMPTY TAGS RULE: when a tags-style reference field named in the "ASSESSED FIELDS" line is EMPTY, that is always a Guideline 8 (Completeness) problem: its finding MUST state that descriptive tags must be added and its verdict MUST be "review", never "pass".
+          - IMAGE ALT RULE: when an image/media item in an assessed field carries an empty or missing "target_alt", or alt text that does not describe the image (a filename, a single word, placeholder text), that field's finding MUST name the problem and its verdict MUST be "review" (Guideline 9, Inclusivity). An empty "target_title" is never a finding.
           - "suggestions" MUST ALWAYS be an empty array []. Never propose rewrites here.
           - field_validation_status MUST be the string "pending".
           - target_id and target_revision_id MUST be integers (not arrays, not null). If you cannot find the id, use 0.

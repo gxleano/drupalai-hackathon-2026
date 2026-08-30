@@ -10,6 +10,9 @@ node_form:
     - core/drupal.dialog
     - core/once
 validation_poll:
+  css:
+    component:
+      css/ai-validating.css: {}
   js:
     js/ai-validation-poll.js: {}
   dependencies:

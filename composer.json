@@ -66,6 +66,7 @@
         "drupal/flowdrop_ui_agents": "^2.0",
         "drupal/flowdrop_ui_components": "^2.0@alpha",
         "drupal/gin": "^5.0",
+        "drupal/media_library_edit": "^3.0",
         "drupal/mercury": "@beta",
         "drupal/metatag": "^2.2",
         "drupal/recipe_installer_kit": "^1",
@@ -74,14 +75,17 @@
         "symfony/property-access": "^7"
     },
     "require-dev": {
+        "behat/mink": "^1.11",
         "drupal/coder": "^9.0",
         "drupal/dtk": "^1.0",
         "drush/drush": "^13.6.1",
         "ivanboring/drush_dtk": "dev-main",
         "mglaman/phpstan-drupal": "^2.0",
         "phpro/grumphp": "^2.0",
+        "phpspec/prophecy-phpunit": "^2.2",
         "phpstan/phpstan": "^2.2",
-        "phpstan/phpstan-deprecation-rules": "^2.0"
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpunit/phpunit": "^11"
     },
     "conflict": {
         "drupal/drupal": "*"

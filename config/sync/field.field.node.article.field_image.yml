@@ -12,7 +12,7 @@ entity_type: node
 bundle: article
 label: Image
 description: 'The article image'
-required: false
+required: true
 translatable: false
 default_value: {  }
 default_value_callback: ''

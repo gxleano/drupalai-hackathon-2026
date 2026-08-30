@@ -194,9 +194,13 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
       // A later run whose content hashes the same reuses this result
       // instead of asking the model again, so the score of unchanged
       // content is deterministic.
-      $hash = $this->contentHash($data['field_content_revision'] ?? NULL);
-      if ($hash !== '') {
-        $result['content_hash'] = $hash;
+      $revision = $this->validatedRevision($data['field_content_revision'] ?? NULL);
+      if ($revision !== NULL) {
+        $result['content_hash'] = ContentHasher::hash($revision);
+        // Per-field digests: what the next run compares against to decide
+        // which fields it may keep instead of re-judging.
+        $result['field_hashes'] = ContentHasher::fieldHashes($revision);
+        $result = $this->carryForward($result, $revision, $entity_id, $workflow_id);
       }
       $data['field_validation_result'] = json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
@@ -218,30 +222,30 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
   }
 
   /**
-   * Hashes the node revision this result is about.
+   * Loads the node revision this result is about.
    *
-   * The hash is computed here, next to the reference the result is stored
-   * with, so it always describes the revision the item is attached to.
+   * Resolved here, next to the reference the result is stored with, so
+   * every digest and every carried-forward verdict describes exactly the
+   * revision the item is attached to.
    *
    * @param mixed $reference
    *   The field_content_revision value from the incoming data: a map with
    *   target_id and target_revision_id, or a list of such maps.
    *
-   * @return string
-   *   The content hash, or an empty string when the referenced revision
-   *   cannot be resolved.
+   * @return \Drupal\Core\Entity\FieldableEntityInterface|null
+   *   The revision, or NULL when it cannot be resolved.
    */
-  private function contentHash(mixed $reference): string {
+  private function validatedRevision(mixed $reference): ?FieldableEntityInterface {
     if (is_array($reference) && isset($reference[0]) && is_array($reference[0])) {
       $reference = $reference[0];
     }
     if (!is_array($reference)) {
-      return '';
+      return NULL;
     }
     $nid = (int) ($reference['target_id'] ?? 0);
     $vid = (int) ($reference['target_revision_id'] ?? 0);
     if ($nid === 0) {
-      return '';
+      return NULL;
     }
     $storage = $this->entityTypeManager->getStorage('node');
     $revision = $vid === 0 ? NULL : $storage->loadRevision($vid);
@@ -251,7 +255,94 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
     if (!$revision instanceof FieldableEntityInterface || (int) $revision->id() !== $nid) {
       $revision = $storage->load($nid);
     }
-    return $revision instanceof FieldableEntityInterface ? ContentHasher::hash($revision) : '';
+    return $revision instanceof FieldableEntityInterface ? $revision : NULL;
+  }
+
+  /**
+   * Keeps the previous verdict for every field that did not change.
+   *
+   * One prompt judges all fields at once, so editing one field re-rolls
+   * the model's answer for all the others: a body nobody touched flips
+   * between "pass" and "review" from run to run, and the fix/re-fix loop
+   * never settles. The fields are compared by their own digests and the
+   * untouched ones keep exactly the finding and verdict they already had,
+   * which is what the validator prompt asks for and cannot guarantee.
+   *
+   * Only whole-content verdict reports carry field verdicts; an improve
+   * proposal has none and passes through untouched.
+   *
+   * @param array<string, mixed> $result
+   *   The result this run produced.
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $revision
+   *   The revision that was validated.
+   * @param int $nid
+   *   The node id whose earlier reports are compared against.
+   * @param string $workflow_id
+   *   The workflow whose earlier reports count; '' compares none.
+   *
+   * @return array<string, mixed>
+   *   The result with unchanged fields restored to their prior verdict.
+   */
+  private function carryForward(array $result, FieldableEntityInterface $revision, int $nid, string $workflow_id): array {
+    if ($nid === 0 || $workflow_id === '' || !is_array($result['field_verdicts'] ?? NULL)) {
+      return $result;
+    }
+    $previous = $this->previousResult($nid, $workflow_id);
+    $old_hashes = is_array($previous['field_hashes'] ?? NULL) ? $previous['field_hashes'] : [];
+    if ($old_hashes === []) {
+      return $result;
+    }
+    $findings = is_array($result['field_findings'] ?? NULL) ? $result['field_findings'] : [];
+    $verdicts = $result['field_verdicts'];
+    foreach ($result['field_hashes'] as $field => $hash) {
+      $unchanged = isset($old_hashes[$field]) && $old_hashes[$field] === $hash;
+      $had_verdict = isset($previous['field_verdicts'][$field]);
+      if (!$unchanged || !$had_verdict) {
+        continue;
+      }
+      $verdicts[$field] = $previous['field_verdicts'][$field];
+      if (isset($previous['field_findings'][$field])) {
+        $findings[$field] = $previous['field_findings'][$field];
+      }
+    }
+    $result['field_verdicts'] = $verdicts;
+    $result['field_findings'] = $findings;
+
+    return $result;
+  }
+
+  /**
+   * Reads the newest stored result for a node and workflow.
+   *
+   * @param int $nid
+   *   The node id.
+   * @param string $workflow_id
+   *   The workflow the report belongs to.
+   *
+   * @return array<string, mixed>
+   *   The decoded result, or an empty array when there is none.
+   */
+  private function previousResult(int $nid, string $workflow_id): array {
+    $storage = $this->entityTypeManager->getStorage('ai_content_validation_item');
+    // accessCheck(FALSE): an internal consistency lookup inside a
+    // system-triggered run, disclosing nothing to anyone.
+    $ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('field_content_revision.target_id', $nid)
+      ->condition('field_flowdrop_workflow', $workflow_id)
+      ->sort('created', 'DESC')
+      ->range(0, 1)
+      ->execute();
+    $item = $ids === [] ? NULL : $storage->load(reset($ids));
+    if ($item === NULL) {
+      return [];
+    }
+    $decoded = json_decode((string) ($item->get('field_validation_result')->value ?? ''), TRUE);
+    if (is_string($decoded)) {
+      $decoded = json_decode($decoded, TRUE);
+    }
+
+    return is_array($decoded) ? $decoded : [];
   }
 
 }

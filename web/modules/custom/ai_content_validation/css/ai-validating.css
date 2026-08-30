@@ -1,0 +1,61 @@
+/**
+ * @file
+ * The centered "Validating with AI…" overlay shown after a node save.
+ *
+ * Lives apart from ai-review.css: the poller runs on whatever page the
+ * editor lands on, front-end theme included, and that page has no reason
+ * to load the whole review stylesheet.
+ */
+
+/* The post-save run blocks nothing, but the editor must not miss it:
+   the badge sits in the middle of the screen over a dimmed page. */
+.ai-validating {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 18, 25, 0.35);
+}
+
+.ai-validating__box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: min(28rem, calc(100vw - 2rem));
+  padding: 1.1rem 1.5rem;
+  border: 1px solid #f0e0d4;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 18, 25, 0.16);
+  color: #9c3608;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ai-validating__note {
+  display: block;
+  margin-block-start: 0.15rem;
+  color: #6b6257;
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.ai-validating__icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d9480f'%3E%3Cpath d='M10 2l1.7 5.1L16.8 8.8 11.7 10.5 10 15.6 8.3 10.5 3.2 8.8 8.3 7.1z'/%3E%3Cpath d='M18 13.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z'/%3E%3C/svg%3E") center / contain no-repeat;
+  animation: ai-validation-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-validating__icon {
+    animation: none;
+  }
+}
+
+@keyframes ai-validation-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}

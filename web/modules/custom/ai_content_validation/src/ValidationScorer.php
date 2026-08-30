@@ -81,7 +81,21 @@ final class ValidationScorer {
         $result['scores']['1'] = 'minor';
       }
       if (count($numeric) === 10) {
-        $result['score'] = (int) min(100, max(0, array_sum($numeric)));
+        $score = (int) min(100, max(0, array_sum($numeric)));
+        // A field flagged "review" means at least one concrete issue an
+        // editor should act on, so a perfect 100 next to yellow field
+        // dots would contradict itself. Capped mechanically because the
+        // model keeps producing all-pass guideline verdicts alongside
+        // per-field review verdicts.
+        $verdicts = is_array($result['field_verdicts'] ?? NULL) ? $result['field_verdicts'] : [];
+        $flagged = array_filter(
+          $verdicts,
+          static fn ($verdict): bool => is_string($verdict) && strtolower(trim($verdict)) === 'review',
+        );
+        if ($flagged !== []) {
+          $score = min($score, 95);
+        }
+        $result['score'] = $score;
       }
     }
     return $result;

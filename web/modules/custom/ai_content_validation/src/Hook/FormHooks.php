@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_validation\Hook;
 
-use Drupal\ai_content_validation\ContentHasher;
 use Drupal\ai_content_validation\Form\AiReviewForm;
+use Drupal\ai_content_validation\ValidatedFields;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -99,16 +99,6 @@ final class FormHooks {
     // A report only speaks for the content it actually saw — measured by
     // the same content hash the run gate uses.
     $current = $review->reportIsCurrent($node, $report, $parsed);
-    $per = [];
-    foreach (array_keys(ValidatedFields::labels($node)) as $f) {
-      $per[] = $f . '=' . substr(md5(json_encode($node->get($f)->getValue())), 0, 8);
-    }
-    \Drupal::logger('acv_debug')->notice('cur=@c hash=@h stored=@s | @p', [
-      '@c' => $current ? 'yes' : 'no',
-      '@h' => substr(ContentHasher::hash($node), 0, 10),
-      '@s' => substr((string) ($parsed['content_hash'] ?? 'none'), 0, 10),
-      '@p' => implode(' ', $per),
-    ]);
     $pending = $review->pendingSuggestions($node);
     $decisions = $review->fieldDecisions($node);
 
@@ -123,7 +113,11 @@ final class FormHooks {
     // A report that fails wholesale describes content that does not exist
     // yet; there is nothing for the improver to work from.
     $thin = $current && $this->contentTooThin($parsed);
-    $details = $current ? $this->guidelineDetails($parsed, $thin) : '';
+    // A stale report still shows its breakdown — findings and dots are
+    // shown from it anyway — flagged as stale so the dialog says the
+    // score predates the current content instead of downgrading to the
+    // bare popover.
+    $details = $this->guidelineDetails($parsed, $thin, !$current);
     foreach ($labels as $field => $label) {
       if (!isset($form[$field])) {
         continue;
@@ -139,9 +133,7 @@ final class FormHooks {
         $pending[$field] ?? NULL,
         $decisions[$field] ?? NULL,
         $details,
-        ValidatedFields::isFixable($node, $field)
-          && !$thin
-          && $this->worthRewriting(is_string($findings[$field] ?? NULL) ? $findings[$field] : '', $parsed),
+        ValidatedFields::isFixable($node, $field) && !$thin,
       );
       if ($element !== []) {
         // The meta tags widget is a details grouped into the sidebar; the
@@ -238,7 +230,7 @@ final class FormHooks {
 
     $form['ai_review_status'] = [
       '#type' => 'details',
-      '#title' => $this->t('AI quality'),
+      '#title' => $this->t('AI content validation'),
       '#group' => 'advanced',
       '#open' => TRUE,
       '#weight' => -10,
@@ -325,12 +317,14 @@ final class FormHooks {
    *   The parsed validation result, or NULL when there is no report.
    * @param bool $thin
    *   Whether the content is too thin to improve.
+   * @param bool $stale
+   *   Whether the report predates the content currently being edited.
    *
    * @return string
    *   JSON with the overall score, summary and per-guideline rows; the
    *   empty string when the report carries no guideline scores.
    */
-  private function guidelineDetails(?array $parsed, bool $thin = FALSE): string {
+  private function guidelineDetails(?array $parsed, bool $thin = FALSE, bool $stale = FALSE): string {
     $scores = is_array($parsed['scores'] ?? NULL) ? $parsed['scores'] : [];
     if ($scores === []) {
       return '';
@@ -358,51 +352,9 @@ final class FormHooks {
       'score' => is_numeric($parsed['score'] ?? NULL) ? (int) $parsed['score'] : NULL,
       'summary' => $summary,
       'thin' => $thin,
+      'stale' => $stale,
       'items' => $items,
     ]);
-  }
-
-  /**
-   * Whether a field's finding is severe enough to justify an AI rewrite.
-   *
-   * Every rewrite changes the text, so the next validation judges
-   * different content and raises a fresh crop of small notes — an endless
-   * fix/re-fix loop for issues nobody asked to fix. Only an explicit
-   * "minor" on every guideline the finding names suppresses the rewrite:
-   * that is the model saying "style note". The per-field verdict is the
-   * authority on whether the field has a problem at all, and the document
-   * scores routinely disagree with it (a field finding citing a real
-   * error next to an all-pass score map), so anything other than "minor"
-   * — including "pass" and a missing verdict — offers the rewrite.
-   *
-   * @param string $finding
-   *   The field's finding text, which names its guidelines.
-   * @param array<string, mixed>|null $parsed
-   *   The parsed validation result.
-   *
-   * @return bool
-   *   TRUE when the field is worth rewriting.
-   */
-  private function worthRewriting(string $finding, ?array $parsed): bool {
-    preg_match_all('/guidelines?\s*(?:nos?\.?\s*|#\s*)?(\d+(?:\s*(?:,|and|&|\/)\s*\d+)*)/i', $finding, $matches);
-    $numbers = [];
-    foreach ($matches[1] ?? [] as $group) {
-      foreach (preg_split('/[^0-9]+/', $group, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $number) {
-        $numbers[] = (int) $number;
-      }
-    }
-    if ($numbers === []) {
-      return TRUE;
-    }
-    $scores = is_array($parsed['scores'] ?? NULL) ? $parsed['scores'] : [];
-    foreach ($numbers as $number) {
-      $verdict = $scores[$number] ?? $scores[(string) $number] ?? NULL;
-      if ($verdict === NULL || strtolower(trim((string) $verdict)) !== 'minor') {
-        return TRUE;
-      }
-    }
-
-    return FALSE;
   }
 
   /**

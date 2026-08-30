@@ -9,7 +9,7 @@
  * real form controls.
  */
 
-(function (Drupal, once) {
+(function (Drupal, drupalSettings, once) {
   'use strict';
 
   const OPEN_KEY = 'aiContentValidationOpenDrawer';
@@ -45,7 +45,10 @@
    *   The progress message.
    */
   function lockDialog(content, message) {
-    content.prepend(el('p', 'ai-nodeform-drawer__progress', message));
+    const progress = el('p', 'ai-nodeform-drawer__progress', message);
+    // A live region: screen readers announce the wait when it starts.
+    progress.setAttribute('role', 'status');
+    content.prepend(progress);
     content
       .closest('.ui-dialog')
       ?.querySelectorAll('.ui-dialog-buttonpane button')
@@ -114,6 +117,13 @@
       // panel) is the live value, so mirror that when it exists.
       const editor = findEditor(source);
       const html = editor !== null || source.closest('.js-text-format-wrapper');
+      // A rich text mirror gets its own CKEditor, built from the same text
+      // format as the source field, so the editor never edits raw HTML.
+      const format =
+        drupalSettings.editor?.formats?.[
+          source.getAttribute('data-editor-active-text-format')
+        ] ?? null;
+      const wysiwyg = Boolean(html && format && Drupal.editors?.ckeditor5);
       const label = source.closest('.form-item')?.querySelector('label')
         ?.textContent;
       if (sources.length > 1 || html) {
@@ -121,7 +131,7 @@
           el(
             'label',
             'ai-nodeform-drawer__edit-label',
-            html
+            html && !wysiwyg
               ? Drupal.t('@label (HTML source)', {
                   '@label': label ? label.trim() : Drupal.t('Suggestion'),
                 })
@@ -132,23 +142,41 @@
         );
       }
       const mirror = document.createElement('textarea');
-      mirror.className = `ai-nodeform-drawer__edit-input${html ? ' ai-nodeform-drawer__edit-input--code' : ''}`;
-      mirror.rows = sources.length > 1 ? 2 : 12;
+      mirror.className = `ai-nodeform-drawer__edit-input${html && !wysiwyg ? ' ai-nodeform-drawer__edit-input--code' : ''}`;
+      mirror.rows = sources.length > 1 ? 3 : 12;
       mirror.value = editor === null ? source.value : editor.getData();
       section.appendChild(mirror);
-      return { source, mirror };
+      return { source, mirror, format: wysiwyg ? format : null };
     });
+    // Reads a mirror's live value: its own CKEditor instance when one was
+    // attached, the plain textarea otherwise.
+    const mirrorValue = (mirror) => {
+      const id = mirror.getAttribute('data-ckeditor5-id');
+      const instance =
+        id === null ? null : Drupal.CKEditor5Instances?.get(id);
+      return instance ? instance.getData() : mirror.value;
+    };
     return {
       section,
+      activate() {
+        // CKEditor must not be built inside a hidden container (its toolbar
+        // measures itself), so the instances attach on first reveal.
+        pairs.forEach(({ mirror, format }) => {
+          if (format && !mirror.hasAttribute('data-ckeditor5-id')) {
+            Drupal.editors.ckeditor5.attach(mirror, format);
+          }
+        });
+      },
       apply() {
         if (section.hidden) {
           return;
         }
         pairs.forEach(({ source, mirror }) => {
-          source.value = mirror.value;
+          const value = mirrorValue(mirror);
+          source.value = value;
           // A CKEditor instance writes its own data over the textarea on
           // submit — keep it in sync so the edit survives.
-          findEditor(source)?.setData(mirror.value);
+          findEditor(source)?.setData(value);
         });
       },
     };
@@ -274,6 +302,18 @@
     );
     const label = dot.dataset.aiLabel || Drupal.t('This field');
 
+    if (details.stale) {
+      wrap.appendChild(
+        el(
+          'p',
+          'ai-nodeform-report__stale',
+          Drupal.t(
+            'The content has changed since this report — save to run the validation again.',
+          ),
+        ),
+      );
+    }
+
     const hero = el('div', 'ai-nodeform-report__hero');
     const heroText = el('div', 'ai-nodeform-report__hero-text');
     const line = el('div', 'ai-nodeform-report__line');
@@ -321,15 +361,16 @@
       );
     }
 
-    // A flagged field with no rewrite on offer: the finding is style-level
-    // only, and rewriting it would just move the wording around.
+    // A flagged field with no rewrite on offer is one the AI must not
+    // write: a taxonomy or media reference, where it would have to invent
+    // the value rather than reword it.
     if (!ok && !details.thin && !dot.dataset.aiFix && !dot.dataset.aiSuggestion) {
       wrap.appendChild(
         el(
           'p',
           'ai-nodeform-report__note ai-nodeform-report__note--empty',
           Drupal.t(
-            'These are style notes, not errors — no AI rewrite is offered. Every rewrite changes the text and earns a fresh set of notes; edit the field yourself if you want to polish it.',
+            'This field is reviewed but never rewritten by the AI — it references other content, so the right value is yours to choose. Edit the field to fix it.',
           ),
         ),
       );
@@ -579,6 +620,7 @@
           edit.section.hidden = !edit.section.hidden;
           this.setAttribute('aria-expanded', String(!edit.section.hidden));
           if (!edit.section.hidden) {
+            edit.activate();
             edit.section.querySelector('textarea')?.focus();
           }
         },
@@ -654,4 +696,4 @@
       }
     },
   };
-})(Drupal, once);
+})(Drupal, drupalSettings, once);

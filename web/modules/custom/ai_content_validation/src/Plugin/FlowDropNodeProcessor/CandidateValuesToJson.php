@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_content_validation\Plugin\FlowDropNodeProcessor;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\ai_content_validation\MediaReferenceDetails;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -207,13 +208,53 @@ final class CandidateValuesToJson extends AbstractFlowDropNodeProcessor {
     // save() is never called, and the timestamps stay whatever the base
     // revision carries.
     $candidate = clone $base;
+    $label_only = [];
+    $alt_overrides = [];
     foreach ($candidates as $field_name => $value) {
       $field_name = (string) $field_name;
       $this->assertCandidateIsApplicable($candidate, $field_name, $value);
+      // A tags candidate arrives as label-only reference items (term
+      // names, no target ids — the terms may not exist yet). They cannot
+      // go through $candidate->set(); the serialized output is overridden
+      // below instead, so the validator scores the labels while this node
+      // stays read-only.
+      if ($this->isLabelOnlyReference($candidate, $field_name, $value)) {
+        $label_only[$field_name] = $this->resolveReferenceItems($candidate, $field_name, $value);
+        continue;
+      }
+      // A media alt-text candidate keeps its targets and only overrides
+      // target_alt; the override is applied after serialization (and
+      // after the alt/title enrichment, which it must win over).
+      if ($this->isAltOverrideReference($candidate, $field_name, $value)) {
+        $alt_overrides[$field_name] = $value;
+        continue;
+      }
       $candidate->set($field_name, $value);
     }
 
     $data = $this->entitySerializer->serialize($candidate);
+    foreach ($label_only as $field_name => $items) {
+      if (is_array($data['fields'] ?? NULL)) {
+        $data['fields'][$field_name] = $items;
+      }
+    }
+    // Keep the candidate byte-comparable to the baseline: the payload node
+    // enriches media references with alt/title, so the gate must too.
+    if (is_array($data['fields'] ?? NULL)) {
+      $data['fields'] = MediaReferenceDetails::enrich($candidate, $data['fields']);
+      foreach ($alt_overrides as $field_name => $items) {
+        foreach ($items as $override) {
+          if (!isset($override['target_alt'])) {
+            continue;
+          }
+          foreach ($data['fields'][$field_name] ?? [] as $delta => $serialized) {
+            if (is_array($serialized) && (int) ($serialized['target_id'] ?? -1) === (int) ($override['target_id'] ?? -2)) {
+              $data['fields'][$field_name][$delta]['target_alt'] = $override['target_alt'];
+            }
+          }
+        }
+      }
+    }
 
     // Json::encode() is the encoder data_to_json uses. Matching it makes
     // the emitted string byte-identical to the baseline for unchanged
@@ -310,6 +351,100 @@ final class CandidateValuesToJson extends AbstractFlowDropNodeProcessor {
     if (count($properties) > 1) {
       throw new \InvalidArgumentException(sprintf('Candidate value for field "%s" must be a field-item array with the keys %s; a bare %s would leave the other properties unset and the field would not actually be applied.', $field_name, implode(', ', $properties), get_debug_type($value)));
     }
+  }
+
+  /**
+   * Whether a candidate value is a list of label-only reference items.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The candidate entity.
+   * @param string $field_name
+   *   The field the value targets.
+   * @param mixed $value
+   *   The candidate value.
+   *
+   * @return bool
+   *   TRUE for an entity_reference field whose candidate items carry a
+   *   target_label but no target_id.
+   */
+  private function isLabelOnlyReference(FieldableEntityInterface $entity, string $field_name, mixed $value): bool {
+    if ($entity->getFieldDefinition($field_name)?->getType() !== 'entity_reference' || !is_array($value) || $value === []) {
+      return FALSE;
+    }
+    foreach ($value as $item) {
+      if (!is_array($item) || !isset($item['target_label']) || isset($item['target_id'])) {
+        return FALSE;
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * Whether a candidate value is a target list overriding only alt text.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The candidate entity.
+   * @param string $field_name
+   *   The field the value targets.
+   * @param mixed $value
+   *   The candidate value.
+   *
+   * @return bool
+   *   TRUE for an entity_reference field whose candidate items all carry
+   *   a target_id and at least one carries a target_alt.
+   */
+  private function isAltOverrideReference(FieldableEntityInterface $entity, string $field_name, mixed $value): bool {
+    if ($entity->getFieldDefinition($field_name)?->getType() !== 'entity_reference' || !is_array($value) || $value === []) {
+      return FALSE;
+    }
+    $has_alt = FALSE;
+    foreach ($value as $item) {
+      if (!is_array($item) || !isset($item['target_id'])) {
+        return FALSE;
+      }
+      $has_alt = $has_alt || isset($item['target_alt']);
+    }
+    return $has_alt;
+  }
+
+  /**
+   * Shapes label-only reference items like the serializer would emit them.
+   *
+   * Names matching an existing term get its real target_id so the
+   * candidate serialisation stays as close as possible to what a saved
+   * node would produce; unknown names keep target_id 0 — the label is
+   * what the validator reads either way.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The candidate entity.
+   * @param string $field_name
+   *   The reference field.
+   * @param array<int, array{target_label: string}> $items
+   *   The label-only items.
+   *
+   * @return list<array{target_id: int, target_label: string}>
+   *   Serializer-shaped reference items.
+   */
+  private function resolveReferenceItems(FieldableEntityInterface $entity, string $field_name, array $items): array {
+    $settings = $entity->getFieldDefinition($field_name)?->getSetting('handler_settings') ?? [];
+    $bundles = array_values(array_filter((array) ($settings['target_bundles'] ?? [])));
+    $storage = $this->entityTypeManager->getStorage('taxonomy_term');
+    $resolved = [];
+    foreach ($items as $item) {
+      $name = (string) $item['target_label'];
+      // accessCheck(FALSE): read-only lookup feeding the validator prompt,
+      // same access posture as loadNode() above.
+      $query = $storage->getQuery()->accessCheck(FALSE)->condition('name', $name);
+      if ($bundles !== []) {
+        $query->condition('vid', $bundles, 'IN');
+      }
+      $ids = $query->range(0, 1)->execute();
+      $resolved[] = [
+        'target_id' => $ids === [] ? 0 : (int) reset($ids),
+        'target_label' => $name,
+      ];
+    }
+    return $resolved;
   }
 
   /**

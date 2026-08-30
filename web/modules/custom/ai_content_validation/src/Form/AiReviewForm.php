@@ -1992,6 +1992,23 @@ final class AiReviewForm extends FormBase {
     if ($field === '' || !$node->hasField($field)) {
       return '';
     }
+    if (ValidatedFields::isTagsField($node, $field)) {
+      $labels = array_map(
+        static fn ($term) => (string) $term->label(),
+        $node->get($field)->referencedEntities(),
+      );
+      return implode(', ', $labels);
+    }
+    if (ValidatedFields::isMediaField($node, $field)) {
+      foreach ($node->get($field)->referencedEntities() as $media) {
+        $source_field = $media->getSource()->getConfiguration()['source_field'] ?? '';
+        if (is_string($source_field) && $source_field !== '' && $media->hasField($source_field)) {
+          $item = $media->get($source_field)->first()?->getValue() ?? [];
+          return (string) ($item['alt'] ?? '');
+        }
+      }
+      return '';
+    }
     $value = $node->get($field)->first()?->getValue() ?? [];
     return is_scalar($value['value'] ?? NULL) ? (string) $value['value'] : '';
   }
@@ -2241,6 +2258,13 @@ final class AiReviewForm extends FormBase {
     if (!$node->hasField($field)) {
       return FALSE;
     }
+    if (ValidatedFields::isTagsField($node, $field)) {
+      $node->set($field, $this->resolveTagTargets($node, $field, $value));
+      return TRUE;
+    }
+    if (ValidatedFields::isMediaField($node, $field)) {
+      return $this->applyMediaAlt($node, $field, $value);
+    }
     $item = $node->get($field);
     $definition = $item->getFieldDefinition()->getFieldStorageDefinition();
     if ($definition->getMainPropertyName() !== 'value') {
@@ -2263,6 +2287,95 @@ final class AiReviewForm extends FormBase {
       return str_replace($current, $suggested, $stored);
     }
     return $suggested;
+  }
+
+  /**
+   * Writes a suggested alt text onto a media field's referenced media.
+   *
+   * The suggestion IS the new alt text; the file reference itself is
+   * never changed. The media entity is shared, so the new alt applies on
+   * every usage of that media item — the same effect as an editor fixing
+   * it in the media library.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node whose media field is being fixed.
+   * @param string $field
+   *   The media reference field machine name.
+   * @param string $value
+   *   The suggested alt text.
+   *
+   * @return bool
+   *   TRUE when a referenced media item accepted the alt text.
+   */
+  private function applyMediaAlt(NodeInterface $node, string $field, string $value): bool {
+    $alt = trim($value);
+    if ($alt === '') {
+      return FALSE;
+    }
+    foreach ($node->get($field)->referencedEntities() as $media) {
+      $source_field = $media->getSource()->getConfiguration()['source_field'] ?? '';
+      if (!is_string($source_field) || $source_field === '' || !$media->hasField($source_field)) {
+        continue;
+      }
+      $item = $media->get($source_field)->first();
+      $stored = $item?->getValue() ?? [];
+      // Only alt-bearing sources (images) accept the fix; a document or
+      // remote-video media item is skipped.
+      if ($item === NULL || !array_key_exists('alt', $stored)) {
+        continue;
+      }
+      $stored['alt'] = $alt;
+      $media->set($source_field, $stored);
+      $media->save();
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Resolves a suggested tag-name list to taxonomy term targets.
+   *
+   * Existing terms are matched by name inside the field's target
+   * vocabularies; missing ones are created there — the same behavior the
+   * field's own auto_create widget setting licenses for editors.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node being fixed.
+   * @param string $field
+   *   The tags field machine name.
+   * @param string $value
+   *   The suggested value (comma-separated term names).
+   *
+   * @return list<array{target_id: int}>
+   *   Field items ready for $node->set().
+   */
+  private function resolveTagTargets(NodeInterface $node, string $field, string $value): array {
+    $settings = $node->getFieldDefinition($field)->getSetting('handler_settings') ?? [];
+    $bundles = array_values(array_filter((array) ($settings['target_bundles'] ?? [])));
+    $bundle = ($settings['auto_create_bundle'] ?? '') ?: ($bundles[0] ?? '');
+    $storage = $this->entityTypeManager->getStorage('taxonomy_term');
+    $targets = [];
+    foreach (ValidatedFields::parseTagNames($value) as $name) {
+      // accessCheck(FALSE): term lookup by name for a save the editor is
+      // already authorized to make; term access would only hide existing
+      // terms and cause duplicates.
+      $query = $storage->getQuery()->accessCheck(FALSE)->condition('name', $name);
+      if ($bundles !== []) {
+        $query->condition('vid', $bundles, 'IN');
+      }
+      $ids = $query->range(0, 1)->execute();
+      $id = $ids === [] ? 0 : (int) reset($ids);
+      if ($id === 0) {
+        if ($bundle === '') {
+          continue;
+        }
+        $term = $storage->create(['vid' => $bundle, 'name' => $name]);
+        $term->save();
+        $id = (int) $term->id();
+      }
+      $targets[] = ['target_id' => $id];
+    }
+    return $targets;
   }
 
   /**

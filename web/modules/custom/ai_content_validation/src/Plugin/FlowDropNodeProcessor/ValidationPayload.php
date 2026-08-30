@@ -8,6 +8,7 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ai_content_validation\MediaReferenceDetails;
 use Drupal\ai_content_validation\ValidatedFields;
 use Drupal\flowdrop\Attribute\FlowDropNodeProcessor;
 use Drupal\flowdrop\DTO\ParameterBagInterface;
@@ -121,7 +122,13 @@ final class ValidationPayload extends AbstractFlowDropNodeProcessor {
     if ($data === []) {
       throw new \RuntimeException('The validator payload node received no entity data.');
     }
-    return ['json' => self::header($this->loadNode($data), $data) . "\n" . Json::encode($data)];
+    $node = $this->loadNode($data);
+    // Media references arrive as filename labels only — append the source
+    // image's alt/title so the validator can judge accessibility text.
+    if ($node !== NULL && is_array($data['fields'] ?? NULL)) {
+      $data['fields'] = MediaReferenceDetails::enrich($node, $data['fields']);
+    }
+    return ['json' => self::header($node, $data) . "\n" . Json::encode($data)];
   }
 
   /**
@@ -146,13 +153,23 @@ final class ValidationPayload extends AbstractFlowDropNodeProcessor {
 
     $lines = [];
     foreach ($labels as $field => $label) {
+      // "Assess only" means the editor fixes it by hand, NOT that the
+      // field gets a lighter verdict — spelled out because the short form
+      // read as permission to wave the field through.
       $lines[] = '"' . $field . '" (' . $label . ')'
-        . (in_array($field, $fixable, TRUE) ? '' : ' — assess only, never propose a replacement value');
+        . (in_array($field, $fixable, TRUE) ? '' : ' — assess only: judge it exactly as strictly as every other field, but never propose a replacement value for it');
     }
     return 'ASSESSED FIELDS (' . count($lines) . ', exactly these, on every run): '
       . implode('; ', $lines)
       . '. Report one "field_findings" entry and one "field_verdicts" entry for EACH of them, using these exact key names. '
-      . 'A field whose value is empty is still assessed — say so in its finding.';
+      . 'A field whose value is empty is still assessed — say so in its finding. '
+      . 'REFERENCE FIELDS (tags, categories, media and any other field whose items carry a "target_label"): the labels ARE the value — judge every one of them by name. '
+      . 'A term that does not describe THIS article is a problem: name it in that field\'s finding and set that field\'s verdict to "review" (Guideline 6, Audience Relevance). '
+      . 'Never answer "the field is present and relevant" without having weighed each label against the article; presence is not relevance. '
+      . 'Quote the offending label verbatim in the finding (e.g. "the tag \'Drupal\' is unrelated to this article"), and never prefix a finding with "Assess only" — the verdict carries that. '
+      . 'A tags field that is EMPTY is ALWAYS a problem, with no exception: its finding MUST read "the tags field is empty — descriptive tags must be added (Guideline 8, Completeness)" and its verdict MUST be "review", never "pass". '
+      . 'IMAGE/MEDIA ITEMS carrying a "target_alt" key: the alt text is part of the value — judge it. Empty or missing alt text, or alt text that does not describe the image for a screen-reader user (a filename, a single word, marketing copy), is an accessibility problem: name it and set that field\'s verdict to "review" (Guideline 9, Inclusivity & Language Ethics). An empty "target_title" is acceptable and never a finding. '
+      . 'FINAL CHECK before you answer: for every field whose finding names ANY problem — including an assess-only field, including a merely irrelevant term — that field\'s "field_verdicts" entry MUST be "review". A finding that states a problem next to a "pass" verdict is a self-contradiction and is rejected.';
   }
 
   /**
