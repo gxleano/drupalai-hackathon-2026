@@ -47,6 +47,13 @@ function ai_content_validation_node_form_reject_submit(array &$form, FormStateIn
 }
 
 /**
+ * Submit handler on node Save: writes staged alt-text fixes to media.
+ */
+function ai_content_validation_node_form_staged_alts_submit(array &$form, FormStateInterface $form_state): void {
+  \Drupal::classResolver(FormHooks::class)->applyStagedAlts($form, $form_state);
+}
+
+/**
  * Submit handler: runs the improve workflow for one flagged field.
  */
 function ai_content_validation_node_form_improve_submit(array &$form, FormStateInterface $form_state): void {

@@ -119,6 +119,16 @@ final class FormHooks {
       '#type' => 'hidden',
       '#default_value' => '',
     ];
+    // Alt-text fixes staged for media fields (JSON field => alt): applied
+    // to the media entities by Save, right before the node itself saves,
+    // so the post-save validation already reads the new alt.
+    $form['acv_staged_alt'] = [
+      '#type' => 'hidden',
+      '#default_value' => '',
+    ];
+    if (isset($form['actions']['submit']['#submit'])) {
+      array_unshift($form['actions']['submit']['#submit'], 'ai_content_validation_node_form_staged_alts_submit');
+    }
     $edited_input = $form_state->getUserInput()['acv_edited'] ?? '';
     foreach (explode(',', is_string($edited_input) ? $edited_input : '') as $edited_field) {
       if ($edited_field !== '') {
@@ -185,6 +195,26 @@ final class FormHooks {
           $target['#attributes']['class'][] = $group_class;
         }
         unset($target);
+      }
+    }
+  }
+
+  /**
+   * Submit handler on Save: writes staged alt-text fixes to their media.
+   *
+   * Runs before NodeForm::save() so the validation triggered by the node
+   * save already sees the new alt. The media entity is shared — the alt
+   * applies everywhere that media item is used.
+   */
+  public function applyStagedAlts(array &$form, FormStateInterface $form_state): void {
+    $staged = json_decode((string) ($form_state->getUserInput()['acv_staged_alt'] ?? ''), TRUE);
+    $node = $form_state->getFormObject()->getEntity();
+    if (!is_array($staged) || !$node instanceof NodeInterface) {
+      return;
+    }
+    foreach ($staged as $field => $alt) {
+      if (is_string($field) && is_string($alt) && trim($alt) !== '') {
+        $this->review()->applyMediaAlt($node, $field, $alt);
       }
     }
   }

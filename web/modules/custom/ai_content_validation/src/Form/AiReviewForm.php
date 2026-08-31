@@ -644,7 +644,6 @@ final class AiReviewForm extends FormBase {
     // widgets to stage into, and a media fix writes to the media entity
     // rather than this form, so both keep the direct save.
     $staged = $form_state->getFormObject() instanceof EntityFormInterface
-      && !ValidatedFields::isMediaField($node, $field)
       && $this->stageIntoForm($form_state, $node, $field, $value);
     if (!$staged && !$this->applyToNode($node, $field, $value, $this->rawValue($suggestion['current'] ?? ''))) {
       $this->messenger()->addWarning($this->t('Could not apply suggestion for field %field.', ['%field' => $field]));
@@ -734,6 +733,21 @@ final class AiReviewForm extends FormBase {
    */
   private function stageIntoForm(FormStateInterface $form_state, NodeInterface $node, string $field, string $value): bool {
     $input = &$form_state->getUserInput();
+    if (ValidatedFields::isMediaField($node, $field)) {
+      // The alt lives on the referenced media entity — no widget on this
+      // form holds it — so it is staged into the hidden acv_staged_alt
+      // carrier and written to the media entity by the node form's Save
+      // (FormHooks::applyStagedAlts()), never before.
+      $alt = trim($this->plainText($value));
+      if ($alt === '') {
+        return FALSE;
+      }
+      $staged = json_decode((string) ($input['acv_staged_alt'] ?? ''), TRUE);
+      $staged = is_array($staged) ? $staged : [];
+      $staged[$field] = $alt;
+      $input['acv_staged_alt'] = json_encode($staged);
+      return TRUE;
+    }
     if (ValidatedFields::isTagsField($node, $field)) {
       // The tags autocomplete takes a comma-separated string; plain names
       // match existing terms by title and auto-create the rest, the same
@@ -2210,7 +2224,7 @@ final class AiReviewForm extends FormBase {
    * @return bool
    *   TRUE when a referenced media item accepted the alt text.
    */
-  private function applyMediaAlt(NodeInterface $node, string $field, string $value): bool {
+  public function applyMediaAlt(NodeInterface $node, string $field, string $value): bool {
     $alt = trim($value);
     if ($alt === '') {
       return FALSE;
