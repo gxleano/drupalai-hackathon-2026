@@ -57,7 +57,7 @@
 }
 
 .ai-review-hero__icon::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   margin: auto;
@@ -76,7 +76,7 @@
 
 .ai-review-hero--issues .ai-review-hero__icon::after,
 .ai-review-hero--stale .ai-review-hero__icon::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   margin: auto;
@@ -94,7 +94,7 @@
 }
 
 .ai-review-hero--none .ai-review-hero__icon::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   margin: auto;
@@ -219,7 +219,6 @@
   overflow: hidden;
 }
 
-
 /* Row status icon: small filled circle, check or "!". */
 .ai-review-finding__icon {
   flex: none;
@@ -232,7 +231,7 @@
 }
 
 .ai-review-finding__icon::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   margin: auto;
@@ -254,7 +253,7 @@
 }
 
 .ai-review-finding--issue .ai-review-finding__icon::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   margin: auto;
@@ -375,7 +374,7 @@
 }
 
 .ai-review-applied__icon::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 0.8em;
   top: 0.68em;
@@ -566,7 +565,6 @@
   background-color: var(--gin-color-button-text, #fff);
 }
 
-
 /* ---------------------------------------------------------------------
  * Inline AI suggestion panel under a field's finding row.
  * ------------------------------------------------------------------ */
@@ -643,7 +641,7 @@
 
 /* Status dot in front of each group heading. */
 .ai-review-history__group::before {
-  content: "";
+  content: '';
   width: 0.55em;
   height: 0.55em;
   border-radius: 50%;
@@ -664,7 +662,9 @@
   border-radius: var(--gin-border-m, 8px);
   background: var(--ai-surface);
   margin: 0 0 0.75em;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .ai-review-history details:hover {
@@ -674,7 +674,9 @@
 
 /* Gentle hover lift on the results cards too. */
 .ai-review-finding {
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .ai-review-finding:hover {
@@ -775,14 +777,18 @@
 
 /* Hovering (or focusing) the status dot outlines the field's own inputs in
    the dot's color, so it is obvious which widget the verdict is about. */
-.ai-nodeform-field:has(.ai-nodeform-status__dot:hover, .ai-nodeform-status__dot:focus) :is(
-  input:not([type="hidden"], [type="submit"], [type="button"]),
-  textarea,
-  select,
-  .ck-editor__editable,
-  tags.tagify,
-  .media-library-widget
-) {
+.ai-nodeform-field:has(
+    .ai-nodeform-status__dot:hover,
+    .ai-nodeform-status__dot:focus
+  )
+  :is(
+    input:not([type='hidden'], [type='submit'], [type='button']),
+    textarea,
+    select,
+    .ck-editor__editable,
+    tags.tagify,
+    .media-library-widget
+  ) {
   outline: 2px solid var(--ai-dot-color);
   outline-offset: 0;
   border-radius: 4px;
@@ -854,7 +860,7 @@
 
 .ai-nodeform-popover .ui-dialog-titlebar::before,
 .ai-nodeform-modal .ui-dialog-titlebar::before {
-  content: "";
+  content: '';
   flex: none;
   width: 2rem;
   height: 2rem;
@@ -889,7 +895,8 @@
   filter: none;
   opacity: 0.75;
   font-size: 0;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f2329' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") center / 1.05rem no-repeat;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f2329' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E")
+    center / 1.05rem no-repeat;
 }
 
 .ui-dialog.ai-nodeform-popover .ui-dialog-titlebar-close span,
@@ -988,14 +995,18 @@
 /* Button glyphs, keyed off the class the JS puts on each button. */
 .ai-nodeform-popover .ui-dialog-buttonpane .button::before,
 .ai-nodeform-modal .ui-dialog-buttonpane .button::before {
-  content: "";
+  content: '';
   width: 1.05rem;
   height: 1.05rem;
   background: var(--ai-btn-icon) center / contain no-repeat;
 }
 
-.ai-nodeform-popover .ui-dialog-buttonpane .button:not([class*="ai-btn--"])::before,
-.ai-nodeform-modal .ui-dialog-buttonpane .button:not([class*="ai-btn--"])::before {
+.ai-nodeform-popover
+  .ui-dialog-buttonpane
+  .button:not([class*='ai-btn--'])::before,
+.ai-nodeform-modal
+  .ui-dialog-buttonpane
+  .button:not([class*='ai-btn--'])::before {
   display: none;
 }
 
@@ -1090,7 +1101,7 @@
 }
 
 .ai-nodeform-report__stale::before {
-  content: "";
+  content: '';
   width: 1.1rem;
   height: 1.1rem;
   background: var(--ai-icon-info) center / contain no-repeat;
@@ -1109,7 +1120,7 @@
 }
 
 .ai-nodeform-report__hero::before {
-  content: "";
+  content: '';
   width: 3rem;
   height: 3rem;
   background: var(--ai-report-icon) center / contain no-repeat;
@@ -1169,7 +1180,7 @@
 }
 
 .ai-nodeform-report__note::before {
-  content: "";
+  content: '';
   width: 1.4rem;
   height: 1.4rem;
   margin-top: 0.05rem;
@@ -1226,7 +1237,7 @@
 }
 
 .ai-nodeform-report__item::before {
-  content: "";
+  content: '';
   width: 1.25rem;
   height: 1.25rem;
   margin-top: 0.05rem;
@@ -1302,7 +1313,7 @@
 }
 
 .ai-nodeform-drawer__card::before {
-  content: "";
+  content: '';
   grid-row: span 2;
   width: 1.35rem;
   height: 1.35rem;
@@ -1344,7 +1355,7 @@
 }
 
 .ai-nodeform-drawer__reason::before {
-  content: "";
+  content: '';
   width: 1.35rem;
   height: 1.35rem;
   background: var(--ai-icon-bulb) center / contain no-repeat;
@@ -1372,7 +1383,7 @@
   padding: 0;
   border-radius: 50%;
   background: center / contain no-repeat;
-  content: "";
+  content: '';
 }
 
 .ai-nodeform-drawer__diff .ai-diff::after {
@@ -1396,7 +1407,7 @@
 }
 
 .ai-nodeform-drawer__diff .ai-diff--del::after {
-  content: "BEFORE";
+  content: 'BEFORE';
   background: #fbd7d7;
   color: #b02525;
 }
@@ -1410,7 +1421,7 @@
 }
 
 .ai-nodeform-drawer__diff .ai-diff--ins::after {
-  content: "AFTER";
+  content: 'AFTER';
   background: #c9edd6;
   color: #1d7a37;
 }
@@ -1477,7 +1488,7 @@
 }
 
 .ai-nodeform-drawer__hint::before {
-  content: "";
+  content: '';
   width: 1.2rem;
   height: 1.2rem;
   background: var(--ai-icon-info) center / contain no-repeat;
@@ -1499,7 +1510,7 @@
 /* Spinner in front of the in-flight message, so the wait reads as a
    loading state rather than a warning. */
 .ai-nodeform-drawer__progress::before {
-  content: "";
+  content: '';
   flex: none;
   width: 1rem;
   height: 1rem;
@@ -1510,7 +1521,9 @@
 }
 
 @keyframes ai-progress-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1558,7 +1571,7 @@
 }
 
 .ai-nodeform-sidebar__rating::before {
-  content: "✓";
+  content: '✓';
 }
 
 .ai-nodeform-sidebar__date {
@@ -1616,13 +1629,15 @@
 }
 
 .ai-nodeform-sidebar__auto::before {
-  content: "";
+  content: '';
   top: 0.1875rem;
   width: 1rem;
   height: 1rem;
   background: var(--ai-tone-color);
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 2l1.8 5.2L18 9l-5.2 1.8L11 16l-1.8-5.2L4 9l5.2-1.8L11 2z'/%3E%3Cpath d='M18 14l.85 2.15L21 17l-2.15.85L18 20l-.85-2.15L15 17l2.15-.85L18 14z'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 2l1.8 5.2L18 9l-5.2 1.8L11 16l-1.8-5.2L4 9l5.2-1.8L11 2z'/%3E%3Cpath d='M18 14l.85 2.15L21 17l-2.15.85L18 20l-.85-2.15L15 17l2.15-.85L18 14z'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 2l1.8 5.2L18 9l-5.2 1.8L11 16l-1.8-5.2L4 9l5.2-1.8L11 2z'/%3E%3Cpath d='M18 14l.85 2.15L21 17l-2.15.85L18 20l-.85-2.15L15 17l2.15-.85L18 14z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 2l1.8 5.2L18 9l-5.2 1.8L11 16l-1.8-5.2L4 9l5.2-1.8L11 2z'/%3E%3Cpath d='M18 14l.85 2.15L21 17l-2.15.85L18 20l-.85-2.15L15 17l2.15-.85L18 14z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 
 /* Divider only when a summary sits above the automatic-run note. */
@@ -1642,7 +1657,7 @@
 }
 
 .ai-nodeform-sidebar__link::after {
-  content: "›";
+  content: '›';
 }
 
 /* Score donut: conic ring with the score punched out of the middle. */
@@ -1738,8 +1753,13 @@
 }
 
 @keyframes ai-validation-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1749,7 +1769,6 @@
     opacity: 0.6;
   }
 }
-
 
 /* ---------------------------------------------------------------------
  * Results grid + guideline verdict card.
@@ -2039,15 +2058,6 @@ details.ai-review-history > summary {
 /* ---------------------------------------------------------------------
  * Editor decisions audit (Marked as OK trail on the review page).
  * ------------------------------------------------------------------ */
-.ai-review-overrides {
-  margin: 0 0 1.5em;
-}
-
-.ai-review-overrides__heading {
-  margin: 0 0 0.25em;
-  font-size: 1.1em;
-}
-
 .ai-review-overrides .ai-review-hint {
   margin: 0 0 0.75em;
 }
@@ -2063,7 +2073,7 @@ details.ai-review-history > summary {
 }
 
 .ai-review-override__icon::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   margin: auto;

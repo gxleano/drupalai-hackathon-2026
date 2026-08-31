@@ -179,7 +179,78 @@
             Drupal.editors.ckeditor5.attach(pair.mirror, pair.format);
           }
           if (pair.tags && !pair.tagify) {
-            pair.tagify = new Tagify(pair.mirror, { delimiters: ',' });
+            // Match the contrib tagify widget's markup: its stylesheet keys
+            // the site look on these container classes and on the remove
+            // button's id, so the mirror renders like the field itself.
+            pair.mirror.setAttribute(
+              'placeholder',
+              Drupal.t('Type to add a tag…'),
+            );
+            pair.tagify = new Tagify(pair.mirror, {
+              delimiters: ',',
+              dropdown: {
+                enabled: 1,
+                highlightFirst: true,
+                closeOnSelect: true,
+                maxItems: 20,
+              },
+              templates: {
+                tag(tagData) {
+                  const label = Drupal.checkPlain(tagData.value);
+                  return `<tag title="${label}"
+                    contenteditable="false"
+                    spellcheck="false"
+                    tabindex="-1"
+                    class="tagify__tag ${tagData.class ? tagData.class : ''}"
+                    ${this.getAttributes(tagData)}>
+                      <x id="tagify__tag-remove-button"
+                        title="${Drupal.t('Remove @tag', { '@tag': label })}"
+                        class="tagify__tag__removeBtn"
+                        role="button"
+                        aria-label="remove ${label} tag"
+                        tabindex="0">
+                      </x>
+                      <div><span class="tagify__tag-text">${label}</span></div>
+                  </tag>`;
+                },
+              },
+            });
+            pair.tagify.DOM.scope.classList.add(
+              'tagify-widget',
+              'form-element',
+              'form-element--type-text',
+              'form-element--api-entity-autocomplete-tagify',
+            );
+            // Existing-term suggestions, fetched from the same autocomplete
+            // endpoint as the field's own widget (it lives in the same
+            // field container). Values stay term names — apply() joins
+            // them back into the comma-separated suggestion string.
+            const autocompleteUrl = pair.source
+              .closest('.ai-nodeform-field')
+              ?.querySelector('input[data-autocomplete-url]')
+              ?.getAttribute('data-autocomplete-url');
+            if (autocompleteUrl) {
+              pair.tagify.on(
+                'input',
+                Drupal.debounce((e) => {
+                  const value = e.detail?.value ?? '';
+                  const glue = autocompleteUrl.includes('?') ? '&' : '?';
+                  fetch(
+                    `${autocompleteUrl}${glue}q=${encodeURIComponent(value)}`,
+                  )
+                    .then((res) => res.json())
+                    .then((items) => {
+                      pair.tagify.whitelist = items.map((item) => ({
+                        value: item.label,
+                      }));
+                      pair.tagify.dropdown.show(value);
+                    })
+                    // ponytail: suggestions are a convenience — on fetch
+                    // failure the editor still types tags freely.
+                    .catch(() => {});
+                }, 250),
+              );
+            }
           }
         });
       },
@@ -605,6 +676,18 @@
           // renders on the next load.
           submit.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
           dialog.close();
+          // Mirror of the Reopen handler: the hidden Reopen submit is in
+          // the DOM (rendered from the raw flag), so the undo is offered
+          // right away instead of after the next page load.
+          const reopenName = dot.dataset.aiMarkOk.replace(
+            'markokfield:',
+            'reopenfield:',
+          );
+          dot.dataset.aiReopen = document.querySelector(
+            `[name="${reopenName}"]`,
+          )
+            ? reopenName
+            : '';
           dot.dataset.aiState = 'ok';
           dot.dataset.aiMarkOk = '';
           dot.dataset.aiFix = '';

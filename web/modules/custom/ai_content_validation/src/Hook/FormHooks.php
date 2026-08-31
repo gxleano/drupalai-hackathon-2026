@@ -592,8 +592,11 @@ final class FormHooks {
     $has_ok = $current && $issue && $pending === NULL && $decision === NULL;
     $ok_name = 'markokfield:' . $report_id . ':' . $field;
     // An overridden finding can be reopened: the override is removed and
-    // the flag (with its Fix / Mark as OK actions) comes back.
-    $has_reopen = $override !== NULL && $current;
+    // the flag (with its Fix / Mark as OK actions) comes back. Rendered
+    // for every open flag too — like Fix / Mark as OK — so the dialog can
+    // flip Mark as OK -> Reopen without a page load; the handler no-ops
+    // when no override exists.
+    $has_reopen = $current && $issue && $pending === NULL && $decision === NULL;
     $reopen_name = 'reopenfield:' . $report_id . ':' . $field;
     $info = $this->t('@label — @text', ['@label' => $label, '@text' => $text]);
     $element = [
@@ -618,7 +621,7 @@ final class FormHooks {
           'data-ai-text' => (string) $text,
           'data-ai-fix' => $has_fix && $override === NULL ? $fix_name : '',
           'data-ai-mark-ok' => $has_ok && $override === NULL ? $ok_name : '',
-          'data-ai-reopen' => $has_reopen ? $reopen_name : '',
+          'data-ai-reopen' => $has_reopen && $override !== NULL ? $reopen_name : '',
           // The raw AI finding, kept even when the display text is a
           // decision ("Marked as OK by …"): the dialog parses guideline
           // numbers out of it to badge the flagged rows.

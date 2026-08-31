@@ -295,8 +295,6 @@ final class AiReviewForm extends FormBase {
       ],
     ];
 
-    $form['override_audit'] = $this->buildOverrideAudit($node);
-
     $form['validations'] = $this->buildValidations($node);
 
     return $form;
@@ -633,15 +631,12 @@ final class AiReviewForm extends FormBase {
     unset($row);
 
     return [
-      '#type' => 'container',
+      '#type' => 'details',
+      '#title' => $this->t('Editor decisions (@count)', ['@count' => count($rows)]),
+      // Collapsed: like the score history, decisions are an audit trail.
+      '#open' => FALSE,
       '#attributes' => ['class' => ['ai-review-overrides']],
       '#cache' => ['tags' => ['ai_content_validation_item_list']],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $this->t('Editor decisions (@count)', ['@count' => count($rows)]),
-        '#attributes' => ['class' => ['ai-review-overrides__heading']],
-      ],
       'hint' => [
         '#type' => 'html_tag',
         '#tag' => 'p',
@@ -1764,6 +1759,11 @@ final class AiReviewForm extends FormBase {
         $element['#weight'] = $weight++;
         $build[$id] = $element;
       }
+    }
+
+    $overrides = $this->buildOverrideAudit($node);
+    if ($overrides !== []) {
+      $build['editor_decisions'] = $overrides + ['#weight' => $weight++];
     }
 
     if ($grouped['superseded'] !== []) {
