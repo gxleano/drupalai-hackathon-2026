@@ -269,7 +269,7 @@ display:
           field: ai_quality_score
           relationship: none
           plugin_id: ai_quality_score
-          label: 'Quality Score'
+          label: 'AI Validation'
           exclude: false
           element_default_classes: true
         operations:

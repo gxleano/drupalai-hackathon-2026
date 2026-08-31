@@ -522,9 +522,8 @@
     }
 
     dialog = Drupal.dialog(content, {
-      title: dot.dataset.aiLabel
-        ? Drupal.t('@label — AI validation', { '@label': dot.dataset.aiLabel })
-        : Drupal.t('AI validation'),
+      // The field name already heads the card inside the dialog.
+      title: Drupal.t('AI validation'),
       classes: {
         'ui-dialog': details
           ? 'ai-nodeform-popover ai-nodeform-popover--report'

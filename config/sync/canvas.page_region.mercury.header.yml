@@ -3,7 +3,11 @@ langcode: en
 status: true
 dependencies:
   config:
+    - canvas.component.block.system_branding_block
     - canvas.component.block.system_menu_block.main
+    - canvas.component.sdc.mercury.navbar
+  module:
+    - options
   theme:
     - mercury
 _core:

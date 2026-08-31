@@ -250,7 +250,7 @@ final class AiContentValidationHooks {
    * Implements hook_views_data_alter().
    *
    * Exposes the AI quality score donut as a views field on nodes, used by
-   * the Quality Score column in the content overview.
+   * the AI Validation column in the content overview.
    */
   #[Hook('views_data_alter')]
   public function viewsDataAlter(array &$data): void {

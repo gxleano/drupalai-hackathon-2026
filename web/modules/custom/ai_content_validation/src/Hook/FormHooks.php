@@ -230,7 +230,7 @@ final class FormHooks {
 
     $form['ai_review_status'] = [
       '#type' => 'details',
-      '#title' => $this->t('AI content validation'),
+      '#title' => $this->t('AI validation'),
       '#group' => 'advanced',
       '#open' => TRUE,
       '#weight' => -10,

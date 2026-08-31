@@ -721,13 +721,13 @@
    AI Validation Assistant drawer. */
 .ai-nodeform-status__dot {
   position: absolute;
-  top: 0;
+  top: -11px;
   right: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: 2px solid var(--gin-bg-layer, #fff);
   border-radius: 50%;
@@ -760,6 +760,29 @@
 
 .ai-nodeform-status__dot--issue::after {
   content: '!';
+}
+
+/* Hovering (or focusing) the status dot outlines the field's own inputs in
+   the dot's color, so it is obvious which widget the verdict is about. */
+.ai-nodeform-field:has(.ai-nodeform-status__dot:hover, .ai-nodeform-status__dot:focus) :is(
+  input:not([type="hidden"], [type="submit"], [type="button"]),
+  textarea,
+  select,
+  .ck-editor__editable,
+  tags.tagify,
+  .media-library-widget
+) {
+  outline: 2px solid var(--ai-dot-color);
+  outline-offset: 0;
+  border-radius: 4px;
+}
+
+.ai-nodeform-field:has(.ai-nodeform-status__dot--pass) {
+  --ai-dot-color: var(--gin-color-green, #26a769);
+}
+
+.ai-nodeform-field:has(.ai-nodeform-status__dot--issue) {
+  --ai-dot-color: var(--gin-color-warning, #e29700);
 }
 
 /* ---------------------------------------------------------------------

@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - canvas.component.block.system_menu_block.footer
+    - canvas.component.sdc.mercury.footer
   theme:
     - mercury
 _core:
