@@ -225,7 +225,15 @@ final class AiContentValidationHooks {
         if (is_numeric($score)) {
           // The content hash travels along so the donut can flag a score
           // whose content has changed since it was validated.
-          $verdicts = is_array($decoded['scores'] ?? NULL) ? $decoded['scores'] : [];
+          $verdicts = is_array($decoded['field_verdicts'] ?? NULL) ? $decoded['field_verdicts'] : [];
+          // A field the editor marked as OK carries no yellow dot on the
+          // form, so it must not raise the content-list icon either.
+          $overrides = is_array($decoded['editor_overrides'] ?? NULL) ? $decoded['editor_overrides'] : [];
+          // Older reports without per-field verdicts fall back to the
+          // guideline-score heuristic.
+          $open = $verdicts === []
+            ? (is_array($decoded['scores'] ?? NULL) ? $decoded['scores'] : [])
+            : array_diff_key($verdicts, $overrides);
           $scores[$nid] = [
             'score' => (int) $score,
             'vid' => (int) ($item->get('field_content_revision')->target_revision_id ?? 0),
@@ -233,10 +241,10 @@ final class AiContentValidationHooks {
             // The hash the score was computed from: a save that changed
             // no validated value keeps the score current.
             'hash' => is_string($decoded['content_hash'] ?? NULL) ? $decoded['content_hash'] : NULL,
-            // Any verdict below a full pass means the report suggests
-            // improvements — the content list flags it.
+            // Any open (not overridden) verdict below a full pass means a
+            // field still shows a yellow dot — the content list flags it.
             'weak' => (bool) array_filter(
-              $verdicts,
+              $open,
               fn ($v) => is_numeric($v) ? (int) $v < 10 : strtolower(trim((string) $v)) !== 'pass',
             ),
           ];
