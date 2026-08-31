@@ -664,13 +664,14 @@ final class ImproveGate extends AbstractFlowDropNodeProcessor {
       // label-only reference items so the candidate is scored on the
       // labels, exactly what the validator reads — no term is created.
       if (ValidatedFields::isTagsField($base, $field)) {
+        // An empty list is a real instruction here — "remove the
+        // irrelevant tag" leaves nothing behind — so it is scored, not
+        // dropped as the empty-value model mistake it would be on text.
         $names = ValidatedFields::parseTagNames($this->rawValue($suggestion['suggested'] ?? ''));
-        if ($names !== []) {
-          $values[$field] = array_map(
-            static fn (string $name): array => ['target_label' => $name],
-            $names,
-          );
-        }
+        $values[$field] = array_map(
+          static fn (string $name): array => ['target_label' => $name],
+          $names,
+        );
         continue;
       }
       $item = $base->get($field);

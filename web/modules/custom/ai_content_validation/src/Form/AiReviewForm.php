@@ -662,7 +662,7 @@ final class AiReviewForm extends FormBase {
     $value = $suggestion === NULL
       ? ''
       : $this->editedValue(is_array($edit) ? $edit : [], $this->rawValue($suggestion['suggested']));
-    if ($suggestion === NULL || $this->plainText($value) === '') {
+    if ($suggestion === NULL || ($this->plainText($value) === '' && !ValidatedFields::isTagsField($node, $field))) {
       $this->messenger()->addWarning($this->t('No applicable suggestion for field %field.', ['%field' => $field]));
       return;
     }
@@ -1758,8 +1758,10 @@ final class AiReviewForm extends FormBase {
       // The improve model is told to OMIT fields it cannot edit without
       // inventing content, but it sometimes emits them with an empty
       // suggested value anyway — an empty "change" is never applicable,
-      // so drop the row instead of offering to blank a field.
-      if ($this->plainText($suggested_raw) === '') {
+      // so drop the row instead of offering to blank a field. A tags
+      // field is the exception: "" is the only way to say "remove the
+      // tags", which is exactly what a single irrelevant tag needs.
+      if ($this->plainText($suggested_raw) === '' && !ValidatedFields::isTagsField($node, $field)) {
         continue;
       }
       $prepared['s' . $delta] = [
@@ -2177,8 +2179,9 @@ final class AiReviewForm extends FormBase {
       $suggested_raw = $this->rawValue($suggestion['suggested']);
       $value = $this->editedValue(is_array($row['change']['edit'] ?? NULL) ? $row['change']['edit'] : [], $suggested_raw);
       // Never blank a field: an empty replacement value is a model
-      // mistake (skipped-field contract), not an instruction to clear.
-      if ($this->plainText($value) === '') {
+      // mistake (skipped-field contract), not an instruction to clear —
+      // except on a tags field, where clearing IS the fix.
+      if ($this->plainText($value) === '' && !ValidatedFields::isTagsField($node, (string) $suggestion['field'])) {
         continue;
       }
       if ($this->applyToNode($node, (string) $suggestion['field'], $value, $this->rawValue($suggestion['current'] ?? ''))) {
