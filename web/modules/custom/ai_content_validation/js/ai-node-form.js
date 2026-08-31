@@ -286,18 +286,24 @@
    */
   function buildReport(dot, details) {
     const ok = dot.dataset.aiState === 'pass';
+    // An edited field (a manual change or a staged AI suggestion) shows
+    // the full report like any other, led by an info banner saying the
+    // verdict predates the change — its note IS that banner text.
+    const edited = dot.dataset.aiState === 'edited';
     const note = dot.dataset.aiText || '';
     // The note names the guideline that failed on THIS field ("Guideline
     // 2: …"); the report's own scores are content-wide, so nothing from
     // them is shown as if it were the field's own verdict.
-    const flagged = ok ? [] : flaggedGuidelines(note);
+    const flagged = ok || edited ? [] : flaggedGuidelines(note);
     const wrap = el(
       'div',
-      `ai-nodeform-report ai-nodeform-report--${ok ? 'ok' : 'issue'}`,
+      `ai-nodeform-report ai-nodeform-report--${ok || edited ? 'ok' : 'issue'}`,
     );
     const label = dot.dataset.aiLabel || Drupal.t('This field');
 
-    if (details.stale) {
+    if (edited) {
+      wrap.appendChild(el('p', 'ai-nodeform-report__stale', note));
+    } else if (details.stale) {
       wrap.appendChild(
         el(
           'p',
@@ -317,7 +323,11 @@
       el(
         'span',
         'ai-nodeform-report__chip',
-        ok ? Drupal.t('Passed') : Drupal.t('Needs attention'),
+        edited
+          ? Drupal.t('Edited')
+          : ok
+            ? Drupal.t('Passed')
+            : Drupal.t('Needs attention'),
       ),
     );
     heroText.appendChild(line);
@@ -328,11 +338,13 @@
         // The finding itself is the verdict — naming the guideline a
         // second time in the editor's own words said nothing the note
         // below did not already say better.
-        ok
-          ? Drupal.t(
-              'This field meets all quality standards based on the EU content guidelines.',
-            )
-          : note || Drupal.t('This field needs attention.'),
+        edited
+          ? Drupal.t('The results below describe this field before your change.')
+          : ok
+            ? Drupal.t(
+                'This field meets all quality standards based on the EU content guidelines.',
+              )
+            : note || Drupal.t('This field needs attention.'),
       ),
     );
     hero.appendChild(heroText);
@@ -355,7 +367,7 @@
     // A flagged field with no rewrite on offer is one the AI must not
     // write: a taxonomy or media reference, where it would have to invent
     // the value rather than reword it.
-    if (!ok && !details.thin && !dot.dataset.aiFix && !dot.dataset.aiSuggestion) {
+    if (!ok && !edited && !details.thin && !dot.dataset.aiFix && !dot.dataset.aiSuggestion) {
       wrap.appendChild(
         el(
           'p',
@@ -716,9 +728,8 @@
     dot.classList.add('ai-nodeform-status__dot--edited');
     dot.dataset.aiState = 'edited';
     dot.dataset.aiText = text;
-    // Both the old breakdown and the fix button speak for the pre-edit
-    // text, so the popover drops to the plain note.
-    dot.dataset.aiDetails = '';
+    // The breakdown stays (shown behind an "edited" banner); only the fix
+    // goes away — a rewrite built on a stale finding would undo the edit.
     dot.dataset.aiFix = '';
     dot.title = text;
     dot.setAttribute('aria-label', text);

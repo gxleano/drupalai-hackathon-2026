@@ -577,9 +577,9 @@ final class FormHooks {
           'data-ai-text' => (string) $text,
           'data-ai-fix' => $has_fix ? $fix_name : '',
           'data-ai-state' => $state,
-          // Both verdict states show the breakdown; a staged (edited)
-          // field hides it — it graded the text the suggestion replaced.
-          'data-ai-details' => $state === 'edited' ? '' : $details,
+          // Every state shows the breakdown; an edited field's dialog
+          // leads with a banner saying it predates the change.
+          'data-ai-details' => $details,
         ],
       ],
     ];
