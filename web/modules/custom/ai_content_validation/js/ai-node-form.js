@@ -131,8 +131,9 @@
             source.getAttribute('data-editor-active-text-format')
         ] ?? null;
       const wysiwyg = Boolean(html && format && Drupal.editors?.ckeditor5);
-      const label = source.closest('.form-item')?.querySelector('label')
-        ?.textContent;
+      const label = source
+        .closest('.form-item')
+        ?.querySelector('label')?.textContent;
       if (sources.length > 1 || html) {
         section.appendChild(
           el(
@@ -150,7 +151,8 @@
       }
       // A tags suggestion mirrors as a Tagify input — the same chips UI
       // as the field itself — while the value stays comma-separated names.
-      const tags = source.hasAttribute('data-ai-tags') && typeof Tagify === 'function';
+      const tags =
+        source.hasAttribute('data-ai-tags') && typeof Tagify === 'function';
       const mirror = document.createElement(tags ? 'input' : 'textarea');
       mirror.className = `ai-nodeform-drawer__edit-input${html && !wysiwyg ? ' ai-nodeform-drawer__edit-input--code' : ''}`;
       if (!tags) {
@@ -164,8 +166,7 @@
     // attached, the plain textarea otherwise.
     const mirrorValue = (mirror) => {
       const id = mirror.getAttribute('data-ckeditor5-id');
-      const instance =
-        id === null ? null : Drupal.CKEditor5Instances?.get(id);
+      const instance = id === null ? null : Drupal.CKEditor5Instances?.get(id);
       return instance ? instance.getData() : mirror.value;
     };
     return {
@@ -219,8 +220,6 @@
     return found;
   }
 
-
-
   /**
    * Reads the guideline breakdown a passing dot carries, when present.
    *
@@ -257,7 +256,8 @@
    */
   function flaggedGuidelines(note) {
     const numbers = [];
-    const pattern = /guidelines?\s*(?:nos?\.?\s*|#\s*)?((?:\d+\s*(?:,|and|&|\/)\s*)*\d+)/gi;
+    const pattern =
+      /guidelines?\s*(?:nos?\.?\s*|#\s*)?((?:\d+\s*(?:,|and|&|\/)\s*)*\d+)/gi;
     let match = pattern.exec(note);
     while (match !== null) {
       match[1]
@@ -285,7 +285,10 @@
    *   The report body.
    */
   function buildReport(dot, details) {
-    const ok = dot.dataset.aiState === 'pass';
+    // 'ok' is a human override ("Marked as OK") — rendered like a pass,
+    // but its banner names the human decision instead of an AI verdict.
+    const marked = dot.dataset.aiState === 'ok';
+    const ok = dot.dataset.aiState === 'pass' || marked;
     // An edited field (a manual change or a staged AI suggestion) shows
     // the full report like any other, led by an info banner saying the
     // verdict predates the change — its note IS that banner text.
@@ -294,10 +297,19 @@
     // The note names the guideline that failed on THIS field ("Guideline
     // 2: …"); the report's own scores are content-wide, so nothing from
     // them is shown as if it were the field's own verdict.
-    const flagged = ok || edited ? [] : flaggedGuidelines(note);
+    // A marked-as-OK field keeps its flagged guidelines visible: the
+    // override is a human decision about them, not a claim they pass.
+    // Its display text is the decision, so the guideline numbers come
+    // from the preserved raw finding instead.
+    const flagged =
+      (ok && !marked) || edited
+        ? []
+        : flaggedGuidelines(marked ? dot.dataset.aiFinding || '' : note);
     const wrap = el(
       'div',
-      `ai-nodeform-report ai-nodeform-report--${ok || edited ? 'ok' : 'issue'}`,
+      `ai-nodeform-report ai-nodeform-report--${
+        marked ? 'marked' : ok || edited ? 'ok' : 'issue'
+      }`,
     );
     const label = dot.dataset.aiLabel || Drupal.t('This field');
 
@@ -325,9 +337,11 @@
         'ai-nodeform-report__chip',
         edited
           ? Drupal.t('Edited')
-          : ok
-            ? Drupal.t('Passed')
-            : Drupal.t('Needs attention'),
+          : marked
+            ? Drupal.t('Accepted')
+            : ok
+              ? Drupal.t('Passed')
+              : Drupal.t('Needs attention'),
       ),
     );
     heroText.appendChild(line);
@@ -339,14 +353,25 @@
         // second time in the editor's own words said nothing the note
         // below did not already say better.
         edited
-          ? Drupal.t('The results below describe this field before your change.')
-          : ok
-            ? Drupal.t(
-                'This field meets all quality standards based on the EU content guidelines.',
+          ? Drupal.t(
+              'The results below describe this field before your change.',
+            )
+          : marked
+            ? dot.dataset.aiFinding ||
+              Drupal.t(
+                'The AI flagged this field; an editor approved the content as written.',
               )
-            : note || Drupal.t('This field needs attention.'),
+            : ok
+              ? Drupal.t(
+                  'This field meets all quality standards based on the EU content guidelines.',
+                )
+              : note || Drupal.t('This field needs attention.'),
       ),
     );
+    if (marked && note) {
+      // Who accepted and when — the note the server built for this state.
+      heroText.appendChild(el('span', 'ai-nodeform-report__accepted', note));
+    }
     hero.appendChild(heroText);
     wrap.appendChild(hero);
 
@@ -367,7 +392,13 @@
     // A flagged field with no rewrite on offer is one the AI must not
     // write: a taxonomy or media reference, where it would have to invent
     // the value rather than reword it.
-    if (!ok && !edited && !details.thin && !dot.dataset.aiFix && !dot.dataset.aiSuggestion) {
+    if (
+      !ok &&
+      !edited &&
+      !details.thin &&
+      !dot.dataset.aiFix &&
+      !dot.dataset.aiSuggestion
+    ) {
       wrap.appendChild(
         el(
           'p',
@@ -388,6 +419,8 @@
       // are flagged. The report's `scores` map grades the whole document,
       // so reusing it here would mark a guideline weak on every field.
       const weak = flagged.includes(item.n);
+      // The flagged guideline keeps its amber warning even on an accepted
+      // field: the banner carries the decision; the row states the fact.
       const row = el(
         'li',
         `ai-nodeform-report__item ai-nodeform-report__item--${weak ? 'weak' : 'ok'}`,
@@ -463,18 +496,19 @@
     // on the left, the AI action on the right.
     // Edit field belongs to any flagged field — the editor fixes it by
     // hand when no AI rewrite is offered. A passing field needs nothing.
-    const buttons = dot.dataset.aiState === 'issue'
-      ? [
-          {
-            text: Drupal.t('Edit field'),
-            class: 'button ai-btn--field',
-            click() {
-              dialog.close();
-              focusField(dot);
+    const buttons =
+      dot.dataset.aiState === 'issue'
+        ? [
+            {
+              text: Drupal.t('Edit field'),
+              class: 'button ai-btn--field',
+              click() {
+                dialog.close();
+                focusField(dot);
+              },
             },
-          },
-        ]
-      : [];
+          ]
+        : [];
     if (dot.dataset.aiSuggestion) {
       buttons.push({
         text: Drupal.t('Review suggestion'),
@@ -508,6 +542,79 @@
             );
             submit.click();
           }
+        },
+      });
+    }
+    if (dot.dataset.aiReopen) {
+      // Undo for Mark as OK: removes the override from the current report
+      // (via AJAX, no navigation) and restores the flag with its actions.
+      buttons.push({
+        text: Drupal.t('Reopen finding'),
+        class: 'button ai-btn--reopen',
+        click() {
+          const submit = document.querySelector(
+            `input[name="${dot.dataset.aiReopen}"], button[name="${dot.dataset.aiReopen}"]`,
+          );
+          if (!submit) {
+            return;
+          }
+          submit.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+          dialog.close();
+          // The hidden Fix / Mark as OK submits are still in the DOM
+          // (rendered from the raw flag), so their names can simply be
+          // reconstructed from the reopen name.
+          const fixName = dot.dataset.aiReopen.replace(
+            'reopenfield:',
+            'improvefield:',
+          );
+          const okName = dot.dataset.aiReopen.replace(
+            'reopenfield:',
+            'markokfield:',
+          );
+          dot.dataset.aiFix = document.querySelector(`[name="${fixName}"]`)
+            ? fixName
+            : '';
+          dot.dataset.aiMarkOk = document.querySelector(`[name="${okName}"]`)
+            ? okName
+            : '';
+          dot.dataset.aiReopen = '';
+          dot.dataset.aiState = 'issue';
+          dot.dataset.aiText =
+            dot.dataset.aiFinding || Drupal.t('Needs attention.');
+          dot.classList.remove('ai-nodeform-status__dot--ok');
+          dot.classList.add('ai-nodeform-status__dot--issue');
+        },
+      });
+    }
+    if (dot.dataset.aiMarkOk) {
+      // Human override: accepts the flagged finding as-is. Only writes to
+      // the validation item — the node and the form values stay untouched.
+      buttons.unshift({
+        text: Drupal.t('Mark as OK'),
+        class: 'button ai-btn--markok',
+        click() {
+          const submit = document.querySelector(
+            `input[name="${dot.dataset.aiMarkOk}"], button[name="${dot.dataset.aiMarkOk}"]`,
+          );
+          if (!submit) {
+            return;
+          }
+          // AJAX submit (bound on mousedown): the override is recorded
+          // without navigating, so unsaved edits stay in the form. The
+          // dot flips optimistically to the same blue state the server
+          // renders on the next load.
+          submit.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+          dialog.close();
+          dot.dataset.aiState = 'ok';
+          dot.dataset.aiMarkOk = '';
+          dot.dataset.aiFix = '';
+          dot.dataset.aiText = Drupal.t('Reviewed and accepted by you.');
+          dot.classList.remove(
+            'ai-nodeform-status__dot--pass',
+            'ai-nodeform-status__dot--issue',
+            'ai-nodeform-status__dot--edited',
+          );
+          dot.classList.add('ai-nodeform-status__dot--ok');
         },
       });
     }
@@ -613,8 +720,28 @@
         text: Drupal.t('Reject'),
         class: 'button ai-btn--reject',
         click() {
-          lockDialog(content, Drupal.t('Dismissing the suggestion…'));
-          panel.querySelector('[name^="ignorefieldsug:"]')?.click();
+          const submit = panel.querySelector('[name^="ignorefieldsug:"]');
+          if (!submit) {
+            return;
+          }
+          // The reject button is an AJAX submit (Drupal binds it on
+          // mousedown): the decision is recorded without navigating, so
+          // the editor's unsaved edits stay in the form. The dot is
+          // updated optimistically to the same state the server would
+          // render.
+          submit.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+          dialog.close();
+          dot.dataset.aiState = 'issue';
+          delete dot.dataset.aiSuggestion;
+          dot.dataset.aiText = Drupal.t(
+            'AI change rejected — the finding remains open.',
+          );
+          dot.classList.remove(
+            'ai-nodeform-status__dot--pass',
+            'ai-nodeform-status__dot--edited',
+            'ai-nodeform-status__dot--ok',
+          );
+          dot.classList.add('ai-nodeform-status__dot--issue');
         },
       },
     ];
@@ -690,15 +817,17 @@
       badge.setAttribute('aria-hidden', 'true');
       donut.appendChild(badge);
     }
-    sidebar.querySelector('.ai-nodeform-sidebar__score')?.after(
-      el(
-        'p',
-        'ai-nodeform-sidebar__status',
-        Drupal.t(
-          'You edited this content — this score describes the last saved version. Save to validate it again.',
+    sidebar
+      .querySelector('.ai-nodeform-sidebar__score')
+      ?.after(
+        el(
+          'p',
+          'ai-nodeform-sidebar__status',
+          Drupal.t(
+            'You edited this content — this score describes the last saved version. Save to validate it again.',
+          ),
         ),
-      ),
-    );
+      );
   }
 
   /**
@@ -763,6 +892,53 @@
             event.preventDefault();
             openFinding(dot);
           });
+        },
+      );
+      // Editor preference: show or hide the per-field validation dots.
+      // Stored per browser — a preference, not content — and applied as a
+      // body class so every dot on the form obeys one switch.
+      once('ai-dots-toggle', '.ai-nodeform-sidebar', context).forEach(
+        (sidebar) => {
+          const KEY = 'aiContentValidationHideDots';
+          let hidden = false;
+          try {
+            hidden = localStorage.getItem(KEY) === '1';
+          } catch (e) {
+            hidden = false;
+          }
+          const button = el('button', 'ai-nodeform-sidebar__dots-toggle');
+          button.type = 'button';
+          button.title = Drupal.t(
+            'Show or hide the validation icons on the fields',
+          );
+          const render = () => {
+            document.body.classList.toggle('ai-validation-dots-hidden', hidden);
+            button.textContent = hidden
+              ? Drupal.t('Show alerts')
+              : Drupal.t('Hide alerts');
+            button.setAttribute('aria-pressed', String(hidden));
+          };
+          button.addEventListener('click', () => {
+            hidden = !hidden;
+            try {
+              localStorage.setItem(KEY, hidden ? '1' : '0');
+            } catch (e) {
+              // Storage unavailable: the toggle still works for this page.
+            }
+            render();
+          });
+          render();
+          // Share one footer row with the "Open full AI validation" link:
+          // link on the left, toggle on the right.
+          const link = sidebar.querySelector('.ai-nodeform-sidebar__link');
+          if (link) {
+            const row = el('div', 'ai-nodeform-sidebar__footer');
+            link.parentNode.insertBefore(row, link);
+            row.appendChild(link);
+            row.appendChild(button);
+          } else {
+            sidebar.appendChild(button);
+          }
         },
       );
       // A dot already rendered as edited (a staged AI suggestion) means

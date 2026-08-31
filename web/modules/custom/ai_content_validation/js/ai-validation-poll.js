@@ -33,9 +33,7 @@
     text.textContent = Drupal.t('Validating with AI…');
     const note = document.createElement('span');
     note.className = 'ai-validating__note';
-    note.textContent = Drupal.t(
-      'The quality score appears here as soon as the report lands.',
-    );
+    note.textContent = Drupal.t('The page refreshes when it finishes.');
     text.appendChild(note);
     box.appendChild(icon);
     box.appendChild(text);

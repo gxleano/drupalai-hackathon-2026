@@ -8,6 +8,8 @@
 declare(strict_types=1);
 
 use Drupal\ai_content_validation\Hook\FormHooks;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\MessageCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 
@@ -58,4 +60,37 @@ function ai_content_validation_node_form_staged_alts_submit(array &$form, FormSt
  */
 function ai_content_validation_node_form_improve_submit(array &$form, FormStateInterface $form_state): void {
   \Drupal::classResolver(FormHooks::class)->improveSubmit($form, $form_state);
+}
+
+/**
+ * Submit handler: marks one flagged field's finding as OK.
+ */
+function ai_content_validation_node_form_mark_ok_submit(array &$form, FormStateInterface $form_state): void {
+  \Drupal::classResolver(FormHooks::class)->markOkSubmit($form, $form_state);
+}
+
+/**
+ * Submit handler: reopens a finding that was marked as OK.
+ */
+function ai_content_validation_node_form_reopen_submit(array &$form, FormStateInterface $form_state): void {
+  \Drupal::classResolver(FormHooks::class)->reopenSubmit($form, $form_state);
+}
+
+/**
+ * AJAX callback for the node form's Reject suggestion button.
+ *
+ * The reject submit handler has already recorded the decision; this only
+ * flushes the queued status messages to the open page so nothing
+ * navigates and the editor's unsaved edits stay in the form.
+ */
+function ai_content_validation_node_form_reject_ajax(array &$form, FormStateInterface $form_state): AjaxResponse {
+  $response = new AjaxResponse();
+  $first = TRUE;
+  foreach (\Drupal::messenger()->deleteAll() as $type => $messages) {
+    foreach ($messages as $message) {
+      $response->addCommand(new MessageCommand((string) $message, NULL, ['type' => $type], $first));
+      $first = FALSE;
+    }
+  }
+  return $response;
 }

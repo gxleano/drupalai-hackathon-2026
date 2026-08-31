@@ -294,10 +294,19 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
     }
     $findings = is_array($result['field_findings'] ?? NULL) ? $result['field_findings'] : [];
     $verdicts = $result['field_verdicts'];
+    $overrides = is_array($result['editor_overrides'] ?? NULL) ? $result['editor_overrides'] : [];
     foreach ($result['field_hashes'] as $field => $hash) {
       $unchanged = isset($old_hashes[$field]) && $old_hashes[$field] === $hash;
-      $had_verdict = isset($previous['field_verdicts'][$field]);
-      if (!$unchanged || !$had_verdict) {
+      if (!$unchanged) {
+        continue;
+      }
+      // A "Marked as OK" decision was made about this exact field value,
+      // so it survives a re-validation as long as the value does — any
+      // edit to the field drops it with the stale verdict.
+      if (isset($previous['editor_overrides'][$field])) {
+        $overrides[$field] = $previous['editor_overrides'][$field];
+      }
+      if (!isset($previous['field_verdicts'][$field])) {
         continue;
       }
       $verdicts[$field] = $previous['field_verdicts'][$field];
@@ -307,6 +316,9 @@ final class ValidationValuesNormalize extends AbstractFlowDropNodeProcessor {
     }
     $result['field_verdicts'] = $verdicts;
     $result['field_findings'] = $findings;
+    if ($overrides !== []) {
+      $result['editor_overrides'] = $overrides;
+    }
 
     return $result;
   }

@@ -155,6 +155,7 @@ final class FormHooks {
     // score predates the current content instead of downgrading to the
     // bare popover.
     $details = $this->guidelineDetails($parsed, $thin, !$current);
+    $overrides = $review->editorOverrides($parsed);
     foreach ($labels as $field => $label) {
       if (!isset($form[$field])) {
         continue;
@@ -171,6 +172,7 @@ final class FormHooks {
         $decisions[$field] ?? NULL,
         $details,
         ValidatedFields::isFixable($node, $field) && !$thin,
+        $overrides[$field] ?? NULL,
       );
       if ($element !== []) {
         // The meta tags widget is a details grouped into the sidebar; the
@@ -242,6 +244,20 @@ final class FormHooks {
    */
   public function improveSubmit(array &$form, FormStateInterface $form_state): void {
     $this->review()->improveField($form, $form_state);
+  }
+
+  /**
+   * Submit handler: marks one flagged field's finding as OK.
+   */
+  public function markOkSubmit(array &$form, FormStateInterface $form_state): void {
+    $this->review()->markFieldOk($form, $form_state);
+  }
+
+  /**
+   * Submit handler: reopens a finding that was marked as OK.
+   */
+  public function reopenSubmit(array &$form, FormStateInterface $form_state): void {
+    $this->review()->reopenFieldFinding($form, $form_state);
   }
 
   /**
@@ -511,11 +527,13 @@ final class FormHooks {
    *   The report's guideline breakdown as JSON, for the popover.
    * @param bool $fixable
    *   Whether the improve workflow may rewrite this field's value.
+   * @param array{uid: int, at: int}|null $override
+   *   The field's "Marked as OK" editor override, when one exists.
    *
    * @return array<string, mixed>
    *   Render array; empty when there is nothing to show for the field.
    */
-  private function buildFieldStatus(AiReviewForm $review, string $field, $label, ?int $report_id, bool $current, mixed $verdict, string $finding, ?array $pending, ?string $decision, string $details, bool $fixable): array {
+  private function buildFieldStatus(AiReviewForm $review, string $field, $label, ?int $report_id, bool $current, mixed $verdict, string $finding, ?array $pending, ?string $decision, string $details, bool $fixable, ?array $override = NULL): array {
     if ($report_id === NULL) {
       return [];
     }
@@ -532,7 +550,22 @@ final class FormHooks {
       $finding === '' => $pending !== NULL,
       default => (bool) preg_match('/guidelines?\s*(?:no\.?\s*|#\s*)?\d/i', $finding),
     };
+    // A human override quiets the flag: the dot goes blue and names who
+    // decided the finding is acceptable. A session decision or a pending
+    // suggestion still outranks it. $issue stays the RAW flag — the
+    // hidden Fix / Mark as OK submits render from it so the "Reopen
+    // finding" action can restore them without a page load; only the
+    // visible state reads the override.
+    $override = ($issue && $pending === NULL && $decision === NULL) ? $override : NULL;
+    $display_issue = $issue && $override === NULL;
     [$state, $text] = match (TRUE) {
+      $override !== NULL => [
+        'ok',
+        $this->t('Reviewed and accepted by @name — @date', [
+          '@name' => $review->overrideName($override['uid']),
+          '@date' => date('d.m.Y H:i', $override['at']),
+        ]),
+      ],
       $decision === 'accepted' => [
         'edited',
         $this->t('AI suggestion applied to the field — save the content to keep it.'),
@@ -543,7 +576,7 @@ final class FormHooks {
       ],
       $decision === 'rejected' => ['issue', $this->t('AI change rejected — the finding remains open.')],
       $pending !== NULL => ['issue', $this->t('An AI suggestion is ready for your review.')],
-      $issue => ['issue', $finding === '' ? $this->t('Needs attention.') : $finding],
+      $display_issue => ['issue', $finding === '' ? $this->t('Needs attention.') : $finding],
       // A passing field still carries a per-field note ("Accurate and
       // specific."); it says more than a generic "passed".
       default => ['pass', $finding === '' ? $this->t('Passed AI validation.') : $finding],
@@ -554,6 +587,14 @@ final class FormHooks {
     // visually hidden, so the dialog button can trigger the form submit.
     $has_fix = $fixable && $current && $issue && $pending === NULL && $decision === NULL;
     $fix_name = 'improvefield:' . $report_id . ':' . $field;
+    // Any open flag can be overridden by a human — even on fields the AI
+    // never rewrites — as long as the report still matches the content.
+    $has_ok = $current && $issue && $pending === NULL && $decision === NULL;
+    $ok_name = 'markokfield:' . $report_id . ':' . $field;
+    // An overridden finding can be reopened: the override is removed and
+    // the flag (with its Fix / Mark as OK actions) comes back.
+    $has_reopen = $override !== NULL && $current;
+    $reopen_name = 'reopenfield:' . $report_id . ':' . $field;
     $info = $this->t('@label — @text', ['@label' => $label, '@text' => $text]);
     $element = [
       '#type' => 'container',
@@ -575,7 +616,13 @@ final class FormHooks {
           'data-ai-title' => $this->t('AI Validation Assistant'),
           'data-ai-label' => $label,
           'data-ai-text' => (string) $text,
-          'data-ai-fix' => $has_fix ? $fix_name : '',
+          'data-ai-fix' => $has_fix && $override === NULL ? $fix_name : '',
+          'data-ai-mark-ok' => $has_ok && $override === NULL ? $ok_name : '',
+          'data-ai-reopen' => $has_reopen ? $reopen_name : '',
+          // The raw AI finding, kept even when the display text is a
+          // decision ("Marked as OK by …"): the dialog parses guideline
+          // numbers out of it to badge the flagged rows.
+          'data-ai-finding' => $finding,
           'data-ai-state' => $state,
           // Every state shows the breakdown; an edited field's dialog
           // leads with a banner saying it predates the change.
@@ -598,6 +645,47 @@ final class FormHooks {
       ];
     }
 
+    if ($has_ok) {
+      // Only touches the validation item, never the node — so it skips
+      // form validation and the default rebuild reloads the fresh state.
+      $element['mark_ok'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['visually-hidden']],
+        'button' => [
+          '#type' => 'submit',
+          '#value' => $this->t('Mark as OK'),
+          '#name' => $ok_name,
+          '#submit' => ['ai_content_validation_node_form_mark_ok_submit'],
+          '#limit_validation_errors' => [],
+          // Like Reject: records the decision without navigating, so the
+          // editor's unsaved edits stay in the form. The callback only
+          // flushes status messages; the dialog JS flips the dot.
+          '#ajax' => [
+            'callback' => 'ai_content_validation_node_form_reject_ajax',
+            'progress' => ['type' => 'none'],
+          ],
+        ],
+      ];
+    }
+
+    if ($has_reopen) {
+      $element['reopen'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['visually-hidden']],
+        'button' => [
+          '#type' => 'submit',
+          '#value' => $this->t('Reopen finding'),
+          '#name' => $reopen_name,
+          '#submit' => ['ai_content_validation_node_form_reopen_submit'],
+          '#limit_validation_errors' => [],
+          '#ajax' => [
+            'callback' => 'ai_content_validation_node_form_reject_ajax',
+            'progress' => ['type' => 'none'],
+          ],
+        ],
+      ];
+    }
+
     if ($pending !== NULL) {
       $panel = $review->buildInlineSuggestion($pending['id'], $pending['suggestion'], $label);
       // The '::method' submit notation resolves against the node form
@@ -609,6 +697,15 @@ final class FormHooks {
       // Limiting validation here would write unvalidated content.
       $panel['actions']['ignore']['#submit'] = ['ai_content_validation_node_form_reject_submit'];
       $panel['actions']['ignore']['#limit_validation_errors'] = [];
+      // Rejecting changes no content, so it must not navigate: a full
+      // submit reloads the edit form, which abandons the editor's unsaved
+      // edits (and trips the autosave "resume editing?" prompt). The AJAX
+      // submit records the decision in place; the dialog JS updates the
+      // dot optimistically.
+      $panel['actions']['ignore']['#ajax'] = [
+        'callback' => 'ai_content_validation_node_form_reject_ajax',
+        'progress' => ['type' => 'none'],
+      ];
       $panel['actions']['hint']['#value'] = $this->t('Accepting puts the suggestion into the field — nothing is saved until you save the content.');
       // The panel stays in the form (its submit buttons must POST) but is
       // hidden: the dialog clones its diff and reason for display and

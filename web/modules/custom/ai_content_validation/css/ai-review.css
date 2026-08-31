@@ -1750,3 +1750,344 @@
   }
 }
 
+
+/* ---------------------------------------------------------------------
+ * Results grid + guideline verdict card.
+ * ------------------------------------------------------------------ */
+.ai-review {
+  --ai-orange: #c05621;
+  --ai-red: var(--gin-color-danger, #c11f1f);
+}
+
+.ai-review-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+  gap: 1.25em;
+  align-items: start;
+  margin: 0 0 1.5em;
+}
+
+@media (max-width: 68em) {
+  .ai-review-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ai-review-grid__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25em;
+  min-width: 0;
+}
+
+/* The summary card manages its own spacing when full-width; inside the
+   aside column the grid gap already provides it. */
+.ai-review-grid__aside .ai-review-summary {
+  margin: 0;
+}
+
+.ai-review-guidelines {
+  padding: 1.25em 1.5em;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--gin-border-m, 8px);
+  background: var(--ai-surface);
+}
+
+.ai-review-guidelines__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em;
+  margin: 0 0 0.5em;
+}
+
+.ai-review-guidelines__heading {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+.ai-review-guidelines__count {
+  font-size: 0.85em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ai-review-guidelines__count--all {
+  color: var(--ai-green);
+}
+
+.ai-review-guidelines__count--partial {
+  color: var(--ai-amber);
+}
+
+.ai-review-guideline {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  padding: 0.8em 0;
+  border-top: 1px solid color-mix(in srgb, var(--ai-border) 55%, transparent);
+}
+
+.ai-review-guideline__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-review-guideline__name {
+  font-weight: 600;
+  margin: 0 0 0.1em;
+}
+
+.ai-review-guideline__description {
+  margin: 0;
+  font-size: 0.85em;
+  line-height: 1.45;
+  color: var(--gin-color-text-light, #55565b);
+}
+
+.ai-review-guideline__points {
+  flex: none;
+  font-size: 1.05em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ai-review-guideline__points span {
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--gin-color-text-light, #55565b);
+}
+
+/* Attention colors: the points number carries the verdict color so a
+   scan down the card immediately shows where the score was lost. */
+.ai-review-guideline--pass .ai-review-guideline__points {
+  color: var(--ai-green);
+}
+
+.ai-review-guideline--minor .ai-review-guideline__points {
+  color: var(--ai-amber);
+}
+
+.ai-review-guideline--major .ai-review-guideline__points {
+  color: var(--ai-orange);
+}
+
+.ai-review-guideline--fail .ai-review-guideline__points {
+  color: var(--ai-red);
+}
+
+/* Verdict pills: tinted background + readable text, softer than the
+   solid field badges so ten rows of pills do not shout. */
+.ai-review-verdict--pass {
+  color: var(--ai-green);
+  background: color-mix(in srgb, var(--ai-green) 12%, transparent);
+}
+
+.ai-review-verdict--minor {
+  color: var(--ai-amber);
+  background: color-mix(in srgb, var(--ai-amber) 14%, transparent);
+}
+
+.ai-review-verdict--major {
+  color: var(--ai-orange);
+  background: color-mix(in srgb, var(--ai-orange) 13%, transparent);
+}
+
+.ai-review-verdict--fail {
+  color: var(--ai-red);
+  background: color-mix(in srgb, var(--ai-red) 12%, transparent);
+}
+
+/* Contradiction bullets inside the overall assessment card. */
+.ai-review-summary__contradictions {
+  margin: 0 0 0.75em;
+  padding-left: 1.2em;
+}
+
+.ai-review-summary__contradictions li {
+  margin: 0 0 0.35em;
+  line-height: 1.5;
+  color: var(--ai-orange);
+}
+
+/* History as a collapsed details at the bottom. */
+details.ai-review-history {
+  margin-top: 0.5em;
+}
+
+details.ai-review-history > summary {
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------
+ * Editor toggle: hide the per-field validation dots.
+ * ------------------------------------------------------------------ */
+.ai-validation-dots-hidden .ai-nodeform-status__dot {
+  display: none;
+}
+
+.ai-nodeform-sidebar__dots-toggle {
+  display: block;
+  margin: 0.5em 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 0.85em;
+  color: var(--gin-color-primary, #0b6cbd);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ai-nodeform-sidebar__dots-toggle:hover,
+.ai-nodeform-sidebar__dots-toggle:focus {
+  text-decoration: none;
+}
+
+.ai-nodeform-sidebar__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  margin-top: 0.75em;
+}
+
+.ai-nodeform-sidebar__footer .ai-nodeform-sidebar__dots-toggle {
+  flex: none;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------
+ * "Marked as OK" editor override.
+ * ------------------------------------------------------------------ */
+/* Dot: blue with a check — a human decision, distinct from the AI's
+   green pass. */
+.ai-nodeform-status__dot--ok {
+  background: var(--ai-blue, #0b6cbd);
+}
+
+.ai-nodeform-status__dot--ok::after {
+  content: '\2713';
+}
+
+.ai-nodeform-field:has(.ai-nodeform-status__dot--ok) {
+  --ai-dot-color: var(--ai-blue, #0b6cbd);
+}
+
+/* Review page badge naming who accepted the finding. */
+.ai-review-badge--ok {
+  color: var(--ai-blue, #0b6cbd);
+  background: color-mix(in srgb, var(--ai-blue, #0b6cbd) 12%, transparent);
+}
+
+.ai-btn--markok {
+  --ai-btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9480f' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12.5l5 5L20 6.5'/%3E%3C/svg%3E");
+}
+
+/* The override dot's glyph is a person + check: a human accepted the
+   finding, not the AI. Replaces the plain text check above. */
+.ai-nodeform-status__dot--ok::after {
+  content: '';
+  display: block;
+  width: 17px;
+  height: 17px;
+  background-color: #fff;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='7' r='3.1'/%3E%3Cpath d='M3.5 19.5c.6-3.1 3-4.7 5.5-4.7 1 0 2 .2 2.8.7'/%3E%3Cpath d='M14 17.5l2.3 2.3 4.2-4.8'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='7' r='3.1'/%3E%3Cpath d='M3.5 19.5c.6-3.1 3-4.7 5.5-4.7 1 0 2 .2 2.8.7'/%3E%3Cpath d='M14 17.5l2.3 2.3 4.2-4.8'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+/* Marked as OK: a human override — blue, with a person + check glyph, so
+   the dialog never reads as an AI pass. */
+.ai-nodeform-report--marked {
+  --ai-report-bg: #eff5fc;
+  --ai-report-rule: #cfdff2;
+  --ai-report-strong: #0b5394;
+  --ai-report-soft: #43608a;
+  --ai-report-chip-bg: #dbe8f7;
+  --ai-report-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230b6cbd' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='7' r='3.1'/%3E%3Cpath d='M3.5 19.5c.6-3.1 3-4.7 5.5-4.7 1 0 2 .2 2.8.7'/%3E%3Cpath d='M14 17.5l2.3 2.3 4.2-4.8'/%3E%3C/svg%3E");
+  --ai-report-note-icon: var(--ai-icon-shield);
+}
+
+/* Flagged guideline on a marked-as-OK field: the row keeps the flag but
+   wears the override blue — the badge itself is the human decision. */
+.ai-nodeform-report__item--overridden {
+  background: #f4f8fd;
+}
+
+.ai-nodeform-report__item--overridden::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230b6cbd' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='7' r='3.1'/%3E%3Cpath d='M3.5 19.5c.6-3.1 3-4.7 5.5-4.7 1 0 2 .2 2.8.7'/%3E%3Cpath d='M14 17.5l2.3 2.3 4.2-4.8'/%3E%3C/svg%3E");
+}
+
+.ai-nodeform-report__item--overridden .ai-nodeform-report__item-value {
+  background: #dbe8f7;
+  color: #0b5394;
+}
+
+/* Override strip: the human decision above the verdict card, in blue. */
+.ai-nodeform-report__override-strip {
+  background: #e7f0fb;
+  color: #0b5394;
+}
+
+/* ---------------------------------------------------------------------
+ * Editor decisions audit (Marked as OK trail on the review page).
+ * ------------------------------------------------------------------ */
+.ai-review-overrides {
+  margin: 0 0 1.5em;
+}
+
+.ai-review-overrides__heading {
+  margin: 0 0 0.25em;
+  font-size: 1.1em;
+}
+
+.ai-review-overrides .ai-review-hint {
+  margin: 0 0 0.75em;
+}
+
+.ai-review-override__icon {
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+  margin-top: 0.1em;
+  border-radius: 50%;
+  background: var(--ai-blue, #0b6cbd);
+  position: relative;
+}
+
+.ai-review-override__icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1em;
+  height: 1em;
+  background-color: #fff;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='7' r='3.1'/%3E%3Cpath d='M3.5 19.5c.6-3.1 3-4.7 5.5-4.7 1 0 2 .2 2.8.7'/%3E%3Cpath d='M14 17.5l2.3 2.3 4.2-4.8'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='7' r='3.1'/%3E%3Cpath d='M3.5 19.5c.6-3.1 3-4.7 5.5-4.7 1 0 2 .2 2.8.7'/%3E%3Cpath d='M14 17.5l2.3 2.3 4.2-4.8'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+/* Small gray audit line in the accepted banner: who and when. */
+.ai-nodeform-report__accepted {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: 0.8125rem;
+  color: var(--gin-color-text-light, #6b7280);
+}
+
+.ai-btn--reopen {
+  --ai-btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9480f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 12a8.5 8.5 0 1 1-2.5-6'/%3E%3Cpath d='M18.5 2.5v4h-4'/%3E%3C/svg%3E");
+}

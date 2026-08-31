@@ -27,7 +27,7 @@ final class ValidationScorer {
    *
    * @var array<string, int>
    */
-  private const POINTS = ['pass' => 10, 'minor' => 8, 'major' => 4, 'fail' => 0];
+  public const POINTS = ['pass' => 10, 'minor' => 8, 'major' => 4, 'fail' => 0];
 
   /**
    * Derives the numeric score from a validation result payload.

@@ -19,6 +19,7 @@ use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\ai_content_validation\ContentHasher;
 use Drupal\ai_content_validation\ValidatedFields;
+use Drupal\ai_content_validation\ValidationScorer;
 use Drupal\flowdrop_node_session\Service\NodeSessionService;
 use Drupal\flowdrop_session\DTO\TurnOptions;
 use Drupal\flowdrop_session\DTO\TurnResult;
@@ -236,7 +237,8 @@ final class AiReviewForm extends FormBase {
         'stats' => $score === NULL ? [] : [
           '#type' => 'container',
           '#attributes' => ['class' => ['ai-review-hero__stats']],
-          'guidelines' => $pass_count === NULL ? [] : $this->heroStat($this->t('@count / 10', ['@count' => $pass_count]), $this->t('Guidelines satisfied')),
+          // The per-guideline pass count is deliberately NOT repeated here:
+          // the guideline results card below is its single home.
           'score' => $this->heroStat($this->t('@score / 100', ['@score' => $score]), $this->t('Quality score')),
           'word' => $this->heroStat($word, $this->t('AI assessment')),
         ],
@@ -267,19 +269,33 @@ final class AiReviewForm extends FormBase {
     ];
 
     // ---- Validation results ------------------------------------------------
+    // Two columns, each fact rendered exactly once: the ten guideline
+    // verdicts on the left (the numbers the 0-100 score derives from), the
+    // per-field findings and the overall assessment on the right.
     $form['report'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['ai-review-results']],
-      'field_findings' => $this->buildFieldFindings(
-        $node,
-        $report_parsed,
-        $latest_report,
-        NULL,
-        [],
-        $this->fieldDecisions($node),
-      ),
-      'overall_summary' => $this->buildOverallSummary($report_parsed, $latest_report),
+      '#attributes' => ['class' => ['ai-review-grid']],
+      'main' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-review-grid__main']],
+        'guidelines' => $this->buildGuidelineResults($scores_map, $latest_report),
+      ],
+      'aside' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-review-grid__aside']],
+        'field_findings' => $this->buildFieldFindings(
+          $node,
+          $report_parsed,
+          $latest_report,
+          NULL,
+          [],
+          $this->fieldDecisions($node),
+        ),
+        'overall_summary' => $this->buildOverallSummary($report_parsed, $latest_report),
+      ],
     ];
+
+    $form['override_audit'] = $this->buildOverrideAudit($node);
 
     $form['validations'] = $this->buildValidations($node);
 
@@ -447,6 +463,13 @@ final class AiReviewForm extends FormBase {
       fn ($s) => !is_array($s) || !in_array($s['field'] ?? NULL, $applied, TRUE),
     );
     if ($unresolved === [] && ($applied !== [] || ($parsed['ignored_suggestions'] ?? []) !== [])) {
+      // This runs during form BUILD, so a plain GET must stay read-only:
+      // the item still reads as closed (return NULL), but the repair is
+      // only persisted on an unsafe request — two concurrent page loads
+      // must never race the same save.
+      if ($this->getRequest()->isMethodSafe()) {
+        return NULL;
+      }
       if ($applied !== []) {
         $parsed['done_by'] = (int) $this->currentUser()->id();
         $parsed['done_at'] = $this->time->getRequestTime();
@@ -491,6 +514,232 @@ final class AiReviewForm extends FormBase {
       }
     }
     return $decisions;
+  }
+
+  /**
+   * Submit handler: reopens a finding that was marked as OK.
+   *
+   * Removes the override from the current report, so the flag — and its
+   * Fix with AI / Mark as OK actions — come back. Overrides recorded on
+   * earlier (superseded) reports are untouched, so the audit trail of the
+   * original decision survives the reopen.
+   */
+  public function reopenFieldFinding(array &$form, FormStateInterface $form_state): void {
+    [, $report_id, $field] = explode(':', $form_state->getTriggeringElement()['#name'], 3);
+    $report = $this->loadOwnedValidation((int) $report_id, $form_state);
+    if ($report === NULL) {
+      return;
+    }
+    $parsed = $this->parseResult((string) $report->get('field_validation_result')->value) ?? [];
+    if (!isset($parsed['editor_overrides'][$field])) {
+      return;
+    }
+    unset($parsed['editor_overrides'][$field]);
+    if ($parsed['editor_overrides'] === []) {
+      unset($parsed['editor_overrides']);
+    }
+    $report->set('field_validation_result', json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    $report->save();
+    $this->messenger()->addStatus($this->t('The finding on %field was reopened.', ['%field' => $field]));
+  }
+
+  /**
+   * Builds the audit list of "Marked as OK" editor decisions.
+   *
+   * Every override ever recorded for the node is listed — carried-forward
+   * copies on newer reports are deduplicated by field + decision time, so
+   * one click shows up once. Superseded reports keep their overrides, so
+   * the trail survives re-validation: this answers "who accepted a finding
+   * that maybe should not have been accepted", with the finding itself.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node being reviewed.
+   *
+   * @return array<string, mixed>
+   *   Render array, empty when no override was ever recorded.
+   */
+  private function buildOverrideAudit(NodeInterface $node): array {
+    $storage = $this->entityTypeManager->getStorage('ai_content_validation_item');
+    $ids = $storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('field_content_revision.target_id', $node->id())
+      ->condition('field_flowdrop_workflow', self::REPORT_WORKFLOW)
+      ->sort('created', 'DESC')
+      ->range(0, 50)
+      ->execute();
+    $labels = ValidatedFields::labels($node);
+    $items = $storage->loadMultiple($ids);
+    $rows = [];
+    // $ids is newest first, so the first report seen for a decision also
+    // carries the freshest copy of its finding text.
+    foreach ($ids as $id) {
+      $item = $items[$id] ?? NULL;
+      $parsed = $item === NULL ? NULL : $this->parseResult((string) ($item->get('field_validation_result')->value ?? ''));
+      foreach ($this->editorOverrides($parsed) as $field => $override) {
+        $key = $field . ':' . $override['at'];
+        if (isset($rows[$key])) {
+          continue;
+        }
+        $finding = $parsed['field_findings'][$field] ?? '';
+        $rows[$key] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['ai-review-finding']],
+          'icon' => [
+            '#type' => 'html_tag',
+            '#tag' => 'span',
+            '#value' => '',
+            '#attributes' => ['class' => ['ai-review-override__icon'], 'aria-hidden' => 'true'],
+          ],
+          'body' => [
+            '#type' => 'container',
+            '#attributes' => ['class' => ['ai-review-finding__body']],
+            'label' => [
+              '#type' => 'html_tag',
+              '#tag' => 'div',
+              '#value' => $labels[$field] ?? Html::escape($field),
+              '#attributes' => ['class' => ['ai-review-finding__label']],
+            ],
+            // The finding the editor accepted: untrusted model output,
+            // escaped by the renderer.
+            'finding' => !is_string($finding) || trim($finding) === '' ? [] : [
+              '#type' => 'html_tag',
+              '#tag' => 'p',
+              '#attributes' => ['class' => ['ai-review-finding__text']],
+              'value' => ['#plain_text' => trim($finding)],
+            ],
+          ],
+          'badge' => [
+            '#type' => 'html_tag',
+            '#tag' => 'span',
+            '#value' => $this->t('Marked as OK by @name — @date', [
+              '@name' => $this->overrideName($override['uid']),
+              '@date' => date('d M Y, H:i', $override['at']),
+            ]),
+            '#attributes' => ['class' => ['ai-review-badge', 'ai-review-badge--ok']],
+          ],
+        ];
+      }
+    }
+    if ($rows === []) {
+      return [];
+    }
+    // Newest decision first — the key ends in the decision timestamp, and
+    // report order is not decision order once overrides carry forward.
+    uksort($rows, static fn (string $a, string $b) => (int) substr($b, strrpos($b, ':') + 1) <=> (int) substr($a, strrpos($a, ':') + 1));
+    $weight = 0;
+    foreach ($rows as &$row) {
+      $row['#weight'] = $weight++;
+    }
+    unset($row);
+
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['ai-review-overrides']],
+      '#cache' => ['tags' => ['ai_content_validation_item_list']],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Editor decisions (@count)', ['@count' => count($rows)]),
+        '#attributes' => ['class' => ['ai-review-overrides__heading']],
+      ],
+      'hint' => [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => $this->t('AI findings an editor accepted as-is, newest first. Each entry names who decided and what the AI had flagged.'),
+        '#attributes' => ['class' => ['ai-review-hint']],
+      ],
+    ] + $rows;
+  }
+
+  /**
+   * Loads a validation item, verifying it belongs to the form's node.
+   *
+   * Defense-in-depth for the id-parameterized submit handlers
+   * (applyfieldsug:, ignorefieldsug:, markokfield:, improvefield:): the
+   * ids come from button names this form itself rendered, so Form API's
+   * triggering-element matching already blocks foreign ids — but the
+   * security property must not rest on that detail alone.
+   *
+   * @param int $id
+   *   The validation item id from the button name.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state carrying the node id under 'nid'.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface|null
+   *   The item, or NULL when it does not belong to this form's node.
+   */
+  private function loadOwnedValidation(int $id, FormStateInterface $form_state): ?ContentEntityInterface {
+    $item = $this->entityTypeManager->getStorage('ai_content_validation_item')->load($id);
+    $nid = (int) $form_state->get('nid');
+    if (!$item instanceof ContentEntityInterface
+      || $nid === 0
+      || (int) ($item->get('field_content_revision')->target_id ?? 0) !== $nid
+    ) {
+      return NULL;
+    }
+    return $item;
+  }
+
+  /**
+   * Reads the editor "Marked as OK" overrides from a parsed report.
+   *
+   * An override is a human decision that a flagged finding is acceptable
+   * as-is. It lives on the report it was made against, so a fresh report
+   * (new content, new verdicts) never inherits it.
+   *
+   * @param array<string, mixed>|null $result
+   *   The parsed validation result.
+   *
+   * @return array<string, array{uid: int, at: int}>
+   *   Overrides keyed by field name.
+   */
+  public function editorOverrides(?array $result): array {
+    $overrides = [];
+    foreach ((array) ($result['editor_overrides'] ?? []) as $field => $info) {
+      if (is_string($field) && is_array($info) && is_numeric($info['uid'] ?? NULL)) {
+        $overrides[$field] = [
+          'uid' => (int) $info['uid'],
+          'at' => (int) ($info['at'] ?? 0),
+        ];
+      }
+    }
+    return $overrides;
+  }
+
+  /**
+   * Resolves a user id to a display name for override badges.
+   *
+   * The uid is stored (names can change); the name is resolved at render
+   * time. A deleted account degrades to a generic label.
+   */
+  public function overrideName(int $uid): string {
+    $user = $this->entityTypeManager->getStorage('user')->load($uid);
+    return $user === NULL ? (string) $this->t('an editor') : (string) $user->label();
+  }
+
+  /**
+   * Submit handler: marks one flagged field's finding as OK.
+   *
+   * Records a human override on the report itself — the AI verdict and the
+   * 0-100 score stay untouched; the field just stops asking for attention
+   * until a new report supersedes this one.
+   */
+  public function markFieldOk(array &$form, FormStateInterface $form_state): void {
+    [, $report_id, $field] = explode(':', $form_state->getTriggeringElement()['#name'], 3);
+    $report = $this->loadOwnedValidation((int) $report_id, $form_state);
+    if ($report === NULL) {
+      return;
+    }
+    $parsed = $this->parseResult((string) $report->get('field_validation_result')->value) ?? [];
+    $overrides = is_array($parsed['editor_overrides'] ?? NULL) ? $parsed['editor_overrides'] : [];
+    $overrides[$field] = [
+      'uid' => (int) $this->currentUser()->id(),
+      'at' => $this->time->getRequestTime(),
+    ];
+    $parsed['editor_overrides'] = $overrides;
+    $report->set('field_validation_result', json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    $report->save();
+    $this->messenger()->addStatus($this->t('The finding on %field was marked as OK.', ['%field' => $field]));
   }
 
   /**
@@ -606,7 +855,7 @@ final class AiReviewForm extends FormBase {
    */
   public function applyFieldSuggestion(array &$form, FormStateInterface $form_state): void {
     [, $validation_id, $field] = explode(':', $form_state->getTriggeringElement()['#name'], 3);
-    $validation = $this->entityTypeManager->getStorage('ai_content_validation_item')->load($validation_id);
+    $validation = $this->loadOwnedValidation((int) $validation_id, $form_state);
     $node = $this->loadNode($form_state);
     if ($validation === NULL || $node === NULL) {
       return;
@@ -806,7 +1055,7 @@ final class AiReviewForm extends FormBase {
    */
   public function ignoreFieldSuggestion(array &$form, FormStateInterface $form_state): void {
     [, $validation_id, $field] = explode(':', $form_state->getTriggeringElement()['#name'], 3);
-    $validation = $this->entityTypeManager->getStorage('ai_content_validation_item')->load($validation_id);
+    $validation = $this->loadOwnedValidation((int) $validation_id, $form_state);
     if ($validation === NULL) {
       return;
     }
@@ -929,6 +1178,7 @@ final class AiReviewForm extends FormBase {
     $labels = ValidatedFields::labels($node);
     $findings = is_array($result['field_findings'] ?? NULL) ? $result['field_findings'] : [];
     $verdicts = is_array($result['field_verdicts'] ?? NULL) ? $result['field_verdicts'] : [];
+    $overrides = $this->editorOverrides($result);
     // A suggestion or decision on a field outside the fixed list still
     // needs its own row — the inline panel is the ONLY review path (the
     // history never shows the bulk table for the newest pending item).
@@ -969,14 +1219,22 @@ final class AiReviewForm extends FormBase {
         $text === '' => TRUE,
         default => (bool) preg_match('/guidelines?\\s*(?:no\\.?\\s*|#\\s*)?\\d/i', $text),
       };
-      $all_passed = $all_passed && !$issue;
       $decision = $decisions[$field] ?? NULL;
-      [$badge_text, $badge_class] = match ($decision) {
-        'accepted' => [$this->t('Change accepted'), 'ai-review-badge--passed'],
-        'rejected' => [$this->t('Change rejected'), 'ai-review-badge--neutral'],
-        default => $issue
-          ? [$this->t('Review'), 'ai-review-badge--review']
-          : [$this->t('Passed'), 'ai-review-badge--passed'],
+      // A human override quiets the finding: the row stops asking for
+      // attention, but its badge names who decided that — never the green
+      // "Passed", which is the AI's verdict alone.
+      $override = ($decision === NULL && isset($overrides[$field])) ? $overrides[$field] : NULL;
+      $issue = $issue && $override === NULL;
+      $all_passed = $all_passed && !$issue;
+      [$badge_text, $badge_class] = match (TRUE) {
+        $decision === 'accepted' => [$this->t('Change accepted'), 'ai-review-badge--passed'],
+        $decision === 'rejected' => [$this->t('Change rejected'), 'ai-review-badge--neutral'],
+        $override !== NULL => [
+          $this->t('Marked as OK by @name', ['@name' => $this->overrideName($override['uid'])]),
+          'ai-review-badge--ok',
+        ],
+        $issue => [$this->t('Review'), 'ai-review-badge--review'],
+        default => [$this->t('Passed'), 'ai-review-badge--passed'],
       };
       $rows[$field] = [
         '#type' => 'container',
@@ -1084,7 +1342,13 @@ final class AiReviewForm extends FormBase {
    */
   private function buildOverallSummary(?array $result, ?ContentEntityInterface $report): array {
     $summary = is_scalar($result['summary'] ?? NULL) ? trim((string) $result['summary']) : '';
-    if ($summary === '') {
+    // Confirmed internal contradictions are the report's sharpest warnings,
+    // so they render as bullets above the closing assessment.
+    $contradictions = array_values(array_filter(
+      is_array($result['contradictions'] ?? NULL) ? $result['contradictions'] : [],
+      fn ($c) => is_string($c) && trim($c) !== '',
+    ));
+    if ($summary === '' && $contradictions === []) {
       return [];
     }
 
@@ -1110,7 +1374,12 @@ final class AiReviewForm extends FormBase {
           '#attributes' => ['class' => ['ai-review-summary__heading']],
         ],
         // Untrusted model output: escaped by the renderer, never #markup.
-        'text' => [
+        'contradictions' => $contradictions === [] ? [] : [
+          '#theme' => 'item_list',
+          '#items' => array_map(fn (string $c) => ['#plain_text' => trim($c)], $contradictions),
+          '#attributes' => ['class' => ['ai-review-summary__contradictions']],
+        ],
+        'text' => $summary === '' ? [] : [
           '#type' => 'html_tag',
           '#tag' => 'p',
           '#attributes' => ['class' => ['ai-review-summary__text']],
@@ -1118,6 +1387,140 @@ final class AiReviewForm extends FormBase {
         ],
       ],
     ];
+  }
+
+  /**
+   * Builds the per-guideline verdict card.
+   *
+   * One row per EU guideline with its points and verdict badge, read from
+   * the report's `scores` map — the same verdicts the 0-100 total derives
+   * from, so this card and the hero score can never disagree. NULL means
+   * the current report carries no usable verdict map (stale, or predating
+   * verdicts) and the card is simply absent.
+   *
+   * @param array<string, mixed>|null $scores
+   *   The verdict map keyed "1"-"10", or NULL.
+   * @param \Drupal\Core\Entity\ContentEntityInterface|null $report
+   *   The report the verdicts came from, for cache metadata.
+   *
+   * @return array<string, mixed>
+   *   Render array, empty when there are no verdicts to show.
+   */
+  private function buildGuidelineResults(?array $scores, ?ContentEntityInterface $report): array {
+    if ($scores === NULL) {
+      return [];
+    }
+    $rows = [];
+    $passed = 0;
+    foreach (self::GUIDELINES as $number => $name) {
+      $verdict = $scores[(string) $number] ?? NULL;
+      if ($verdict === NULL) {
+        continue;
+      }
+      [$points, $key, $label] = $this->verdictDisplay($verdict);
+      $passed += $key === 'pass' ? 1 : 0;
+      $rows['guideline_' . $number] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-review-guideline', 'ai-review-guideline--' . $key]],
+        'body' => [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['ai-review-guideline__body']],
+          'name' => [
+            '#type' => 'html_tag',
+            '#tag' => 'div',
+            '#value' => $name,
+            '#attributes' => ['class' => ['ai-review-guideline__name']],
+          ],
+          'description' => [
+            '#type' => 'html_tag',
+            '#tag' => 'p',
+            '#value' => self::GUIDELINE_DESCRIPTIONS[$number],
+            '#attributes' => ['class' => ['ai-review-guideline__description']],
+          ],
+        ],
+        'points' => [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#value' => $this->t('@points<span>/10</span>', ['@points' => $points]),
+          '#attributes' => ['class' => ['ai-review-guideline__points']],
+        ],
+        'badge' => [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#value' => $label,
+          '#attributes' => ['class' => ['ai-review-badge', 'ai-review-verdict--' . $key]],
+        ],
+      ];
+    }
+    if ($rows === []) {
+      return [];
+    }
+
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['ai-review-guidelines']],
+      '#cache' => [
+        'tags' => $report === NULL ? [] : $report->getCacheTags(),
+      ],
+      'header' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-review-guidelines__header']],
+        'heading' => [
+          '#type' => 'html_tag',
+          '#tag' => 'h3',
+          '#value' => $this->t('Guideline results'),
+          '#attributes' => ['class' => ['ai-review-guidelines__heading']],
+        ],
+        'count' => [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#value' => $this->t('@passed of @total passed', ['@passed' => $passed, '@total' => count($rows)]),
+          '#attributes' => [
+            'class' => [
+              'ai-review-guidelines__count',
+              $passed === count($rows) ? 'ai-review-guidelines__count--all' : 'ai-review-guidelines__count--partial',
+            ],
+          ],
+        ],
+      ],
+    ] + $rows;
+  }
+
+  /**
+   * Maps one stored guideline verdict to its display parts.
+   *
+   * Verdicts are stored either as strings (pass/minor/major/fail) or as
+   * the already-mapped points; both normalize through
+   * ValidationScorer::POINTS so the numbers always match the score maths.
+   *
+   * @param mixed $verdict
+   *   The stored verdict value.
+   *
+   * @return array{0: int, 1: string, 2: \Drupal\Core\StringTranslation\TranslatableMarkup}
+   *   Points, verdict key and badge label.
+   */
+  private function verdictDisplay(mixed $verdict): array {
+    $key = is_numeric($verdict)
+      ? match (TRUE) {
+      (int) $verdict >= 10 => 'pass',
+        (int) $verdict >= 8 => 'minor',
+        (int) $verdict >= 4 => 'major',
+        default => 'fail',
+      }
+    : strtolower(trim((string) $verdict));
+    if (!isset(ValidationScorer::POINTS[$key])) {
+      // An unrecognized verdict string still deserves a visible row; treat
+      // it as needing attention rather than hiding or over-praising it.
+      $key = 'major';
+    }
+    $points = is_numeric($verdict) ? max(0, min(10, (int) $verdict)) : ValidationScorer::POINTS[$key];
+    $label = match ($key) {
+      'pass' => $this->t('Pass'),
+      'minor' => $this->t('Minor issues'),
+      'major' => $this->t('Needs attention'),
+      'fail' => $this->t('Failed'),
+    };
+    return [$points, $key, $label];
   }
 
   /**
@@ -1305,21 +1708,19 @@ final class AiReviewForm extends FormBase {
       ->range(0, 30)
       ->execute();
 
+    // Collapsed by default: the history is an audit trail — everything an
+    // editor acts on already renders in the cards above.
     $build = [
       '#tree' => TRUE,
-      '#type' => 'container',
+      '#type' => 'details',
+      '#title' => $this->t('Validation history'),
+      '#open' => FALSE,
       '#attributes' => ['class' => ['ai-review-history']],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $this->t('Validation history'),
-        '#attributes' => ['class' => ['ai-review-history__heading']],
-        '#weight' => -1,
-      ],
     ];
     if (!$ids) {
       return ['#tree' => TRUE];
     }
+    $build['#title'] = $this->t('Validation history (@count)', ['@count' => count($ids)]);
 
     $items = $storage->loadMultiple($ids);
     $grouped = ['pending' => [], 'done' => [], 'ignored' => [], 'superseded' => []];
@@ -1629,7 +2030,7 @@ final class AiReviewForm extends FormBase {
    *   Restrict the rewrite to this field, or NULL for all flagged fields.
    */
   private function runImprove(FormStateInterface $form_state, int $validation_id, ?string $only_field): void {
-    $validation = $this->entityTypeManager->getStorage('ai_content_validation_item')->load($validation_id);
+    $validation = $this->loadOwnedValidation($validation_id, $form_state);
     $node = $this->loadNode($form_state);
     if ($validation === NULL || $node === NULL) {
       return;
@@ -1745,8 +2146,11 @@ final class AiReviewForm extends FormBase {
       $suggested_raw = $this->rawValue($suggestion['suggested'] ?? '');
       // A tags suggestion is normalized to the FINAL tag list (unmentioned
       // stored tags kept), so the diff and the edit chips never pretend
-      // that removing one tag removes them all.
+      // that removing one tag removes them all. The "before" side must be
+      // the node's real stored list for the same reason — the model's own
+      // "current" often names only the tags it removed.
       if (ValidatedFields::isTagsField($node, $field)) {
+        $current = $this->displayValue($this->currentNodeValue($node, $field));
         $suggested_raw = implode(', ', ValidatedFields::mergeTagNames(
           $this->currentNodeValue($node, $field),
           $suggested_raw,
@@ -1762,11 +2166,25 @@ final class AiReviewForm extends FormBase {
       if ($this->plainText($suggested_raw) === '' && !ValidatedFields::isTagsField($node, $field)) {
         continue;
       }
+      $suggested_display = $this->displayValue($suggested_raw);
+      // A markup-only change (adding a link, fixing a tag) strips to
+      // identical display text, which would render no diff at all — fall
+      // back to a short raw-markup excerpt around the change, so the
+      // changed HTML is visible without dumping the whole raw body.
+      if ($suggested_display === $current) {
+        $current_raw = $this->rawValue($suggestion['current'] ?? '');
+        if ($current_raw === '') {
+          $current_raw = $this->currentNodeValue($node, $field);
+        }
+        if ($current_raw !== $suggested_raw) {
+          [$current, $suggested_display] = $this->markupChangeExcerpts($current_raw, $suggested_raw);
+        }
+      }
       $prepared['s' . $delta] = [
         'field' => $field,
         'label' => (string) ($suggestion['label'] ?? $field),
         'current' => $current,
-        'suggested_display' => $this->displayValue($suggested_raw),
+        'suggested_display' => $suggested_display,
         'suggested_raw' => $suggested_raw,
         'kind' => $this->valueKind($suggested_raw),
         'tags' => ValidatedFields::isTagsField($node, $field),
@@ -1775,6 +2193,52 @@ final class AiReviewForm extends FormBase {
       ];
     }
     return $prepared;
+  }
+
+  /**
+   * Trims two raw values to a short excerpt around their difference.
+   *
+   * Used for markup-only changes, where the interesting part is a small
+   * HTML edit inside an otherwise identical value: everything before the
+   * first differing byte and after the last one is context, and only ~120
+   * characters of it are kept on each side, marked with ellipses.
+   *
+   * @param string $current
+   *   The current raw value.
+   * @param string $suggested
+   *   The suggested raw value.
+   *
+   * @return array{0: string, 1: string}
+   *   The trimmed current and suggested excerpts.
+   */
+  private function markupChangeExcerpts(string $current, string $suggested): array {
+    $context = 120;
+    $max = min(strlen($current), strlen($suggested));
+    $prefix = 0;
+    while ($prefix < $max && $current[$prefix] === $suggested[$prefix]) {
+      $prefix++;
+    }
+    $suffix = 0;
+    while ($suffix < $max - $prefix
+      && $current[strlen($current) - 1 - $suffix] === $suggested[strlen($suggested) - 1 - $suffix]
+    ) {
+      $suffix++;
+    }
+    $start = max(0, $prefix - $context);
+    // Never split a UTF-8 sequence: back up to a leading byte.
+    while ($start > 0 && (ord($current[$start]) & 0xC0) === 0x80) {
+      $start--;
+    }
+    $excerpt = function (string $value) use ($start, $suffix, $context): string {
+      $end = min(strlen($value), strlen($value) - $suffix + $context);
+      while ($end < strlen($value) && (ord($value[$end]) & 0xC0) === 0x80) {
+        $end++;
+      }
+      return ($start > 0 ? '… ' : '')
+        . substr($value, $start, $end - $start)
+        . ($end < strlen($value) ? ' …' : '');
+    };
+    return [$excerpt($current), $excerpt($suggested)];
   }
 
   /**
@@ -1933,7 +2397,14 @@ final class AiReviewForm extends FormBase {
    */
   private function diffMarkup(string $current, string $suggested): array {
     if ($current === $suggested) {
-      return ['#plain_text' => $suggested];
+      // Dumping the full unchanged text here reads as a broken diff; a
+      // short honest note is all an identical value warrants.
+      return [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => $this->t('The suggested value is identical to the current one.'),
+        '#attributes' => ['class' => ['ai-review-hint']],
+      ];
     }
     if ($current === '') {
       // Markup::create() instead of #markup: all text is escaped above and
@@ -2230,6 +2701,12 @@ final class AiReviewForm extends FormBase {
       return FALSE;
     }
     foreach ($node->get($field)->referencedEntities() as $media) {
+      // The media entity is shared site-wide, so the editor needs update
+      // access to IT — node access alone must not reach into it.
+      if (!$media->access('update')) {
+        $this->messenger()->addWarning($this->t('You do not have permission to update the referenced media item, so its alternative text was not changed.'));
+        continue;
+      }
       $source_field = $media->getSource()->getConfiguration()['source_field'] ?? '';
       if (!is_string($source_field) || $source_field === '' || !$media->hasField($source_field)) {
         continue;

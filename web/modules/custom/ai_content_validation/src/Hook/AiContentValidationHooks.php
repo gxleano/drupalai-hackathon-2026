@@ -360,15 +360,22 @@ final class AiContentValidationHooks {
       return;
     }
     $registered[(int) $node->id()] = TRUE;
-    // The run happens after the response: tell the editor, and flag the
-    // next page so it polls and reloads when the report lands.
-    $this->tempStoreFactory->get('ai_content_validation')->set('pending_nid', (int) $node->id());
     $operations = $this->configFactory->get('flowdrop_node_session.settings')->get('entity_operations') ?: [];
     if ($operations === []) {
       return;
     }
     $workflow_id = (string) $operations[0]['workflow_id'];
     $review = $this->classResolver->getInstanceFromDefinition(AiReviewForm::class);
+    // Unchanged content never validates again: when a current report's
+    // stored hash matches the saved values, skip BEFORE announcing
+    // anything — no "Validating with AI…" badge, no polling, no shutdown
+    // run. The same check repeats inside the shutdown as a race guard.
+    if ($review->cachedReport($node, $workflow_id) !== NULL) {
+      return;
+    }
+    // The run happens after the response: tell the editor, and flag the
+    // next page so it polls and reloads when the report lands.
+    $this->tempStoreFactory->get('ai_content_validation')->set('pending_nid', (int) $node->id());
     $switcher = $this->accountSwitcher;
     $logger = $this->loggerFactory->get('ai_content_validation');
     // A user-less save has no account to run as, so it borrows the site
