@@ -201,4 +201,51 @@ final class ValidatedFieldsTest extends UnitTestCase {
     ];
   }
 
+  /**
+   * Tests subset-aware tag merging.
+   */
+  #[DataProvider('mergeTagNamesProvider')]
+  public function testMergeTagNames(string $stored, string $suggested, string $current, array $expected): void {
+    $this->assertSame($expected, ValidatedFields::mergeTagNames($stored, $suggested, $current));
+  }
+
+  /**
+   * Cases for ::testMergeTagNames.
+   *
+   * @return array<string, array{string, string, string, list<string>}>
+   *   Stored, suggested, current, expected.
+   */
+  public static function mergeTagNamesProvider(): array {
+    return [
+      'subset removal keeps unmentioned tags' => [
+        'EHIC, EU travel, Drupal', '', 'Drupal',
+        ['EHIC', 'EU travel'],
+      ],
+      'subset replacement keeps unmentioned tags' => [
+        'EHIC, EU travel, Drupal', 'CMS', 'Drupal',
+        ['EHIC', 'EU travel', 'CMS'],
+      ],
+      'full current is a replacement' => [
+        'EHIC, Drupal', 'EHIC', 'EHIC, Drupal',
+        ['EHIC'],
+      ],
+      'removing the only tag empties the field' => [
+        'Drupal', '', 'Drupal',
+        [],
+      ],
+      'empty stored takes the suggestion as-is' => [
+        '', 'EHIC, EU travel', '',
+        ['EHIC', 'EU travel'],
+      ],
+      'empty current is additive, never destructive' => [
+        'EHIC, EU travel', 'crisis response', '',
+        ['EHIC', 'EU travel', 'crisis response'],
+      ],
+      'case-insensitive matching and dedup' => [
+        'EHIC, eu travel', 'EU Travel, New Tag', 'ehic',
+        ['eu travel', 'New Tag'],
+      ],
+    ];
+  }
+
 }

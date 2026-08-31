@@ -620,6 +620,15 @@ final class AiReviewForm extends FormBase {
         break;
       }
     }
+    if ($suggestion !== NULL && $node !== NULL && ValidatedFields::isTagsField($node, $field)) {
+      // Same normalization as prepareSuggestions(): a subset suggestion
+      // ("remove tag X") keeps every stored tag the model never mentioned.
+      $suggestion['suggested'] = implode(', ', ValidatedFields::mergeTagNames(
+        $this->currentNodeValue($node, $field),
+        $this->rawValue($suggestion['suggested']),
+        $this->rawValue($suggestion['current'] ?? ''),
+      ));
+    }
     $edit = $form_state->getValue(['inline_suggestion', $field, 'edit'], []);
     $value = $suggestion === NULL
       ? ''
@@ -1720,6 +1729,16 @@ final class AiReviewForm extends FormBase {
         $current = $this->displayValue($this->currentNodeValue($node, $field));
       }
       $suggested_raw = $this->rawValue($suggestion['suggested'] ?? '');
+      // A tags suggestion is normalized to the FINAL tag list (unmentioned
+      // stored tags kept), so the diff and the edit chips never pretend
+      // that removing one tag removes them all.
+      if (ValidatedFields::isTagsField($node, $field)) {
+        $suggested_raw = implode(', ', ValidatedFields::mergeTagNames(
+          $this->currentNodeValue($node, $field),
+          $suggested_raw,
+          $this->rawValue($suggestion['current'] ?? ''),
+        ));
+      }
       // The improve model is told to OMIT fields it cannot edit without
       // inventing content, but it sometimes emits them with an empty
       // suggested value anyway — an empty "change" is never applicable,
@@ -1736,6 +1755,7 @@ final class AiReviewForm extends FormBase {
         'suggested_display' => $this->displayValue($suggested_raw),
         'suggested_raw' => $suggested_raw,
         'kind' => $this->valueKind($suggested_raw),
+        'tags' => ValidatedFields::isTagsField($node, $field),
         'format' => $this->fieldTextFormat($node, $field),
         'reason' => (string) ($suggestion['reason'] ?? ''),
       ];
@@ -1827,6 +1847,18 @@ final class AiReviewForm extends FormBase {
       '#title' => $this->t('Edit suggestion'),
       '#open' => FALSE,
     ];
+    if (!empty($s['tags'])) {
+      // Comma-separated term names under the hood; the modal JS mirrors
+      // this as a Tagify input so editing looks like the field itself.
+      $edit['value'] = [
+        '#type' => 'textarea',
+        '#default_value' => $s['suggested_raw'],
+        '#rows' => 2,
+        '#attributes' => ['data-ai-tags' => '1'],
+        '#description' => $this->t('Your edited tags replace the AI suggestion when applied.'),
+      ];
+      return $edit;
+    }
     if ($s['kind'] === 'html') {
       $format = $s['format'] ?: 'basic_html';
       $edit['value'] = [

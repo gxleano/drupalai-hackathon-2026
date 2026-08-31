@@ -148,12 +148,17 @@
           ),
         );
       }
-      const mirror = document.createElement('textarea');
+      // A tags suggestion mirrors as a Tagify input — the same chips UI
+      // as the field itself — while the value stays comma-separated names.
+      const tags = source.hasAttribute('data-ai-tags') && typeof Tagify === 'function';
+      const mirror = document.createElement(tags ? 'input' : 'textarea');
       mirror.className = `ai-nodeform-drawer__edit-input${html && !wysiwyg ? ' ai-nodeform-drawer__edit-input--code' : ''}`;
-      mirror.rows = sources.length > 1 ? 3 : 12;
+      if (!tags) {
+        mirror.rows = sources.length > 1 ? 3 : 12;
+      }
       mirror.value = editor === null ? source.value : editor.getData();
       section.appendChild(mirror);
-      return { source, mirror, format: wysiwyg ? format : null };
+      return { source, mirror, format: wysiwyg ? format : null, tags };
     });
     // Reads a mirror's live value: its own CKEditor instance when one was
     // attached, the plain textarea otherwise.
@@ -168,9 +173,12 @@
       activate() {
         // CKEditor must not be built inside a hidden container (its toolbar
         // measures itself), so the instances attach on first reveal.
-        pairs.forEach(({ mirror, format }) => {
-          if (format && !mirror.hasAttribute('data-ckeditor5-id')) {
-            Drupal.editors.ckeditor5.attach(mirror, format);
+        pairs.forEach((pair) => {
+          if (pair.format && !pair.mirror.hasAttribute('data-ckeditor5-id')) {
+            Drupal.editors.ckeditor5.attach(pair.mirror, pair.format);
+          }
+          if (pair.tags && !pair.tagify) {
+            pair.tagify = new Tagify(pair.mirror, { delimiters: ',' });
           }
         });
       },
@@ -178,8 +186,10 @@
         if (section.hidden) {
           return;
         }
-        pairs.forEach(({ source, mirror }) => {
-          const value = mirrorValue(mirror);
+        pairs.forEach(({ source, mirror, tagify }) => {
+          const value = tagify
+            ? tagify.value.map((tag) => tag.value).join(', ')
+            : mirrorValue(mirror);
           source.value = value;
           // A CKEditor instance writes its own data over the textarea on
           // submit — keep it in sync so the edit survives.

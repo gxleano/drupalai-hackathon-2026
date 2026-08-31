@@ -155,6 +155,53 @@ final class ValidatedFields {
   }
 
   /**
+   * Merges a suggested tags value into the stored tag list.
+   *
+   * The model routinely emits only the tags it is talking about: a
+   * "remove the irrelevant tag" fix arrives as current "X", suggested "",
+   * while the field holds five other perfectly good tags. A suggestion is
+   * therefore applied as a REPLACEMENT only when its "current" provably
+   * covers every stored tag (the model saw the whole list); otherwise it
+   * is a subset edit — the mentioned tags are dropped, the suggested ones
+   * added, and every unmentioned stored tag kept.
+   *
+   * @param string $stored
+   *   The node's stored tag names, comma-separated.
+   * @param string $suggested
+   *   The suggested value.
+   * @param string $current
+   *   The suggestion's own "current" value — what the model claims the
+   *   field holds.
+   *
+   * @return list<string>
+   *   The final tag names.
+   */
+  public static function mergeTagNames(string $stored, string $suggested, string $current): array {
+    $stored_names = self::parseTagNames($stored);
+    $suggested_names = self::parseTagNames($suggested);
+    if ($stored_names === []) {
+      return $suggested_names;
+    }
+    $mentioned = array_map('mb_strtolower', self::parseTagNames($current));
+    $unmentioned = array_filter(
+      $stored_names,
+      static fn (string $name): bool => !in_array(mb_strtolower($name), $mentioned, TRUE),
+    );
+    if ($unmentioned === []) {
+      return $suggested_names;
+    }
+    $result = array_values($unmentioned);
+    $have = array_map('mb_strtolower', $result);
+    foreach ($suggested_names as $name) {
+      if (!in_array(mb_strtolower($name), $have, TRUE)) {
+        $result[] = $name;
+        $have[] = mb_strtolower($name);
+      }
+    }
+    return $result;
+  }
+
+  /**
    * Parses a suggested tags value into a clean list of term names.
    *
    * Accepts the comma-separated form the improve prompt asks for, and

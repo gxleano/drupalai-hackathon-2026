@@ -667,7 +667,17 @@ final class ImproveGate extends AbstractFlowDropNodeProcessor {
         // An empty list is a real instruction here — "remove the
         // irrelevant tag" leaves nothing behind — so it is scored, not
         // dropped as the empty-value model mistake it would be on text.
-        $names = ValidatedFields::parseTagNames($this->rawValue($suggestion['suggested'] ?? ''));
+        // A subset suggestion keeps the stored tags the model never
+        // mentioned (mergeTagNames), matching what Apply would produce.
+        $stored = implode(', ', array_map(
+          static fn ($term): string => (string) $term->label(),
+          $base->get($field)->referencedEntities(),
+        ));
+        $names = ValidatedFields::mergeTagNames(
+          $stored,
+          $this->rawValue($suggestion['suggested'] ?? ''),
+          $this->rawValue($suggestion['current'] ?? ''),
+        );
         $values[$field] = array_map(
           static fn (string $name): array => ['target_label' => $name],
           $names,
