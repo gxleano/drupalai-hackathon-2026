@@ -538,6 +538,22 @@
       buttons,
     });
     dialog.showModal();
+    closeOnBackdrop(dialog);
+  }
+
+  /**
+   * Closes a modal dialog when its backdrop is clicked.
+   *
+   * jQuery UI's overlay swallows the click without closing; the dot dialogs
+   * are read-mostly, so a click outside should dismiss them like Escape.
+   *
+   * @param {object} dialog
+   *   The Drupal.dialog instance that was just opened.
+   */
+  function closeOnBackdrop(dialog) {
+    const overlays = document.querySelectorAll('.ui-widget-overlay');
+    const overlay = overlays[overlays.length - 1];
+    overlay?.addEventListener('click', () => dialog.close(), { once: true });
   }
 
   /**
@@ -649,6 +665,7 @@
       buttons,
     });
     dialog.showModal();
+    closeOnBackdrop(dialog);
   }
 
   Drupal.behaviors.aiNodeFormStatus = {
