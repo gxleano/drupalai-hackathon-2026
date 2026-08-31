@@ -9,6 +9,10 @@ node_form:
     - core/drupal
     - core/drupal.dialog
     - core/once
+dashboard:
+  css:
+    component:
+      css/ai-dashboard.css: {}
 validation_poll:
   css:
     component:

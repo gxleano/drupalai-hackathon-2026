@@ -1,0 +1,126 @@
+/**
+ * @file
+ * Dashboard block: content needing AI validation review.
+ *
+ * The dashboard card (.block) has no padding of its own — every dashboard
+ * block's inner template pads itself (see .announcements) — so this block's
+ * content does the same. Rows mirror the Drupal Events card: separators,
+ * hover tint, a leading score donut and a trailing action hint.
+ */
+
+.block-ai-validation-attention .item-list,
+.block-ai-validation-attention .acv-dash-empty {
+  margin: 0;
+  padding: 4px 16px 16px;
+}
+
+.block-ai-validation-attention .item-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.block-ai-validation-attention .item-list li {
+  margin: 0;
+  list-style: none;
+}
+
+.block-ai-validation-attention .item-list li + li {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.acv-dash-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 8px;
+}
+
+.acv-dash-row__donut {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.acv-dash-row__donut-center {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--gin-bg-layer, #fff);
+  color: var(--gin-color-text, #222);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.acv-dash-row__body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.acv-dash-row__title {
+  overflow: hidden;
+  color: var(--gin-color-primary, #c26100);
+  font-weight: 600;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acv-dash-row__title:hover {
+  text-decoration: underline;
+}
+
+.acv-dash-row__status {
+  color: var(--gin-color-text-light, #55565b);
+  font-size: 0.85em;
+}
+
+.acv-dash-row__action {
+  flex: none;
+  padding: 4px 12px;
+  border: 1px solid var(--gin-color-primary, #c26100);
+  border-radius: 6px;
+  color: var(--gin-color-primary, #c26100);
+  font-size: 0.85em;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.acv-dash-row__action:hover {
+  background: var(--gin-color-primary, #c26100);
+  color: #fff;
+  text-decoration: none;
+}
+
+.acv-dash-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gin-color-text-light, #55565b);
+}
+
+.acv-dash-empty__icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gin-color-green, #26a769);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
