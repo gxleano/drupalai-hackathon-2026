@@ -1836,6 +1836,12 @@ final class AiReviewForm extends FormBase {
         '#default_value' => $s['suggested_raw'],
         '#rows' => 8,
         '#description' => $this->t('Your edited text replaces the AI suggestion when applied.'),
+        // The modal JS mirrors this control with its own CKEditor. It must
+        // know the format at build time, and core's editor.js only stamps
+        // data-editor-active-text-format on the textarea once its own
+        // (async) attach has run — too late when the modal opens right on
+        // page load. This attribute is ours and always there.
+        '#attributes' => ['data-ai-format' => $format],
       ];
       return $edit;
     }

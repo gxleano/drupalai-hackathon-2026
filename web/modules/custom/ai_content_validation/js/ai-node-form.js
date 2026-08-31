@@ -116,12 +116,19 @@
       // source, and a CKEditor instance over it (built inside the hidden
       // panel) is the live value, so mirror that when it exists.
       const editor = findEditor(source);
-      const html = editor !== null || source.closest('.js-text-format-wrapper');
+      const html =
+        editor !== null ||
+        source.closest('.js-text-format-wrapper') ||
+        source.hasAttribute('data-ai-format');
       // A rich text mirror gets its own CKEditor, built from the same text
       // format as the source field, so the editor never edits raw HTML.
+      // The format comes from the server-rendered data-ai-format first:
+      // core's data-editor-active-text-format only exists after editor.js
+      // has attached, which loses the race when this modal opens on load.
       const format =
         drupalSettings.editor?.formats?.[
-          source.getAttribute('data-editor-active-text-format')
+          source.getAttribute('data-ai-format') ||
+            source.getAttribute('data-editor-active-text-format')
         ] ?? null;
       const wysiwyg = Boolean(html && format && Drupal.editors?.ckeditor5);
       const label = source.closest('.form-item')?.querySelector('label')
@@ -564,7 +571,7 @@
         'p',
         'ai-nodeform-drawer__hint',
         Drupal.t(
-          'Applying saves a new revision — unsaved changes on this form are discarded.',
+          'Applying puts the suggestion into the field — nothing changes until you save the content.',
         ),
       ),
     );
