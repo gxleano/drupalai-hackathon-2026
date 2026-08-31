@@ -8,6 +8,7 @@ use Drupal\ai_content_validation\Form\AiReviewForm;
 use Drupal\ai_content_validation\ValidatedFields;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Session\AccountInterface;
@@ -28,6 +29,7 @@ final class FormHooks {
   public function __construct(
     private readonly ClassResolverInterface $classResolver,
     private readonly AccountInterface $currentUser,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
     #[Autowire(service: 'flowdrop_interrupt.manager')]
     private readonly InterruptManagerInterface $interruptManager,
     #[Autowire(service: 'flowdrop_session.service')]
@@ -98,9 +100,34 @@ final class FormHooks {
       : $review->parseResult((string) ($report->get('field_validation_result')->value ?? ''));
     // A report only speaks for the content it actually saw — measured by
     // the same content hash the run gate uses.
-    $current = $review->reportIsCurrent($node, $report, $parsed);
+    // Measured against the SAVED node, never the form object's entity:
+    // EntityForm::afterBuild() rebuilds that entity from user input on
+    // every POST, so mid-session it reflects unsaved edits and staged AI
+    // values, and its hash would flip the report to "stale" — hiding the
+    // other fields' Fix buttons. The report speaks for the saved content;
+    // in-form changes are tracked by the pen dots instead.
+    $saved = $this->entityTypeManager->getStorage('node')->load($node->id());
+    $current = $review->reportIsCurrent($saved instanceof NodeInterface ? $saved : $node, $report, $parsed);
     $pending = $review->pendingSuggestions($node);
     $decisions = $review->fieldDecisions($node);
+    // The pen state for manual edits lives client-side (typing cannot be
+    // seen by the server), so the JS records each edited field into this
+    // hidden input and the rebuild reads it back — otherwise a POST that
+    // rebuilds the form (a Fix with AI run, an accepted suggestion) would
+    // reset an edited field's dot to the report verdict.
+    $form['acv_edited'] = [
+      '#type' => 'hidden',
+      '#default_value' => '',
+    ];
+    $edited_input = $form_state->getUserInput()['acv_edited'] ?? '';
+    foreach (explode(',', is_string($edited_input) ? $edited_input : '') as $edited_field) {
+      if ($edited_field !== '') {
+        $decisions[$edited_field] ??= 'edited';
+      }
+    }
+    foreach ($form_state->get('acv_staged') ?? [] as $staged_field) {
+      $decisions[$staged_field] = 'accepted';
+    }
 
     $this->buildSidebar($form, $review, $node, $current);
 
@@ -476,7 +503,14 @@ final class FormHooks {
       default => (bool) preg_match('/guidelines?\s*(?:no\.?\s*|#\s*)?\d/i', $finding),
     };
     [$state, $text] = match (TRUE) {
-      $decision === 'accepted' => ['pass', $this->t('AI change accepted.')],
+      $decision === 'accepted' => [
+        'edited',
+        $this->t('AI suggestion applied to the field — save the content to keep it.'),
+      ],
+      $decision === 'edited' => [
+        'edited',
+        $this->t('You edited this field after the last AI validation. Save to validate it again.'),
+      ],
       $decision === 'rejected' => ['issue', $this->t('AI change rejected — the finding remains open.')],
       $pending !== NULL => ['issue', $this->t('An AI suggestion is ready for your review.')],
       $issue => ['issue', $finding === '' ? $this->t('Needs attention.') : $finding],
@@ -507,15 +541,15 @@ final class FormHooks {
           'title' => $info,
           'aria-label' => $info,
           'aria-haspopup' => 'dialog',
+          'data-ai-field' => $field,
           'data-ai-title' => $this->t('AI Validation Assistant'),
           'data-ai-label' => $label,
           'data-ai-text' => (string) $text,
           'data-ai-fix' => $has_fix ? $fix_name : '',
           'data-ai-state' => $state,
-          // Both states show the breakdown; the dialog leads with the
-          // finding when the field is flagged and with the verdict when
-          // it passes.
-          'data-ai-details' => $details,
+          // Both verdict states show the breakdown; a staged (edited)
+          // field hides it — it graded the text the suggestion replaced.
+          'data-ai-details' => $state === 'edited' ? '' : $details,
         ],
       ],
     ];
@@ -540,10 +574,12 @@ final class FormHooks {
       // object, which has no such handlers — rewire to the procedural
       // wrappers that delegate back to AiReviewForm.
       $panel['actions']['apply']['#submit'] = ['ai_content_validation_node_form_apply_submit'];
-      $panel['actions']['apply']['#limit_validation_errors'] = [['inline_suggestion']];
+      // Accepting saves the node, and it saves the editor's unsaved edits
+      // with it — so it validates the whole form like any other save.
+      // Limiting validation here would write unvalidated content.
       $panel['actions']['ignore']['#submit'] = ['ai_content_validation_node_form_reject_submit'];
       $panel['actions']['ignore']['#limit_validation_errors'] = [];
-      $panel['actions']['hint']['#value'] = $this->t('Accepting saves a new revision — unsaved changes on this form are discarded.');
+      $panel['actions']['hint']['#value'] = $this->t('Accepting puts the suggestion into the field — nothing is saved until you save the content.');
       // The panel stays in the form (its submit buttons must POST) but is
       // hidden: the dialog clones its diff and reason for display and
       // proxy-clicks the real Accept / Reject buttons.

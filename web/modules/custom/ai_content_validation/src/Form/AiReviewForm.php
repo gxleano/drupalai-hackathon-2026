@@ -9,13 +9,13 @@ use Drupal\Component\Diff\WordLevelDiff;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Lock\LockBackendInterface;
-use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\ai_content_validation\ContentHasher;
 use Drupal\ai_content_validation\ValidatedFields;
@@ -130,8 +130,6 @@ final class AiReviewForm extends FormBase {
     $form_state->set('nid', $node->id());
     $form['#title'] = $this->t('AI Validation: @title', ['@title' => $node->label()]);
 
-    $operations = $this->configFactory()->get('flowdrop_node_session.settings')->get('entity_operations') ?: [];
-
     // Every action submits over AJAX and replaces this wrapper, so the page
     // never freezes on a full-page load while the model runs — the button's
     // throbber tells the editor what is happening.
@@ -156,25 +154,20 @@ final class AiReviewForm extends FormBase {
       ];
     }
 
-    // AI fixes are offered per field only (the Fix with AI buttons on the
-    // finding rows), and ONLY right after an explicit Run validation on
-    // this page (report stamped manual_run and still matching the current
-    // revision). Any node edit or applied improvement produces a new
-    // revision and/or an unstamped report (entity triggers validate on
-    // save too), so changed content gets validated first.
+    // This page is a read-only summary: validations run automatically on
+    // node save, and fixes are applied from the node edit form. Nothing
+    // here starts a model run or changes content.
     $latest_report = $this->latestReport($node);
     $report_parsed = $latest_report === NULL
       ? NULL
       : $this->parseResult((string) ($latest_report->get('field_validation_result')->value ?? ''));
     $revision_match = $this->reportIsCurrent($node, $latest_report, $report_parsed);
-    $report_current = $revision_match && !empty($report_parsed['manual_run']);
 
     // ---- Status hero -----------------------------------------------------
     // One banner answers the editor's first question — "is this content OK?"
     // — with a state color, a plain-words verdict, the three key numbers and
     // the actions, before any detail below.
     [$score, $date] = $this->acceptedScore($node);
-    $pending = $this->pendingSuggestions($node);
     $scores_map = $revision_match && is_array($report_parsed['scores'] ?? NULL) && $report_parsed['scores'] !== []
       ? $report_parsed['scores']
       : NULL;
@@ -201,15 +194,11 @@ final class AiReviewForm extends FormBase {
       ],
       'stale' => [
         $this->t('Content has changed'),
-        $pending !== []
-          // Mid review session: applies change the revision on purpose and
-          // the closing apply/ignore re-validates automatically.
-          ? $this->t('Suggestions are being applied. The score refreshes automatically when you finish reviewing them below.')
-          : $this->t('These results are from a previous version. Re-run the validation for a current verdict.'),
+        $this->t('These results are from a previous version. Saving the content runs the validation again.'),
       ],
       default => [
         $this->t('Not validated yet'),
-        $this->t('AI validation checks this content against the 10 EU content guidelines (accuracy, clarity, neutrality, completeness, …) and produces a quality score with concrete improvement suggestions.'),
+        $this->t('AI validation checks this content against the 10 EU content guidelines (accuracy, clarity, neutrality, completeness, …) each time it is saved, and its findings and fixes appear on the edit form.'),
       ],
     };
     $word = match (TRUE) {
@@ -263,38 +252,19 @@ final class AiReviewForm extends FormBase {
         '#attributes' => ['class' => ['ai-review-hero__actions']],
       ],
     ];
-    // Exactly one validate button: the handler always runs fresh, so the
-    // label only tells the editor whether this is a first run or a re-run.
-    $cached = $operations !== [] ? $this->cachedReport($node, $operations[0]['workflow_id']) : NULL;
-    if ($operations !== []) {
-      $form['hero']['actions']['rerun'] = [
-        '#type' => 'submit',
-        '#value' => match (TRUE) {
-          $cached !== NULL, $state === 'passed' => $this->t('Re-run validation'),
-          $latest_report !== NULL => $this->t('Re-run validation on the new version'),
-          default => $this->t('Run validation'),
-        },
-        // The #name must be STABLE across builds: an AJAX click submits the
-        // name painted on the previous render, and if the rebuild names the
-        // button differently (state moved on) no triggering element matches
-        // and the click silently does nothing. The cached-vs-fresh decision
-        // therefore lives in the submit handler, not in the name.
-        '#name' => 'rerun:' . $operations[0]['workflow_id'],
-        '#submit' => ['::rerunValidation'],
-        // A passed report needs no urgent action — the button stays
-        // secondary so the green banner remains the loudest element.
-        '#button_type' => $state === 'passed' ? NULL : 'primary',
-        '#ajax' => $this->ajaxAction($this->aiProgressMessage($this->t('Analyzing the content against the 10 EU guidelines… (~30s)'))),
-      ];
-    }
-    if (count(Element::children($form['hero']['actions'])) > 0) {
-      $form['hero']['actions']['hint'] = [
-        '#type' => 'html_tag',
-        '#tag' => 'p',
-        '#attributes' => ['class' => ['ai-review-hint']],
-        '#value' => $this->t('A run takes 30–60 seconds. Nothing is changed until you apply a suggestion.'),
-      ];
-    }
+    // Read-only page: the only action is going where the work happens.
+    $form['hero']['actions']['edit'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Edit content'),
+      '#url' => $node->toUrl('edit-form'),
+      '#attributes' => ['class' => ['button', 'button--primary']],
+    ];
+    $form['hero']['actions']['hint'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'p',
+      '#attributes' => ['class' => ['ai-review-hint']],
+      '#value' => $this->t('Validation runs automatically when the content is saved; AI fixes are applied on the edit form.'),
+    ];
 
     // ---- Validation results ------------------------------------------------
     $form['report'] = [
@@ -304,22 +274,14 @@ final class AiReviewForm extends FormBase {
         $node,
         $report_parsed,
         $latest_report,
-        $report_current ? (int) $latest_report->id() : NULL,
-        $pending,
+        NULL,
+        [],
         $this->fieldDecisions($node),
       ),
       'overall_summary' => $this->buildOverallSummary($report_parsed, $latest_report),
     ];
 
-    // Every pending suggestion renders inline under a field row — whether
-    // it came from a full improve run or a per-field Fix
-    // with AI — so the newest pending improve item never repeats in the
-    // history below with its bulk apply table: one review path, per-field
-    // Accept/Reject decisions, regardless of origin.
-    $form['validations'] = $this->buildValidations(
-      $node,
-      $pending === [] ? NULL : reset($pending)['id'],
-    );
+    $form['validations'] = $this->buildValidations($node);
 
     return $form;
   }
@@ -666,7 +628,16 @@ final class AiReviewForm extends FormBase {
       $this->messenger()->addWarning($this->t('No applicable suggestion for field %field.', ['%field' => $field]));
       return;
     }
-    if (!$this->applyToNode($node, $field, $value, $this->rawValue($suggestion['current'] ?? ''))) {
+    // On the node edit form the suggestion is STAGED into the field's own
+    // widget instead of saved: the editor sees it sitting in the form like
+    // a manual edit (gray pen dot) and the normal Save persists it — plus
+    // any other unsaved edits — and re-validates. The review page has no
+    // widgets to stage into, and a media fix writes to the media entity
+    // rather than this form, so both keep the direct save.
+    $staged = $form_state->getFormObject() instanceof EntityFormInterface
+      && !ValidatedFields::isMediaField($node, $field)
+      && $this->stageIntoForm($form_state, $node, $field, $value);
+    if (!$staged && !$this->applyToNode($node, $field, $value, $this->rawValue($suggestion['current'] ?? ''))) {
       $this->messenger()->addWarning($this->t('Could not apply suggestion for field %field.', ['%field' => $field]));
       return;
     }
@@ -681,13 +652,15 @@ final class AiReviewForm extends FormBase {
         }
       }
     }
-    $node->setNewRevision(TRUE);
-    if ($node instanceof RevisionLogInterface) {
-      $node->setRevisionLogMessage('Applied AI suggestion (' . ($suggestion['label'] ?? $field) . ') from validation #' . $validation_id);
-      $node->setRevisionUserId((int) $this->currentUser()->id());
-      $node->setRevisionCreationTime($this->time->getRequestTime());
+    if (!$staged) {
+      $node->setNewRevision(TRUE);
+      if ($node instanceof RevisionLogInterface) {
+        $node->setRevisionLogMessage('Applied AI suggestion (' . ($suggestion['label'] ?? $field) . ') from validation #' . $validation_id);
+        $node->setRevisionUserId((int) $this->currentUser()->id());
+        $node->setRevisionCreationTime($this->time->getRequestTime());
+      }
+      $node->save();
     }
-    $node->save();
 
     $applied_fields = is_array($parsed['applied_fields'] ?? NULL) ? $parsed['applied_fields'] : [];
     $applied_fields[] = $field;
@@ -704,6 +677,21 @@ final class AiReviewForm extends FormBase {
     }
     $validation->set('field_validation_result', json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     $validation->save();
+    if ($staged) {
+      // The rebuilt form must show the pen dot even when this was the
+      // item's last suggestion (the item just left pending, so the
+      // decision map no longer speaks for it): remember it on the form
+      // state, which survives into this rebuild and no further — a fresh
+      // page load also loses the staged widget value itself.
+      $staged_fields = $form_state->get('acv_staged') ?? [];
+      $staged_fields[] = $field;
+      $form_state->set('acv_staged', $staged_fields);
+      $this->messenger()->addStatus($this->t('Put the suggestion into %field — save the content to keep it.', ['%field' => $suggestion['label'] ?? $field]));
+      // The staged value only lives in the rebuilt form; saving the node
+      // runs the validation, so no separate re-validation is started.
+      $form_state->setRebuild();
+      return;
+    }
     $this->messenger()->addStatus($this->t('Applied the suggestion to %field as a new revision.', ['%field' => $suggestion['label'] ?? $field]));
     // One re-validation per review session, when the last suggestion is
     // resolved — not one 30-second model call per field.
@@ -712,6 +700,77 @@ final class AiReviewForm extends FormBase {
     }
     // No setRebuild(): the default redirect reloads the page from scratch,
     // so this field shows its new state and the rest rebuilds from storage.
+  }
+
+  /**
+   * Writes a suggested value into the node form's own widgets, unsaved.
+   *
+   * The form rebuild renders widgets from user input, so overriding the
+   * field's raw input is what makes the suggestion appear in the widget
+   * exactly as if the editor had typed it. Nothing touches storage — the
+   * editor reviews it in place and the normal Save persists it.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The node form's state.
+   * @param \Drupal\node\NodeInterface $node
+   *   The node being edited, source of the field definitions.
+   * @param string $field
+   *   The field machine name.
+   * @param string $value
+   *   The suggested value (raw text, tag names, or metatag JSON).
+   *
+   * @return bool
+   *   TRUE when the value was staged; FALSE for a widget shape this does
+   *   not know, in which case the caller falls back to the direct save.
+   */
+  private function stageIntoForm(FormStateInterface $form_state, NodeInterface $node, string $field, string $value): bool {
+    $input = &$form_state->getUserInput();
+    if (ValidatedFields::isTagsField($node, $field)) {
+      // The tags autocomplete takes a comma-separated string; plain names
+      // match existing terms by title and auto-create the rest, the same
+      // as typing them. The input shape depends on the widget (a plain
+      // string, or nested under target_id), so the staged value mirrors
+      // whatever shape this POST already carries.
+      $names = implode(', ', ValidatedFields::parseTagNames($value));
+      $existing = $input[$field] ?? NULL;
+      if (is_array($existing) && array_key_exists('target_id', $existing)) {
+        $input[$field]['target_id'] = $names;
+        return TRUE;
+      }
+      if ($existing === NULL || is_scalar($existing)) {
+        $input[$field] = $names;
+        return TRUE;
+      }
+      return FALSE;
+    }
+    if ($field !== 'title' && $node->getFieldDefinition($field)?->getType() === 'metatag') {
+      $decoded = json_decode($value, TRUE);
+      if (!is_array($decoded) || !is_array($input[$field][0] ?? NULL)) {
+        return FALSE;
+      }
+      // The metatag widget nests one input per tag under its group
+      // ([0][basic][title], …): fill every input whose key the
+      // suggestion carries and keep the rest as they are.
+      foreach ($input[$field][0] as $group => $tags) {
+        if (!is_array($tags)) {
+          continue;
+        }
+        foreach (array_keys($tags) as $tag) {
+          if (is_scalar($decoded[$tag] ?? NULL)) {
+            $input[$field][0][$group][$tag] = (string) $decoded[$tag];
+          }
+        }
+      }
+      return TRUE;
+    }
+    // Title and every plain "value" widget (string, text, text_long,
+    // text_with_summary) post as FIELD[0][value]; the text format input
+    // next to it is left alone.
+    if (is_array($input[$field][0] ?? NULL) && array_key_exists('value', $input[$field][0])) {
+      $input[$field][0]['value'] = $value;
+      return TRUE;
+    }
+    return FALSE;
   }
 
   /**
@@ -1098,25 +1157,6 @@ final class AiReviewForm extends FormBase {
   }
 
   /**
-   * Runs the validation workflow and accepts the resulting score.
-   *
-   * Clicking Run validation IS the intent to get a fresh score, so the
-   * report is accepted right away instead of waiting in pending — no
-   * separate Accept step.
-   */
-  public function rerunValidation(array &$form, FormStateInterface $form_state): void {
-    [, $workflow_id] = explode(':', $form_state->getTriggeringElement()['#name'], 2);
-    $node = $this->loadNode($form_state);
-    if ($node !== NULL) {
-      // The button reads "Re-run validation" — clicking it always runs,
-      // cached report or not. The cache still spares the model on runs the
-      // editor did NOT ask for explicitly (entity triggers).
-      $this->runAndAccept($node, $workflow_id);
-    }
-    $form_state->setRebuild();
-  }
-
-  /**
    * Finds a current report whose stored hash matches the node's content.
    *
    * Only reports — items without suggestions — that are still current
@@ -1455,46 +1495,7 @@ final class AiReviewForm extends FormBase {
       ];
     }
 
-    if ($prepared !== [] && $group === 'pending') {
-      $element['suggestions'] = [
-        '#type' => 'table',
-        '#header' => [
-          $this->t('Apply'),
-          $this->t('Field'),
-          $this->t('Change'),
-          $this->t('Reason'),
-        ],
-      ];
-      foreach ($prepared as $key => $s) {
-        $element['suggestions'][$key] = [
-          'apply' => [
-            '#type' => 'checkbox',
-            '#default_value' => TRUE,
-            '#title' => $this->t('Apply @field', ['@field' => $s['label']]),
-            '#title_display' => 'invisible',
-          ],
-          'field' => ['#plain_text' => $s['label']],
-          'change' => [
-            'diff' => $this->diffMarkup($s['current'], $s['suggested_display']),
-            'edit' => $this->buildEditControl($s),
-          ],
-          'reason' => ['#plain_text' => $s['reason']],
-        ];
-      }
-      $element['apply'] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Apply selected changes'),
-        '#name' => 'apply:' . $id,
-        '#submit' => ['::applySuggestions'],
-        '#button_type' => 'primary',
-        // Deliberately NOT AJAX: applying changes the node revision, which
-        // flips the hero back to Run validation.
-        // A full submit + redirect guarantees a fresh page state; the AJAX
-        // rebuild proved unreliable for that switch (same-second changed
-        // time comparisons).
-      ];
-    }
-    elseif ($prepared !== []) {
+    if ($prepared !== []) {
       $element['detailed_heading'] = [
         '#type' => 'html_tag',
         '#tag' => 'h4',
@@ -1545,43 +1546,7 @@ final class AiReviewForm extends FormBase {
       ];
     }
 
-    // A validation report diagnoses only; the human decides: improve the
-    // content (per-field Fix with AI buttons), accept the score as-is,
-    // or ignore the run entirely.
-    $is_report = $workflow?->id() === self::REPORT_WORKFLOW;
-    if ($group === 'pending') {
-      if ($is_report) {
-        $element['accept'] = [
-          '#type' => 'submit',
-          '#value' => $this->t('Accept score'),
-          '#name' => 'accept:' . $id,
-          '#submit' => ['::acceptScore'],
-          '#ajax' => $this->ajaxAction($this->t('Accepting the score…')),
-        ];
-      }
-      $element['ignore'] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Ignore'),
-        '#name' => 'ignore:' . $id,
-        '#submit' => ['::ignoreValidation'],
-        '#ajax' => $this->ajaxAction($this->t('Ignoring…')),
-      ];
-    }
-
     return $element;
-  }
-
-  /**
-   * Accepts a pending validation score, making it the active one.
-   */
-  public function acceptScore(array &$form, FormStateInterface $form_state): void {
-    [, $validation_id] = explode(':', $form_state->getTriggeringElement()['#name'], 2);
-    $validation = $this->entityTypeManager->getStorage('ai_content_validation_item')->load($validation_id);
-    if ($validation !== NULL) {
-      $this->acceptValidation($validation);
-      $this->messenger()->addStatus($this->t('Quality score accepted.'));
-    }
-    $form_state->setRebuild();
   }
 
   /**
@@ -2143,109 +2108,6 @@ final class AiReviewForm extends FormBase {
   }
 
   /**
-   * Applies the selected suggestions to the node as a new revision.
-   */
-  public function applySuggestions(array &$form, FormStateInterface $form_state): void {
-    [, $validation_id] = explode(':', $form_state->getTriggeringElement()['#name'], 2);
-    $validation = $this->entityTypeManager->getStorage('ai_content_validation_item')->load($validation_id);
-    $node = $this->loadNode($form_state);
-    if ($validation === NULL || $node === NULL) {
-      return;
-    }
-
-    $parsed = $this->parseResult((string) $validation->get('field_validation_result')->value);
-    $suggestions = is_array($parsed['suggestions'] ?? NULL) ? $parsed['suggestions'] : [];
-    $rows = $form_state->getValue(['validations', $validation_id, 'suggestions'], []);
-    $selected_count = 0;
-
-    $applied = [];
-    $applied_fields = [];
-    foreach ($rows as $key => $row) {
-      if (empty($row['apply'])) {
-        continue;
-      }
-      $selected_count++;
-      $suggestion = $suggestions[(int) substr((string) $key, 1)] ?? NULL;
-      if ($suggestion === NULL || !isset($suggestion['field'], $suggestion['suggested'])) {
-        continue;
-      }
-      // An edited suggestion wins over the AI's; an emptied field falls
-      // back to the AI suggestion so a stray clear never wipes a value.
-      // JSON suggestions come back as per-key fields and are re-encoded
-      // here, so the serialized value can never be malformed. HTML
-      // suggestions come back from a text_format element as
-      // {value, format} — only the value is applied (the field keeps its
-      // stored format).
-      $suggested_raw = $this->rawValue($suggestion['suggested']);
-      $value = $this->editedValue(is_array($row['change']['edit'] ?? NULL) ? $row['change']['edit'] : [], $suggested_raw);
-      // Never blank a field: an empty replacement value is a model
-      // mistake (skipped-field contract), not an instruction to clear —
-      // except on a tags field, where clearing IS the fix.
-      if ($this->plainText($value) === '' && !ValidatedFields::isTagsField($node, (string) $suggestion['field'])) {
-        continue;
-      }
-      if ($this->applyToNode($node, (string) $suggestion['field'], $value, $this->rawValue($suggestion['current'] ?? ''))) {
-        $applied[] = $suggestion['label'] ?? $suggestion['field'];
-        $applied_fields[] = (string) $suggestion['field'];
-        // Store what was ACTUALLY applied, so the done item's diff shows
-        // the editor's text, not the AI's; keep the AI original alongside.
-        if ($value !== $suggested_raw) {
-          $parsed['suggestions'][(int) substr((string) $key, 1)]['ai_suggested'] = $suggestion['suggested'];
-          $parsed['suggestions'][(int) substr((string) $key, 1)]['suggested'] = $value;
-        }
-      }
-      else {
-        $this->messenger()->addWarning($this->t('Could not apply suggestion for field %field.', ['%field' => $suggestion['field']]));
-      }
-    }
-
-    if ($applied) {
-      $skipped = count(array_filter($suggestions, 'is_array')) - $selected_count;
-      if ($skipped > 0) {
-        $this->messenger()->addWarning($this->t('You skipped @count suggestion(s). Findings they address remain unfixed.', ['@count' => $skipped]));
-      }
-      $node->setNewRevision(TRUE);
-      if ($node instanceof RevisionLogInterface) {
-        $node->setRevisionLogMessage('Applied AI suggestions (' . implode(', ', $applied) . ') from validation #' . $validation_id);
-        $node->setRevisionUserId((int) $this->currentUser()->id());
-        $node->setRevisionCreationTime($this->time->getRequestTime());
-      }
-      $node->save();
-      // Record which fields were applied (and which were not) so the done
-      // item can show ✓/✕ markers per field afterwards, plus who applied
-      // them and when.
-      $parsed['applied_fields'] = $applied_fields;
-      $parsed['done_by'] = (int) $this->currentUser()->id();
-      $parsed['done_at'] = $this->time->getRequestTime();
-      $validation->set('field_validation_result', json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-      $validation->set('field_validation_status', 'done')->save();
-      $this->messenger()->addStatus($this->t('Applied @count change(s) to %title as a new revision.', [
-        '@count' => count($applied),
-        '%title' => $node->label(),
-      ]));
-      $this->revalidateAfterApply($node);
-    }
-    else {
-      $this->messenger()->addWarning($this->t('No changes were applied.'));
-    }
-    // No setRebuild(): the non-AJAX submit redirects back to this page, so
-    // the button state is rebuilt from scratch on a fresh GET.
-  }
-
-  /**
-   * Marks a validation as ignored.
-   */
-  public function ignoreValidation(array &$form, FormStateInterface $form_state): void {
-    [, $validation_id] = explode(':', $form_state->getTriggeringElement()['#name'], 2);
-    $validation = $this->entityTypeManager->getStorage('ai_content_validation_item')->load($validation_id);
-    if ($validation !== NULL) {
-      $validation->set('field_validation_status', 'ignored')->save();
-      $this->messenger()->addStatus($this->t('Validation ignored.'));
-    }
-    $form_state->setRebuild();
-  }
-
-  /**
    * Writes a suggested value to a node field.
    *
    * Supports the title and any field whose main property is "value"
@@ -2385,6 +2247,28 @@ final class AiReviewForm extends FormBase {
    * Loads the current (default revision) node the form acts on.
    */
   private function loadNode(FormStateInterface $form_state): ?NodeInterface {
+    // On the node edit form the editor may have unsaved changes in other
+    // fields. Building the entity from the submitted values instead of
+    // loading it from storage carries them along, so accepting an AI
+    // suggestion for one field never silently reverts a manual edit made
+    // to another. (ContentEntityForm::validateForm() builds an entity too
+    // but keeps it local — $form_object->getEntity() is still the pristine
+    // one, so it has to be built here.)
+    //
+    // Only safe under full validation: a button with
+    // #limit_validation_errors has had every value outside its own
+    // section stripped from the form state, so building from it would
+    // blank the very fields this is meant to protect.
+    $trigger = $form_state->getTriggeringElement();
+    $limited = isset($trigger['#limit_validation_errors']) && $trigger['#limit_validation_errors'] !== FALSE;
+    $form_object = $form_state->getFormObject();
+    if (!$limited && $form_object instanceof EntityFormInterface) {
+      $complete_form = &$form_state->getCompleteForm();
+      $entity = $form_object->buildEntity($complete_form, $form_state);
+      if ($entity instanceof NodeInterface && (int) $entity->id() === (int) $form_state->get('nid')) {
+        return $entity;
+      }
+    }
     $node = $this->entityTypeManager->getStorage('node')->load($form_state->get('nid'));
     return $node instanceof NodeInterface ? $node : NULL;
   }

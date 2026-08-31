@@ -705,6 +705,14 @@
     dot.dataset.aiFix = '';
     dot.title = text;
     dot.setAttribute('aria-label', text);
+    // Recorded into the form so the server re-renders the pen after a
+    // POST rebuild (a Fix with AI run, an accepted suggestion).
+    const carrier = document.querySelector('input[name="acv_edited"]');
+    if (carrier && dot.dataset.aiField) {
+      const fields = new Set(carrier.value.split(',').filter(Boolean));
+      fields.add(dot.dataset.aiField);
+      carrier.value = [...fields].join(',');
+    }
     markScoreStale();
   }
 
@@ -729,6 +737,11 @@
           });
         },
       );
+      // A dot already rendered as edited (a staged AI suggestion) means
+      // the form holds unsaved text — the sidebar score is stale too.
+      if (document.querySelector('.ai-nodeform-status__dot--edited')) {
+        markScoreStale();
+      }
       // Any typing in a validated field invalidates its verdict. 'input'
       // and 'change' cover the plain widgets and the tags autocomplete;
       // 'keyup' catches CKEditor, whose contenteditable never reaches the
