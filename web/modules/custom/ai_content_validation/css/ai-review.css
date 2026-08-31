@@ -762,6 +762,17 @@
   content: '!';
 }
 
+/* Edited since the last validation: neutral gray with a pen. The verdict
+   it used to carry is stale, so it states nothing until the next save. */
+.ai-nodeform-status__dot--edited {
+  background: var(--gin-color-text-light, #8b8b8b);
+}
+
+.ai-nodeform-status__dot--edited::after {
+  content: '\270E';
+  font-size: 14px;
+}
+
 /* Hovering (or focusing) the status dot outlines the field's own inputs in
    the dot's color, so it is obvious which widget the verdict is about. */
 .ai-nodeform-field:has(.ai-nodeform-status__dot:hover, .ai-nodeform-status__dot:focus) :is(
@@ -785,6 +796,10 @@
   --ai-dot-color: var(--gin-color-warning, #e29700);
 }
 
+.ai-nodeform-field:has(.ai-nodeform-status__dot--edited) {
+  --ai-dot-color: var(--gin-color-text-light, #8b8b8b);
+}
+
 /* ---------------------------------------------------------------------
  * AI dialogs (finding popover + suggestion modal).
  *
@@ -806,7 +821,7 @@
   --ai-icon-del: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='%23e03131'/%3E%3Cpath d='M8.5 8.5l7 7M15.5 8.5l-7 7' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
   --ai-icon-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f9e44' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12.5l5 5L20 6.5'/%3E%3C/svg%3E");
   --ai-icon-check-ring: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f9e44' stroke-width='1.9'%3E%3Ccircle cx='12' cy='12' r='9.2'/%3E%3Cpath d='M7.8 12.3l3 3 5.4-6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --ai-icon-bang: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9480f' stroke-width='1.9'%3E%3Ccircle cx='12' cy='12' r='9.2'/%3E%3Cpath d='M12 7v6.2M12 16.2v1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+  --ai-icon-bang: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b25b09' stroke-width='1.9'%3E%3Ccircle cx='12' cy='12' r='9.2'/%3E%3Cpath d='M12 7v6.2M12 16.2v1.4' stroke-linecap='round'/%3E%3C/svg%3E");
   --ai-icon-shield: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f9e44' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l7 2.6v5.6c0 4.2-2.9 7.8-7 9-4.1-1.2-7-4.8-7-9V5.6z'/%3E%3Cpath d='M9 12l2.2 2.2L15.4 10'/%3E%3C/svg%3E");
   --ai-icon-ins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='%232f9e44'/%3E%3Cpath d='M7.5 12.5l3 3 6-6.5' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
@@ -1047,12 +1062,14 @@
   --ai-report-note-icon: var(--ai-icon-shield);
 }
 
+/* Needs attention is a warning, not an error: amber, the same reading as
+   the field's own status dot. Red belongs to failures. */
 .ai-nodeform-report--issue {
-  --ai-report-bg: var(--ai-dlg-accent-soft);
-  --ai-report-rule: #f6d9c6;
-  --ai-report-strong: #9c3608;
-  --ai-report-soft: #7d5744;
-  --ai-report-chip-bg: #fbe1d2;
+  --ai-report-bg: #fff8e6;
+  --ai-report-rule: #f3e0b6;
+  --ai-report-strong: #b25b09;
+  --ai-report-soft: #75603f;
+  --ai-report-chip-bg: #fbeac4;
   --ai-report-icon: var(--ai-icon-bang);
   --ai-report-note-icon: var(--ai-icon-bulb);
 }
@@ -1221,7 +1238,7 @@
 }
 
 .ai-nodeform-report__item--weak {
-  background: #fffaf5;
+  background: #fffbf0;
 }
 
 .ai-nodeform-report__item--weak::before {
@@ -1246,8 +1263,8 @@
 }
 
 .ai-nodeform-report__item--weak .ai-nodeform-report__item-value {
-  background: #fbe1d2;
-  color: #9c3608;
+  background: #fbeac4;
+  color: #b25b09;
 }
 
 /* Suggestion modal: centered, with the BEFORE / AFTER review. */

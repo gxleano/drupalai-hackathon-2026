@@ -205,25 +205,6 @@
 
 
   /**
-   * Decodes HTML entities in a string built with Drupal.t().
-   *
-   * Drupal.t() escapes its placeholder values, but el() writes strings as
-   * textContent — so an escaped "&amp;" would otherwise be shown verbatim.
-   * Only ever called on strings this file composed itself.
-   *
-   * @param {string} text
-   *   The escaped string.
-   *
-   * @return {string}
-   *   The plain text.
-   */
-  function decode(text) {
-    const holder = document.createElement('textarea');
-    holder.innerHTML = text;
-    return holder.value;
-  }
-
-  /**
    * Reads the guideline breakdown a passing dot carries, when present.
    *
    * @param {Element} dot
@@ -293,9 +274,6 @@
     // 2: …"); the report's own scores are content-wide, so nothing from
     // them is shown as if it were the field's own verdict.
     const flagged = ok ? [] : flaggedGuidelines(note);
-    const named = flagged.length
-      ? details.items.find((item) => item.n === flagged[0])
-      : null;
     const wrap = el(
       'div',
       `ai-nodeform-report ai-nodeform-report--${ok ? 'ok' : 'issue'}`,
@@ -330,18 +308,14 @@
       el(
         'span',
         'ai-nodeform-report__sub',
+        // The finding itself is the verdict — naming the guideline a
+        // second time in the editor's own words said nothing the note
+        // below did not already say better.
         ok
           ? Drupal.t(
               'This field meets all quality standards based on the EU content guidelines.',
             )
-          : named
-            ? decode(
-                Drupal.t('Guideline @n (@name) needs attention on this field.', {
-                  '@n': named.n,
-                  '@name': named.name,
-                }),
-              )
-            : Drupal.t('This field needs attention.'),
+          : note || Drupal.t('This field needs attention.'),
       ),
     );
     hero.appendChild(heroText);
@@ -372,18 +346,6 @@
           Drupal.t(
             'This field is reviewed but never rewritten by the AI — it references other content, so the right value is yours to choose. Edit the field to fix it.',
           ),
-        ),
-      );
-    }
-
-    // The note only earns its space when there is something to fix; the
-    // verdict card above already says a passing field is fine.
-    if (!ok && note) {
-      wrap.appendChild(
-        el(
-          'p',
-          `ai-nodeform-report__note ai-nodeform-report__note--${ok ? 'ok' : 'issue'}`,
-          note,
         ),
       );
     }
@@ -668,6 +630,84 @@
     closeOnBackdrop(dialog);
   }
 
+  /**
+   * Grays the sidebar score once the content has been edited.
+   *
+   * The score, its rating and its summary describe the SAVED content. An
+   * edit makes all three history, so the panel drops to the neutral tone
+   * the server itself uses for a stale report (gray ring, "!" badge, no
+   * rating or summary) and says why. The next save re-validates.
+   */
+  function markScoreStale() {
+    const sidebar = document.querySelector('.ai-nodeform-sidebar');
+    if (!sidebar || sidebar.dataset.aiStale === '1') {
+      return;
+    }
+    sidebar.dataset.aiStale = '1';
+    sidebar.classList.remove(
+      'ai-nodeform-sidebar--good',
+      'ai-nodeform-sidebar--warn',
+      'ai-nodeform-sidebar--bad',
+    );
+    [
+      '.ai-nodeform-sidebar__rating',
+      '.ai-nodeform-sidebar__date',
+      '.ai-nodeform-sidebar__summary',
+      '.ai-nodeform-sidebar__status',
+    ].forEach((selector) => sidebar.querySelector(selector)?.remove());
+    const donut = sidebar.querySelector('.ai-donut');
+    if (donut && !donut.querySelector('.ai-donut__badge')) {
+      const badge = el('span', 'ai-donut__badge', '!');
+      badge.setAttribute('aria-hidden', 'true');
+      donut.appendChild(badge);
+    }
+    sidebar.querySelector('.ai-nodeform-sidebar__score')?.after(
+      el(
+        'p',
+        'ai-nodeform-sidebar__status',
+        Drupal.t(
+          'You edited this content — this score describes the last saved version. Save to validate it again.',
+        ),
+      ),
+    );
+  }
+
+  /**
+   * Marks a field's dot as edited since the last validation.
+   *
+   * The verdict on the dot describes the text the validator saw. Once the
+   * editor types in the field that verdict is history — so the dot goes
+   * gray with a pen instead of claiming a pass or a failure, and its AI
+   * fix action goes away (a rewrite built on a stale finding would undo
+   * the edit that was just made). The next save re-validates.
+   *
+   * @param {Element} field
+   *   The field wrapper that was edited.
+   */
+  function markEdited(field) {
+    const dot = field.querySelector('.ai-nodeform-status__dot');
+    if (!dot || dot.dataset.aiState === 'edited') {
+      return;
+    }
+    const text = Drupal.t(
+      'You edited this field after the last AI validation. Save to validate it again.',
+    );
+    dot.classList.remove(
+      'ai-nodeform-status__dot--pass',
+      'ai-nodeform-status__dot--issue',
+    );
+    dot.classList.add('ai-nodeform-status__dot--edited');
+    dot.dataset.aiState = 'edited';
+    dot.dataset.aiText = text;
+    // Both the old breakdown and the fix button speak for the pre-edit
+    // text, so the popover drops to the plain note.
+    dot.dataset.aiDetails = '';
+    dot.dataset.aiFix = '';
+    dot.title = text;
+    dot.setAttribute('aria-label', text);
+    markScoreStale();
+  }
+
   Drupal.behaviors.aiNodeFormStatus = {
     attach(context) {
       // A dot rendered inside a collapsed sidebar details (meta tags)
@@ -686,6 +726,17 @@
           dot.addEventListener('click', (event) => {
             event.preventDefault();
             openFinding(dot);
+          });
+        },
+      );
+      // Any typing in a validated field invalidates its verdict. 'input'
+      // and 'change' cover the plain widgets and the tags autocomplete;
+      // 'keyup' catches CKEditor, whose contenteditable never reaches the
+      // textarea until submit.
+      once('ai-status-edited', '.ai-nodeform-field', context).forEach(
+        (field) => {
+          ['input', 'change', 'keyup'].forEach((event) => {
+            field.addEventListener(event, () => markEdited(field));
           });
         },
       );
